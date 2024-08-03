@@ -80,16 +80,27 @@ function Chat({ username, room }) {
           <div className="flex-1">
             {/* Check if there are messages for the selected recipient */}
             {messages[room.username] ? (
-              messages[room.username].map((msg, index) => (
-                <div key={index} className="p-4">
-                  <b>
-                    <p>{msg.sender}</p>
-                  </b>
-                  <p>{msg.content}</p>
-                </div>
-              ))
+              messages[room.username].map((msg, index) =>
+                // If message from user align right, else align left
+                msg.sender === username ? (
+                  <div key={index} className="p-4 text-right">
+                    <b>
+                      <p>{msg.sender}</p>
+                    </b>
+                    <p>{msg.content}</p>
+                  </div>
+                ) : (
+                  <div key={index} className="p-4 text-left">
+                    <b>
+                      <p>{msg.sender}</p>
+                    </b>
+                    <p>{msg.content}</p>
+                  </div>
+                )
+              )
             ) : (
-              <p>No messages in this conversation</p> // Display this message if there are no messages
+              // If no messages, display a message
+              <p>No messages in this conversation</p>
             )}
           </div>
           <div className="p-4 pb-8 bg-gray-200 flex">
