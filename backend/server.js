@@ -2,12 +2,45 @@ import { Server } from "socket.io";
 import express from "express";
 import { createServer } from "node:http";
 import cors from "cors";
+import mongoose from "mongoose";
+import Rooms from "./models/rooms.js";
+import Users from "./models/users.js";
 
 const app = express(); // Express server, function handler for HTTP server
 const server = createServer(app); // HTTP express server
+const uri =
+  "mongodb+srv://tazim720:sEmi6GzM5S68SO49@messaging-app-cluster.jq4v6uf.mongodb.net/messaging-app?retryWrites=true&w=majority&appName=messaging-app-cluster";
+
+const clientOptions = {
+  serverApi: { version: "1", strict: true, deprecationErrors: true },
+};
+
+async function runMongoDB() {
+  try {
+    // Create a Mongoose client with a MongoClientOptions object to set the Stable API version
+    await mongoose.connect(uri, clientOptions);
+    await mongoose.connection.db.admin().command({ ping: 1 });
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+    process.exit(1); // Exit the process with failure
+  }
+}
+runMongoDB().catch(console.dir); // Run the function and catch any errors
+
+// Functions for rooms collection
+async function getRoom(roomID) {
+  const room = await Rooms.findById(roomID); // Find the room by the ID
+  return room; // Return the room
+}
+async function addMessage(roomID, message) {
+  const room = await Rooms.findById(roomID); // Find the room by the ID
+  await room.updateOne({ $push: { messages: message } }); // Add the message to the room
+}
 
 let users = []; // Array to store users
-// const messages = { general: [] }; // Object to store messages
 
 const io = new Server(server, {
   cors: {
@@ -19,8 +52,20 @@ const io = new Server(server, {
 
 // Listen for a "connection" event
 io.on("connection", (socket) => {
-  socket.once("join_server", (username) => {
+  socket.once("join_server", async (username) => {
+    // await Users.create({ username: "test" }); // Create a new user
+
+    const user = await Users.findOne({ username: username });
+    if (!user) {
+      console.log("User not found:", username);
+      return;
+    }
+
     console.log("User joined server", username); // Log the user joining the server
+
+    const allRooms = user.rooms; // Get all the rooms the user is in
+    console.log(`User ${username} is in rooms:`, allRooms); // Log the rooms the user is in
+    console.log(`Room ${allRooms[0]}: `, await getRoom(allRooms[0])); // Log the first room
 
     // Emit the list of users to the new user
     socket.emit("update_user_list", Array.from(users.values()));
@@ -28,13 +73,13 @@ io.on("connection", (socket) => {
     // Broadcast the updated user list to all users
     io.emit("update_user_list", Array.from(users.values()));
 
-    const user = {
-      username,
+    const user_inServer = {
+      username: user.username,
       id: socket.id,
     };
-    // io.emit("user_join", `User joined: ${user.username}`); // Emit a message to all clients
+    io.emit("user_join", `User joined: ${user.username}`); // Emit a message to all clients
 
-    users.push(user); // Add the user to the array
+    users.push(user_inServer); // Add the user to the array
 
     // Emit the updated list to all users
     io.emit("update_user_list", users);
@@ -76,7 +121,7 @@ io.on("connection", (socket) => {
   // });
 
   // Listen for a "dm" event, direct messaging
-  socket.on("dm", (content, to, sender) => {
+  socket.on("dm", async (content, to, sender) => {
     console.log("Message received:", content, to); // Log the message
 
     const messageData = {
@@ -84,11 +129,24 @@ io.on("connection", (socket) => {
       to,
       sender,
     };
-    socket.to(to).emit("recieve_message", messageData); // Emit the message to the recipient
-    console.log(messageData);
-    // if (messages[roomName]) {
-    //   messages[roomName].push({ sender, content }); // Add the message to the list of messages
-    // }
+
+    const room = await Rooms.findOne({ participants: { $all: [to, sender] } }); // Find the room by the participants
+
+    if (!room) {
+      console.log("Room not found:", to, sender);
+      return;
+      // IMPLEMENT ROOM CREATION
+    }
+
+    addMessage(room._id, messageData); // Add the message to the room
+
+    await msg.save().then(() => {
+      socket.to(to).emit("recieve_message", messageData); // Emit the message to the recipient
+      console.log(messageData);
+      // if (messages[roomName]) {
+      //   messages[roomName].push({ sender, content }); // Add the message to the list of messages
+      // }
+    });
   });
 
   socket.on("disconnect", () => {
