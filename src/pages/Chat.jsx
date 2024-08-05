@@ -13,15 +13,17 @@ function Chat({ username, room, messages, setMessages }) {
     if (socket && socket.connected) {
       console.log("Chat component mounted. Socket:", socket);
 
-      // Listen for received messages
+      // Listen for received messages -  NEED TO IMPLEMENT GROUP CHAT FUNCTIONALITY
       socket.on("recieve_message", (messageData) => {
         console.log("Message received:", messageData); // Log the received message
         let content = messageData.content;
         let sender = messageData.sender;
+        let timestamp = messageData.timestamp;
 
         let messageContent = {
-          content,
-          sender,
+          sender: sender,
+          content: content,
+          timestamp: timestamp,
         };
 
         setMessages((prevMessages) => {
@@ -30,12 +32,7 @@ function Chat({ username, room, messages, setMessages }) {
             [sender]: [...(prevMessages[sender] || []), messageContent], // Update the messages state for this dm
           };
         });
-        console.log("Messages:", messages);
-      });
-
-      socket.once("recieve_previous_messages", (messages) => {
-        console.log("Previous messages received:", messages);
-        setMessages(messages); // Update the messages state
+        console.log("Messages:", messages[room.name]);
       });
     }
     return () => {
@@ -48,6 +45,7 @@ function Chat({ username, room, messages, setMessages }) {
     let message = e.target.value;
     console.log("Typing message...", message);
     setMessage(message); // Update the message state
+    console.log("room.name:", room.name);
   };
 
   const send = () => {
@@ -56,7 +54,7 @@ function Chat({ username, room, messages, setMessages }) {
       "Sending message: " +
         message +
         " to room: " +
-        room +
+        room.name +
         " from user: " +
         username
     );
@@ -68,24 +66,21 @@ function Chat({ username, room, messages, setMessages }) {
     setMessages((prevMessages) => {
       return {
         ...prevMessages,
-        [room.username]: [
-          ...(prevMessages[room.username] || []),
-          messageContent,
-        ], // Update the messages state for this dm
+        [room.name]: [...(prevMessages[room.name] || []), messageContent], // Update the messages state for this dm
       };
     });
-    socket.emit("dm", message, room.id, room.username, username); // Emit a message, FOR NOW ROOM IS JUST A USER
+    socket.emit("dm", message, room.id, room.name, username, room.is_group); // Emit a message, FOR NOW ROOM IS JUST A USER
     setMessage(""); // Clear the message input
   };
 
   return (
     <div className="flex flex-col flex-1">
-      {room && room.username ? ( // Check if the room (recipient) is selected
+      {room ? ( // Check if the room (recipient) is selected
         <div className="flex flex-col flex-1">
           <div className="flex-1">
             {/* Check if there are messages for the selected recipient */}
-            {messages[room.username] ? (
-              messages[room.username].map((msg, index) =>
+            {messages[room.name] ? (
+              messages[room.name].map((msg, index) =>
                 // If message from user align right, else align left
                 msg.sender === username ? (
                   <div key={index} className="p-4 text-right">
@@ -111,7 +106,7 @@ function Chat({ username, room, messages, setMessages }) {
           <div className="p-4 pb-8 bg-gray-200 flex">
             <input
               type="text"
-              placeholder={`Message ${room.username}`}
+              placeholder={`Message ${room.name}`}
               className="w-full h-12 focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-4 bg-white rounded-md py-2"
               value={message}
               onChange={onType}

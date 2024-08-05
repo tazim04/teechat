@@ -31,13 +31,13 @@ async function runMongoDB() {
 runMongoDB().catch(console.dir); // Run the function and catch any errors
 
 // Add message to room in the database
-async function addMessage(roomID, message) {
+async function add_message_in_db(roomID, message) {
   const room = await Rooms.findById(roomID); // Find the room by the ID
   await room.updateOne({ $push: { messages: message } }); // Add the message to the room
 }
 
 // Find room by participants - direct messaging
-async function findContact(sender, recipient) {
+async function find_room_in_db(sender, recipient) {
   console.log("(findContact) Sender:", sender);
   let sender_rooms = sender.rooms; // Get the rooms for the sender
 
@@ -50,7 +50,7 @@ async function findContact(sender, recipient) {
   return null; // Return null if the room is not found
 }
 
-// // Get all rooms for a user
+// Get all rooms for a user
 // async function getUserRooms(user) {
 //   let rooms = [];
 //   let user_rooms = user.rooms; // Get the rooms for the user
@@ -97,11 +97,9 @@ io.on("connection", (socket) => {
     };
     users.push(user_withSocketID); // Add the user to the array
 
-    // Emit the list of users to the new user
-    socket.emit("update_user_list", users);
+    rooms = user.rooms; // Get the rooms for the user
 
-    // Emit the updated list to all users
-    io.emit("update_user_list", users);
+    socket.emit("update_contacts", rooms); // Emit the contact list to the user
 
     console.log(users);
   });
@@ -122,35 +120,35 @@ io.on("connection", (socket) => {
   // NOT IMPLEMENTED YET - ROOMS
 
   // Listen for a "dm" event, direct messaging
-  socket.on("dm", async (content, to_socket_id, to, from) => {
+  socket.on("dm", async (content, room_id, to, from, is_group) => {
     console.log("Message received:", content, from); // Log the message
 
-    const sender = await Users.findOne({ username: from }); // Find the sender by username
-    const recipient = await Users.findOne({ username: to }); // Find the recipient by username
+    if (!is_group) {
+      const sender = await Users.findOne({ username: from }); // Find the sender by username
+      const recipient = await Users.findOne({ username: to }); // Find the recipient by username
 
-    if (!sender || !recipient) {
-      console.log("User not found:", to, sender);
-      return;
+      if (!sender || !recipient) {
+        console.log("User not found:", to, sender);
+        return;
+      }
+
+      let recipient_socket_id = users.find(
+        (recipient) => recipient.username === to
+      ).socket_id; // Find the recipient's socket ID
+
+      console.log("(dm event) recipient_socket_id:", recipient_socket_id);
+
+      const messageData = {
+        sender: sender.username,
+        content,
+        timestamp: new Date(),
+      };
+
+      await add_message_in_db(room_id, messageData); // Add the message to the room in the database
+      io.to(recipient_socket_id).emit("recieve_message", messageData); // Emit the message to the recipient's socket.id
+    } else {
+      // Group messaging
     }
-
-    let recipient_socket_id = users.find(
-      (recipient) => recipient.username === to
-    ).socket_id; // Find the recipient's socket ID
-
-    let room = await findContact(sender, recipient); // Find the room between the sender and recipient
-    console.log("(dm event)Room:", room);
-
-    let room_id = room._id; // Get the room ID
-    console.log("(dm event)Room ID:", room_id);
-
-    const messageData = {
-      sender: sender.username,
-      content,
-      timestamp: new Date(),
-    };
-
-    addMessage(room_id, messageData); // Add the message to the room
-    io.to(to_socket_id).emit("recieve_message", messageData); // Emit the message to the recipient's socket.id
   });
 
   socket.on("disconnect", () => {
