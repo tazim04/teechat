@@ -18,11 +18,18 @@ function SideBar({ username, room, setRoom, messages, setMessages }) {
         console.log("Users list updated:", users); // Log the updated user list
       });
     }
+    return () => {
+      // Clean up the event listeners
+      socket.off("update_contacts");
+    };
   }, [socket]);
 
   const openChat = (contacts) => {
+    if (room && room.id === contacts.id) {
+      return; // If the selected chat is the same as the current chat, return
+    }
     setRoom(contacts); // Set the room to the selected chat
-    // socket.emit("get_previous_messages", username, chat.username); // Emit a "get_previous_messages" event
+    socket.emit("get_previous_messages", contacts.id); // Emit a "get_previous_messages" event
 
     console.log(
       "Set room to: " + contacts.id,

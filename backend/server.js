@@ -36,6 +36,14 @@ async function add_message_in_db(roomID, message) {
   await room.updateOne({ $push: { messages: message } }); // Add the message to the room
 }
 
+async function get_previous_messages(roomID) {
+  const room = await Rooms.findById(roomID); // Find the room by the ID
+  console.log("(get_previous_messages)Room:", room);
+  let prev_messages = room.messages; // Get the messages from the room
+  console.log("(get_previous_messages)Messages:", prev_messages);
+  return prev_messages; // Return the messages
+}
+
 // Find room by participants - direct messaging
 async function find_room_in_db(sender, recipient) {
   console.log("(findContact) Sender:", sender);
@@ -64,6 +72,7 @@ async function find_room_in_db(sender, recipient) {
 
 let users = []; // Array to store users
 let rooms = []; // Array to store rooms
+let messages = {}; // Array to store messages
 
 // Set io with cors options
 const io = new Server(server, {
@@ -104,6 +113,19 @@ io.on("connection", (socket) => {
     console.log(users);
   });
 
+  // Listen for a "get_previous_messages" event
+  socket.on("get_previous_messages", async (room_id) => {
+    if (messages[room_id]) {
+      console.log("Messages found in cache:", messages[room_id]);
+      io.to(socket.id).emit("recieve_previous_messages", messages[room_id]); // Emit the previous messages to the user
+    } else {
+      let messages = await get_previous_messages(room_id); // Get the previous messages from the room
+      messages[room_id] = messages; // Add the messages to the array
+      console.log("Previous messages:", messages);
+      io.to(socket.id).emit("recieve_previous_messages", messages); // Emit the previous messages to the user
+    }
+  });
+
   // socket.on("get_previous_messages", async (username, other_user) => {
   //   const user = await Users.findOne({ username: username }); // Find the user by username
   //   const other = await Users.findOne({ username: other_user }); // Find the other user by username
@@ -121,9 +143,11 @@ io.on("connection", (socket) => {
 
   // Listen for a "dm" event, direct messaging
   socket.on("dm", async (content, room_id, to, from, is_group) => {
-    console.log("Message received:", content, from); // Log the message
+    console.log("Message received:", content, "from", from); // Log the message
 
+    // Check if the message is a group message or direct message
     if (!is_group) {
+      // Direct messaging
       const sender = await Users.findOne({ username: from }); // Find the sender by username
       const recipient = await Users.findOne({ username: to }); // Find the recipient by username
 
@@ -132,12 +156,6 @@ io.on("connection", (socket) => {
         return;
       }
 
-      let recipient_socket_id = users.find(
-        (recipient) => recipient.username === to
-      ).socket_id; // Find the recipient's socket ID
-
-      console.log("(dm event) recipient_socket_id:", recipient_socket_id);
-
       const messageData = {
         sender: sender.username,
         content,
@@ -145,7 +163,20 @@ io.on("connection", (socket) => {
       };
 
       await add_message_in_db(room_id, messageData); // Add the message to the room in the database
-      io.to(recipient_socket_id).emit("recieve_message", messageData); // Emit the message to the recipient's socket.id
+
+      let isUserOnline = users.some((user) => user.username === to); // Check if the recipient is online
+
+      if (isUserOnline) {
+        let recipient_socket_id = users.find(
+          (recipient) => recipient.username === to
+        ).socket_id; // Find the recipient's socket ID
+
+        console.log("(dm event) recipient_socket_id:", recipient_socket_id);
+
+        io.to(recipient_socket_id).emit("recieve_message", messageData); // Emit the message to the recipient's socket.id
+      } else {
+        console.log(`${to} is offline, message not sent but saved in DB`);
+      }
     } else {
       // Group messaging
     }

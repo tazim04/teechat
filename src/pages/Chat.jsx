@@ -1,12 +1,46 @@
 import { useSocket } from "../context/SocketContext";
 import { io } from "socket.io-client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import SideBar from "../components/SideBar";
+import { set } from "mongoose";
 
 function Chat({ username, room, messages, setMessages }) {
   const socket = useSocket(); // Use custom hook to get the socket object from the context
   const [message, setMessage] = useState(""); // State for the message
   const [users, setUsers] = useState([]); // State for the users
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false); // State for the scroll to bottom button
+  const [atBottom, setAtBottom] = useState(true); // State for the scroll position
+
+  const chatRef = useRef(); // Reference to the chat container
+  const bottomRef = useRef(); // Reference to the bottom of the chat
+
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  // Track if the user is at the bottom of the chat using observer
+  useEffect(() => {
+    console.log("showScrollToBottom:", showScrollToBottom);
+
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      setShowScrollToBottom(!entry.isIntersecting); // Update the atBottom state
+    });
+    if (bottomRef.current) {
+      observer.observe(bottomRef.current);
+    }
+    return () => {
+      observer.disconnect();
+    };
+  });
+
+  // Scroll to the bottom of the chat when the room is opened or a new message is sent
+  useEffect(() => {
+    if (bottomRef.current) {
+      console.log("Scrolling to the bottom of the chat...", bottomRef.current);
+      bottomRef.current.scrollIntoView({ behavior: "auto" });
+    } else {
+      console.log("bottomRef.current is null");
+    }
+  }, [messages, room.name]);
 
   // Listen for events when the component mounts
   useEffect(() => {
@@ -34,12 +68,24 @@ function Chat({ username, room, messages, setMessages }) {
         });
         console.log("Messages:", messages[room.name]);
       });
+
+      // Listen for previous messages
+      socket.on("recieve_previous_messages", (previousMessages) => {
+        console.log("Previous messages:", previousMessages); // Log the previous messages
+        setMessages((prevMessages) => {
+          return {
+            ...prevMessages,
+            [room.name]: [...previousMessages], // Update the messages state for this dm
+          };
+        });
+      });
     }
     return () => {
       // Clean up the event listeners
       socket.off("recieve_message");
+      socket.off("recieve_previous_messages");
     };
-  }, [socket, username, messages, setMessage]);
+  }, [socket, room.name, username, setMessages]);
 
   const onType = (e) => {
     let message = e.target.value;
@@ -74,10 +120,10 @@ function Chat({ username, room, messages, setMessages }) {
   };
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col flex-1 h-screen" ref={chatRef}>
       {room ? ( // Check if the room (recipient) is selected
-        <div className="flex flex-col flex-1">
-          <div className="flex-1">
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4">
             {/* Check if there are messages for the selected recipient */}
             {messages[room.name] ? (
               messages[room.name].map((msg, index) =>
@@ -102,7 +148,26 @@ function Chat({ username, room, messages, setMessages }) {
               // If no messages, display a message
               <p>No messages in this conversation</p>
             )}
+
+            {showScrollToBottom && (
+              <div className="flex justify-center">
+                <button
+                  className="scroll-to-bottom fixed bottom-28 text-indigo-500 border-2 border-indigo-500 px-4 py-auto animate-bounce 
+                  transition ease-in-out delay-3 hover:bg-indigo-500 hover:text-white duration-300"
+                  style={{ fontSize: "2rem", borderRadius: "50%" }}
+                  onClick={() => {
+                    bottomRef.current.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  ↓
+                </button>
+              </div>
+            )}
+
+            {/* Reference to the bottom of the chat */}
+            <div ref={bottomRef}></div>
           </div>
+
           <div className="p-4 pb-8 bg-gray-200 flex">
             <input
               type="text"
