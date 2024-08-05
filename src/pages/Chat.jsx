@@ -3,10 +3,9 @@ import { io } from "socket.io-client";
 import { useEffect, useState } from "react";
 import SideBar from "../components/SideBar";
 
-function Chat({ username, room }) {
+function Chat({ username, room, messages, setMessages }) {
   const socket = useSocket(); // Use custom hook to get the socket object from the context
   const [message, setMessage] = useState(""); // State for the message
-  const [messages, setMessages] = useState([]); // State for the messages
   const [users, setUsers] = useState([]); // State for the users
 
   // Listen for events when the component mounts
@@ -15,7 +14,7 @@ function Chat({ username, room }) {
       console.log("Chat component mounted. Socket:", socket);
 
       // Listen for received messages
-      socket.once("recieve_message", (messageData) => {
+      socket.on("recieve_message", (messageData) => {
         console.log("Message received:", messageData); // Log the received message
         let content = messageData.content;
         let sender = messageData.sender;
@@ -33,11 +32,17 @@ function Chat({ username, room }) {
         });
         console.log("Messages:", messages);
       });
+
+      socket.once("recieve_previous_messages", (messages) => {
+        console.log("Previous messages received:", messages);
+        setMessages(messages); // Update the messages state
+      });
     }
     return () => {
-      socket.off("recieve_message"); // Clean up the event listener
+      // Clean up the event listeners
+      socket.off("recieve_message");
     };
-  }, [socket, username, messages]);
+  }, [socket, username, messages, setMessage]);
 
   const onType = (e) => {
     let message = e.target.value;
@@ -69,7 +74,7 @@ function Chat({ username, room }) {
         ], // Update the messages state for this dm
       };
     });
-    socket.emit("dm", message, room.id, username); // Emit a message, FOR NOW ROOM IS JUST A USER
+    socket.emit("dm", message, room.id, room.username, username); // Emit a message, FOR NOW ROOM IS JUST A USER
     setMessage(""); // Clear the message input
   };
 

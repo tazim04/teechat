@@ -7,9 +7,22 @@ const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
+    unique: true, // Username must be unique
   },
-  rooms: [{ type: String, required: true }],
+  rooms: [
+    {
+      id: {
+        type: mongoose.Schema.Types.ObjectId, // Ensure room ID is an ObjectId
+        ref: "Room", // Reference to Room model if you need to populate later
+      },
+      name: String,
+      is_group: Boolean,
+      _id: false, // Prevents automatic creation of _id for each participant
+    },
+  ], // Reference to the rooms the user is in
 });
+
+userSchema.index({ username: 1 }); // Index the username field
 
 const User = mongoose.model("User", userSchema); // Create a model from the schema
 

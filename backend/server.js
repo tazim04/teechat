@@ -30,18 +30,42 @@ async function runMongoDB() {
 }
 runMongoDB().catch(console.dir); // Run the function and catch any errors
 
-// Functions for rooms collection
-async function getRoom(roomID) {
-  const room = await Rooms.findById(roomID); // Find the room by the ID
-  return room; // Return the room
-}
+// Add message to room in the database
 async function addMessage(roomID, message) {
   const room = await Rooms.findById(roomID); // Find the room by the ID
   await room.updateOne({ $push: { messages: message } }); // Add the message to the room
 }
 
-let users = []; // Array to store users
+// Find room by participants - direct messaging
+async function findContact(sender, recipient) {
+  console.log("(findContact) Sender:", sender);
+  let sender_rooms = sender.rooms; // Get the rooms for the sender
 
+  for (let room of sender_rooms) {
+    if (room.name === recipient.username && room.is_group === false) {
+      const roomData = await Rooms.findById(room.id); // Find the room by ID
+      return roomData; // Return the room
+    }
+  }
+  return null; // Return null if the room is not found
+}
+
+// // Get all rooms for a user
+// async function getUserRooms(user) {
+//   let rooms = [];
+//   let user_rooms = user.rooms; // Get the rooms for the user
+//   console.log("User rooms:", user_rooms);
+//   for (let room of user_rooms) {
+//     let roomData = await Rooms.findById(room); // Find the room by ID and populate the participants
+//     rooms.push(roomData.messages); // Add the messages to the array
+//   }
+//   return rooms; // Return the messages
+// }
+
+let users = []; // Array to store users
+let rooms = []; // Array to store rooms
+
+// Set io with cors options
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173",
@@ -53,9 +77,10 @@ const io = new Server(server, {
 // Listen for a "connection" event
 io.on("connection", (socket) => {
   socket.once("join_server", async (username) => {
-    // await Users.create({ username: "test" }); // Create a new user
+    const user = await Users.findOne({ username: username }); // Get user from database
+    console.log(user);
 
-    const user = await Users.findOne({ username: username });
+    // Check if the user exists
     if (!user) {
       console.log("User not found:", username);
       return;
@@ -63,23 +88,17 @@ io.on("connection", (socket) => {
 
     console.log("User joined server", username); // Log the user joining the server
 
-    const allRooms = user.rooms; // Get all the rooms the user is in
-    console.log(`User ${username} is in rooms:`, allRooms); // Log the rooms the user is in
-    console.log(`Room ${allRooms[0]}: `, await getRoom(allRooms[0])); // Log the first room
+    // User object with socket ID to store in the array
+    const user_withSocketID = {
+      id: user._id,
+      username: user.username,
+      rooms: user.rooms,
+      socket_id: socket.id,
+    };
+    users.push(user_withSocketID); // Add the user to the array
 
     // Emit the list of users to the new user
-    socket.emit("update_user_list", Array.from(users.values()));
-
-    // Broadcast the updated user list to all users
-    io.emit("update_user_list", Array.from(users.values()));
-
-    const user_inServer = {
-      username: user.username,
-      id: socket.id,
-    };
-    io.emit("user_join", `User joined: ${user.username}`); // Emit a message to all clients
-
-    users.push(user_inServer); // Add the user to the array
+    socket.emit("update_user_list", users);
 
     // Emit the updated list to all users
     io.emit("update_user_list", users);
@@ -87,66 +106,51 @@ io.on("connection", (socket) => {
     console.log(users);
   });
 
-  // NOT IMPLEMENTED YET - ROOMS
-  // socket.on("join_room", (room, callBack) => {
-  //   socket.join(room); // Join the room
-  //   callBack(messages[room]); // Get the previous messages in the room
-  //   io.to(room).emit("Room joined"); // Emit a message to the room
+  // socket.on("get_previous_messages", async (username, other_user) => {
+  //   const user = await Users.findOne({ username: username }); // Find the user by username
+  //   const other = await Users.findOne({ username: other_user }); // Find the other user by username
+
+  //   let room = findRoom(user, other); // Find the room between the user and other user
+
+  //   let messages = room.messages; // Get the messages from the room
+
+  //   console.log("Previous messages ():", messages);
+
+  //   io.to(socket.id).emit("recieve_previous_messages", messages); // Emit previous messages to the user
   // });
 
-  // socket.on("message", (content, sender, to, isRoom) => {
-  //   console.log("Message received:", content, sender, to, isRoom); // Log the message
-  //   // check if the message is for a room (group chat) or a user (dm)
-  //   if (isRoom) {
-  //     const messageData = {
-  //       content,
-  //       roomName: to, // Set the room name to the recipient, a room/group chat
-  //       sender,
-  //     };
-  //     socket.to(to).emit("recieve_message", messageData); // Emit the message to the room
-  //     console.log(messageData);
-  //   } else {
-  //     console.log("Not a room, sending to " + to);
-  //     const messageData = {
-  //       content,
-  //       roomName: to, // Set the room name to the sender
-  //       sender,
-  //     };
-  //     socket.to(to).emit("recieve_message", messageData); // Emit the message to the recipient
-  //     console.log(messageData);
-  //   }
-  //   // if (messages[roomName]) {
-  //   //   messages[roomName].push({ sender, content }); // Add the message to the list of messages
-  //   // }
-  // });
+  // NOT IMPLEMENTED YET - ROOMS
 
   // Listen for a "dm" event, direct messaging
-  socket.on("dm", async (content, to, sender) => {
-    console.log("Message received:", content, to); // Log the message
+  socket.on("dm", async (content, to_socket_id, to, from) => {
+    console.log("Message received:", content, from); // Log the message
 
-    const messageData = {
-      content,
-      to,
-      sender,
-    };
+    const sender = await Users.findOne({ username: from }); // Find the sender by username
+    const recipient = await Users.findOne({ username: to }); // Find the recipient by username
 
-    const room = await Rooms.findOne({ participants: { $all: [to, sender] } }); // Find the room by the participants
-
-    if (!room) {
-      console.log("Room not found:", to, sender);
+    if (!sender || !recipient) {
+      console.log("User not found:", to, sender);
       return;
-      // IMPLEMENT ROOM CREATION
     }
 
-    addMessage(room._id, messageData); // Add the message to the room
+    let recipient_socket_id = users.find(
+      (recipient) => recipient.username === to
+    ).socket_id; // Find the recipient's socket ID
 
-    await msg.save().then(() => {
-      socket.to(to).emit("recieve_message", messageData); // Emit the message to the recipient
-      console.log(messageData);
-      // if (messages[roomName]) {
-      //   messages[roomName].push({ sender, content }); // Add the message to the list of messages
-      // }
-    });
+    let room = await findContact(sender, recipient); // Find the room between the sender and recipient
+    console.log("(dm event)Room:", room);
+
+    let room_id = room._id; // Get the room ID
+    console.log("(dm event)Room ID:", room_id);
+
+    const messageData = {
+      sender: sender.username,
+      content,
+      timestamp: new Date(),
+    };
+
+    addMessage(room_id, messageData); // Add the message to the room
+    io.to(to_socket_id).emit("recieve_message", messageData); // Emit the message to the recipient's socket.id
   });
 
   socket.on("disconnect", () => {

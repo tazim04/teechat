@@ -6,6 +6,7 @@ import { useSocket } from "../context/SocketContext";
 function MainPage({ username }) {
   const socket = useSocket(); // Use custom hook to get the socket object from the context
   const [room, setRoom] = useState(""); // State for the room
+  const [messages, setMessages] = useState([]); // State for the messages
 
   // Listen for events when the component mounts
   useEffect(() => {
@@ -23,8 +24,19 @@ function MainPage({ username }) {
 
   return (
     <div className="flex h-screen">
-      <SideBar username={username} room={room} setRoom={setRoom} />
-      <Chat username={username} room={room} />
+      <SideBar
+        username={username}
+        room={room}
+        setRoom={setRoom}
+        messages={messages}
+        setMessages={setMessages}
+      />
+      <Chat
+        username={username}
+        room={room}
+        messages={messages}
+        setMessages={setMessages}
+      />
     </div>
   );
 }
