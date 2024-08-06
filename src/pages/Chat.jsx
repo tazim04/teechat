@@ -3,6 +3,7 @@ import { io } from "socket.io-client";
 import { useEffect, useState, useRef } from "react";
 import SideBar from "../components/SideBar";
 import { set } from "mongoose";
+import { format, isToday } from "date-fns";
 
 function Chat({ username, room, messages, setMessages }) {
   const socket = useSocket(); // Use custom hook to get the socket object from the context
@@ -82,8 +83,11 @@ function Chat({ username, room, messages, setMessages }) {
     }
     return () => {
       // Clean up the event listeners
-      socket.off("recieve_message");
-      socket.off("recieve_previous_messages");
+
+      if (socket) {
+        socket.off("recieve_message");
+        socket.off("recieve_previous_messages");
+      }
     };
   }, [socket, room.name, username, setMessages]);
 
@@ -108,6 +112,7 @@ function Chat({ username, room, messages, setMessages }) {
     let messageContent = {
       content: message,
       sender: username,
+      timestamp: Date.now(),
     };
     setMessages((prevMessages) => {
       return {
@@ -119,6 +124,16 @@ function Chat({ username, room, messages, setMessages }) {
     setMessage(""); // Clear the message input
   };
 
+  const getTimeStamp = (timestamp) => {
+    const date = new Date(timestamp);
+
+    if (isToday) {
+      return format(date, "hh:mm a"); // Format the timestamp to human-readable time
+    } else {
+      return format(date, "MMM d, yyyy hh:mm a"); // Include the date if the message is not from today
+    }
+  };
+
   return (
     <div className="flex flex-col flex-1 h-screen" ref={chatRef}>
       {room ? ( // Check if the room (recipient) is selected
@@ -127,20 +142,33 @@ function Chat({ username, room, messages, setMessages }) {
             {/* Check if there are messages for the selected recipient */}
             {messages[room.name] ? (
               messages[room.name].map((msg, index) =>
-                // If message from user align right, else align left
                 msg.sender === username ? (
-                  <div key={index} className="p-4 text-right">
-                    <b>
-                      <p>{msg.sender}</p>
-                    </b>
-                    <p>{msg.content}</p>
+                  // Message from the current user
+                  <div className="flex justify-end mt-5" key={index}>
+                    <div>
+                      <div className="ps-4 pe-24 pb-4 pt-2 inline-block max-w-[320px] border-gray-200 bg-indigo-100 rounded-s-xl rounded-se-xl">
+                        <p className="font-bold">{msg.sender}</p>
+                        <p>{msg.content}</p>
+                      </div>
+                      <div className="text-sm text-right pe-1">
+                        {getTimeStamp(msg.timestamp)}
+                      </div>
+                    </div>
                   </div>
                 ) : (
-                  <div key={index} className="p-4 text-left">
-                    <b>
-                      <p>{msg.sender}</p>
-                    </b>
-                    <p>{msg.content}</p>
+                  // Message from the recipient
+                  <div className="flex justify-start mt-5" key={index}>
+                    <div>
+                      <div className="ps-4 pe-24 pb-4 pt-2 inline-block max-w-[320px] border-gray-200 bg-gray-100 rounded-e-xl rounded-t-xl">
+                        <div style={{ fontWeight: "bold" }}>
+                          <p>{msg.sender}</p>
+                        </div>
+                        <p>{msg.content}</p>
+                      </div>
+                      <div className="text-sm ps-1">
+                        {getTimeStamp(msg.timestamp)}
+                      </div>
+                    </div>
                   </div>
                 )
               )
@@ -149,12 +177,13 @@ function Chat({ username, room, messages, setMessages }) {
               <p>No messages in this conversation</p>
             )}
 
+            {/* Scroll to bottom button */}
             {showScrollToBottom && (
               <div className="flex justify-center">
                 <button
-                  className="scroll-to-bottom fixed bottom-28 text-indigo-500 border-2 border-indigo-500 px-4 py-auto animate-bounce 
+                  className="scroll-to-bottom fixed bottom-28 text-indigo-500 border-2 border-indigo-500 px-3 py-auto animate-bounce 
                   transition ease-in-out delay-3 hover:bg-indigo-500 hover:text-white duration-300"
-                  style={{ fontSize: "2rem", borderRadius: "50%" }}
+                  style={{ fontSize: "1.5rem", borderRadius: "50%" }}
                   onClick={() => {
                     bottomRef.current.scrollIntoView({ behavior: "smooth" });
                   }}

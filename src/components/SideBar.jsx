@@ -19,8 +19,10 @@ function SideBar({ username, room, setRoom, messages, setMessages }) {
       });
     }
     return () => {
-      // Clean up the event listeners
-      socket.off("update_contacts");
+      if (socket) {
+        // Clean up the event listeners
+        socket.off("update_contacts");
+      }
     };
   }, [socket]);
 
