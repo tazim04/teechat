@@ -1,0 +1,48 @@
+.send-animation {
+  animation: slide-out 0.3s forwards, slide-in 0.3s 0.3s forwards;
+}
+
+@keyframes slide-out {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(150%);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0; /* Hide the image after sliding out */
+  }
+}
+@keyframes slide-in {
+  0% {
+    transform: translateX(-150%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.empty-message-animation {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-5px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}

@@ -1,3 +1,4 @@
+import { is } from "date-fns/locale";
 import mongoose from "mongoose";
 
 // UPDATE THIS SCHEME TO INCLUDE PASSWORD, EMAIL, ETC.
@@ -20,6 +21,8 @@ const userSchema = new mongoose.Schema({
       _id: false, // Prevents automatic creation of _id for each participant
     },
   ], // Reference to the rooms the user is in
+  password: { type: String, required: true }, // Password field
+  is_online: { type: Boolean, default: false }, // Set default value for is_online
 });
 
 userSchema.index({ username: 1 }); // Index the username field
