@@ -153,7 +153,7 @@ function Chat({ username, room, messages, setMessages }) {
                   // Message from the current user
                   <div className="flex justify-end mt-5" key={index}>
                     <div>
-                      <div className="bg-gradient-to-r from-purple-600 from-10% to-indigo-500 ps-4 pe-24 pb-4 pt-2 inline-block max-w-[320px] border-gray-200 text-white rounded-s-xl rounded-se-xl">
+                      <div className="bg-gradient-to-r from-purple-600 from-10% to-indigo-500 ps-4 pe-5 pb-4 pt-2 inline-block max-w-[400px] border-gray-200 text-white rounded-s-xl rounded-se-xl">
                         <p className="font-bold">{msg.sender}</p>
                         <p>{msg.content}</p>
                       </div>
@@ -181,14 +181,16 @@ function Chat({ username, room, messages, setMessages }) {
               )
             ) : (
               // If no messages, display a message
-              <p>No messages in this conversation</p>
+              <p className="flex justify-center my-10">
+                No messages in this conversation
+              </p>
             )}
 
             {/* Scroll to bottom button */}
             {showScrollToBottom && (
               <div className="flex justify-center">
                 <button
-                  className="scroll-to-bottom fixed bottom-28 text-purple-500 border-2 border-purple-500 px-3 py-auto animate-bounce 
+                  className="scroll-to-bottom fixed bottom-28 text-purple-500 border-2 border-purple-500 px-2 animate-bounce 
                   transition ease-in-out delay-3 hover:bg-purple-500 hover:text-white duration-300"
                   style={{ fontSize: "1.5rem", borderRadius: "50%" }}
                   onClick={() => {
