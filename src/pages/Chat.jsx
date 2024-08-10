@@ -3,6 +3,7 @@ import ChatBar from "../components/ChatBar";
 import { io } from "socket.io-client";
 import { useEffect, useState, useRef } from "react";
 import SideBar from "../components/SideBar";
+import AvatarIcon from "../components/AvatarIcon";
 import { set } from "mongoose";
 import { format, isToday } from "date-fns";
 import "./stylesheets/Chat.css";
@@ -15,6 +16,7 @@ function Chat({ username, room, messages, setMessages }) {
   const [atBottom, setAtBottom] = useState(true); // State for the scroll position
   const [sendAnimation, setSendAnimation] = useState(false); // State for the send animation
   const [emptyMessageAnimation, setEmptyMessageAnimation] = useState(false); // State for the empty message animation
+  const [hoverMessage, setHoverMessage] = useState(false); // State for the hover message
 
   const bottomRef = useRef(); // Reference to the bottom of the chat
 
@@ -131,6 +133,7 @@ function Chat({ username, room, messages, setMessages }) {
   };
 
   const getTimeStamp = (timestamp) => {
+    console.log("Timestamp:", timestamp);
     const date = new Date(timestamp);
 
     if (isToday(date)) {
@@ -138,6 +141,13 @@ function Chat({ username, room, messages, setMessages }) {
     } else {
       return format(date, "MMM d, yyyy - hh:mm a"); // Include the date if the message is not from today
     }
+  };
+
+  const handleMessageHover = (index) => {
+    setHoverMessage(index); // Set the hover message state to true
+  };
+  const handleMessageLeave = () => {
+    setHoverMessage(null); // Reset the hover message state
   };
 
   return (
@@ -148,42 +158,88 @@ function Chat({ username, room, messages, setMessages }) {
           <div className="flex-1 overflow-y-auto p-4">
             {/* Check if there are messages for the selected recipient */}
             {messages[room.name] ? (
-              messages[room.name].map((msg, index) =>
-                msg.sender === username ? (
-                  // Message from the current user
-                  <div className="flex justify-end mt-5" key={index}>
-                    <div>
-                      <div className="bg-gradient-to-r from-purple-600 from-10% to-indigo-500 ps-4 pe-5 pb-4 pt-2 inline-block max-w-[400px] border-gray-200 text-white rounded-s-xl rounded-se-xl">
-                        <p className="font-bold">{msg.sender}</p>
-                        <p>{msg.content}</p>
-                      </div>
-                      <div className="text-sm text-right pe-1">
-                        {getTimeStamp(msg.timestamp)}
+              messages[room.name].map((msg, index, arr) => {
+                const isCurrentUser = msg.sender === username; // Check if the message is from the current user
+                const currentMessageTime = new Date(msg.timestamp); // Get the current message time
+                const prevMessageTime = new Date(arr[index - 1]?.timestamp); // Get the previous message time
+                const prevSender = arr[index - 1]?.sender; // Get the previous sender
+
+                const timeDifference = currentMessageTime - prevMessageTime; // Calculate the time difference between the current and previous message
+
+                const showAvatar =
+                  index === 0 ||
+                  timeDifference > 60000 ||
+                  prevSender !== msg.sender; // Check if the avatar should be displayed
+
+                return isCurrentUser ? (
+                  <div className="flex justify-end" key={index}>
+                    <div className="flex items-start gap-2">
+                      <div
+                        className="flex flex-row items-end"
+                        onMouseEnter={() => handleMessageHover(index)}
+                        onMouseLeave={handleMessageLeave}
+                      >
+                        <div
+                          className={`text-sm pr-1 mx-2 transition-opacity ease-in-out delay-75 ${
+                            hoverMessage === index ? "opacity-100" : "opacity-0"
+                          }`}
+                        >
+                          {getTimeStamp(msg.timestamp)}
+                        </div>
+                        <div
+                          className={`bg-gradient-to-r from-purple-600 to-indigo-500 px-3 py-2 me-2 border-gray-200 text-white rounded-s-xl inline-block max-w-[320px] min-w-[0] break-words
+                          ${
+                            index === 0 ||
+                            timeDifference > 60000 ||
+                            prevSender !== msg.sender
+                              ? "mt-3 rounded-br-xl"
+                              : "mt-1 rounded-r-xl"
+                          }
+                          `}
+                        >
+                          <p>{msg.content}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  // Message from the recipient
-                  <div className="flex justify-start mt-5" key={index}>
-                    <div>
-                      <div className="ps-4 pe-24 pb-4 pt-2 inline-block max-w-[320px] border-gray-200 bg-gray-100 rounded-e-xl rounded-t-xl">
-                        <div style={{ fontWeight: "bold" }}>
-                          <p>{msg.sender}</p>
+                  <div className="flex justify-start" key={index}>
+                    {showAvatar ? (
+                      <AvatarIcon username={msg.sender} />
+                    ) : (
+                      <div className="w-10 h-10 me-3"></div> // Placeholder for the avatar
+                    )}
+                    <div className="flex items-start gap-2">
+                      <div
+                        className="flex flex-row items-end"
+                        onMouseEnter={() => handleMessageHover(index)}
+                        onMouseLeave={handleMessageLeave}
+                      >
+                        <div
+                          className={`bg-gray-100 px-3 py-2 border-gray-200 text-black rounded-e-xl  inline-block max-w-[320px] min-w-[0] break-words ${
+                            index === 0 ||
+                            timeDifference > 60000 ||
+                            prevSender !== msg.sender
+                              ? "mt-3 rounded-bl-xl"
+                              : " mt-1 rounded-s-xl"
+                          }`}
+                        >
+                          <p>{msg.content}</p>
                         </div>
-                        <p style={{ fontWeight: "400" }}>{msg.content}</p>
-                      </div>
-                      <div className="text-sm ps-1">
-                        {getTimeStamp(msg.timestamp)}
+                        <div
+                          className={`text-sm pr-1 mx-2 transition-opacity ease-in-out delay-75 ${
+                            hoverMessage === index ? "opacity-100" : "opacity-0"
+                          }`}
+                        >
+                          {getTimeStamp(msg.timestamp)}
+                        </div>
                       </div>
                     </div>
                   </div>
-                )
-              )
+                );
+              })
             ) : (
-              // If no messages, display a message
-              <p className="flex justify-center my-10">
-                No messages in this conversation
-              </p>
+              <p>No messages in this conversation</p>
             )}
 
             {/* Scroll to bottom button */}
@@ -205,23 +261,23 @@ function Chat({ username, room, messages, setMessages }) {
             {/* Reference to the bottom of the chat */}
             <div ref={bottomRef}></div>
           </div>
-          <div className="p-4 pb-8 bg-gray-200 flex">
+          <div className=" px-2 mx-3 mb-4 mt-5 border-gray-300 rounded-2xl border-2 flex">
             <input
               type="text"
               placeholder={`Message ${room.name}`}
-              className="w-full h-12 focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-4 bg-white rounded-md py-2"
+              className="w-full h-12 font-medium focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-4 bg-white rounded-md py-2"
               value={message}
               onChange={onType}
               onKeyDown={(e) => e.key === "Enter" && send()}
             />
             <button
-              className="bg-purple-500 text-white rounded-md px-2 h-12 ms-5 hover:bg-purple-400 overflow-hidden relative"
+              className="bg-purple-500 text-white rounded-xl px-3 h-9 ms-5 my-auto hover:bg-purple-400 overflow-hidden relative"
               onClick={send}
             >
               <img
                 src="./send_icon.png"
                 alt=""
-                className={`h-auto w-8 mx-2 ${
+                className={`h-auto w-6 mx-2 ${
                   sendAnimation ? "send-animation" : ""
                 } ${emptyMessageAnimation ? "empty-message-animation" : ""}`}
               />
