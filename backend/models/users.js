@@ -1,10 +1,9 @@
 import { is } from "date-fns/locale";
 import mongoose from "mongoose";
 
-// UPDATE THIS SCHEME TO INCLUDE PASSWORD, EMAIL, ETC.
-
 // Create a new schema for users
 const userSchema = new mongoose.Schema({
+  email: { type: String, required: true },
   username: {
     type: String,
     required: true,
@@ -22,7 +21,6 @@ const userSchema = new mongoose.Schema({
     },
   ], // Reference to the rooms the user is in
   password: { type: String, required: true }, // Password field
-  is_online: { type: Boolean, default: false }, // Set default value for is_online
 });
 
 userSchema.index({ username: 1 }); // Index the username field

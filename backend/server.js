@@ -157,6 +157,31 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("create_account", async (email, username, password) => {
+    console.log(
+      "Creating account for:",
+      username +
+        " with the following data: email: " +
+        email +
+        " password: " +
+        password
+    );
+    const user = new Users({
+      email,
+      username,
+      rooms: [],
+      password,
+    });
+    try {
+      await user.save();
+      console.log("Account created for:", username);
+      socket.emit("account_created", username, password);
+    } catch (error) {
+      console.log("Error creating account:", error);
+      socket.emit("account_created", null);
+    }
+  });
+
   socket.on("disconnect", () => {
     const username = Object.keys(socket_ids).find(
       (key) => socket_ids[key] === socket.id

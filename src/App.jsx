@@ -33,7 +33,15 @@ function App() {
                 <SignIn setUsername={setUsername} setPassword={setPassword} />
               }
             />
-            <Route path="/create-account" element={<CreateAccount />} />
+            <Route
+              path="/create-account"
+              element={
+                <CreateAccount
+                  setUsername={setUsername}
+                  setPassword={setPassword}
+                />
+              }
+            />
             <Route path="/main" element={<MainPage username={username} />} />
           </Routes>
         </Router>

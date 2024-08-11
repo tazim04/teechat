@@ -18,15 +18,6 @@ function SignIn({ setUsername, setPassword }) {
 
   const socket = useSocket(); // Use custom hook to get the socket object from the context
 
-  // const onUserNameChange = (e) => {
-  //   console.log("User name change:", e.target.value);
-  //   setUsernameContent(e.target.value); // Update the state with the content in the input field
-  // };
-  // const onPasswordChange = (e) => {
-  //   console.log("Password change:", e.target.value);
-  //   setPasswordContent(e.target.value); // Update the state with the content in the input field
-  // };
-
   useEffect(() => {
     // Set up the sign-in response listener once
     if (!socket) return;
@@ -125,7 +116,7 @@ function SignIn({ setUsername, setPassword }) {
           </div>
         </form>
 
-        <h4 className="mt-6 text-center leading-9 tracking-tight text-gray-900">
+        <h5 className="mt-6 text-center leading-9 tracking-tight text-gray-900">
           Don't have an account? &nbsp;
           <div
             className="inline-flex hover:cursor-pointer text-purple-600 hover:text-purple-400 font-semibold"
@@ -133,7 +124,7 @@ function SignIn({ setUsername, setPassword }) {
           >
             Create an account.
           </div>
-        </h4>
+        </h5>
       </div>
     </div>
   );
