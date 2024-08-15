@@ -10,14 +10,16 @@ const CreateAccount = ({ setUsername, setPassword }) => {
   const socket = useSocket();
 
   useEffect(() => {
-    const handleAccountCreated = (username, password) => {
-      if (username && password) {
+    const handleAccountCreated = (response) => {
+      if (response.username && response.username) {
         console.log("Account created successfully");
-        setUsername(username);
-        setPassword(password);
+        setUsername(response.username);
+        setPassword(response.username);
         navigate("/main");
-      } else {
-        console.log("Account creation failed");
+      } else if (response === "existing email") {
+        alert("Email already exists");
+      } else if (response === "existing username") {
+        alert("Username already exists");
       }
     };
 

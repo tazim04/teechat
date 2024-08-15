@@ -166,20 +166,45 @@ io.on("connection", (socket) => {
         " password: " +
         password
     );
+    const existing_email = await Users.findOne({ email });
+    const existing_username = await Users.findOne({ username });
+    if (existing_email) {
+      const response = "existing email";
+      console.log("Email already exists");
+      socket.emit("account_created", response);
+      return;
+    }
+    if (existing_username) {
+      const response = "existing username";
+      console.log("Username already exists");
+      socket.emit("account_created", response);
+      return;
+    }
     const user = new Users({
       email,
       username,
       rooms: [],
       password,
     });
+    const response = { username, password };
     try {
       await user.save();
       console.log("Account created for:", username);
-      socket.emit("account_created", username, password);
+      socket.emit("account_created", response);
     } catch (error) {
       console.log("Error creating account:", error);
       socket.emit("account_created", null);
     }
+  });
+
+  socket.on("fetch_all_users", async () => {
+    const users = await Users.find({});
+    let allUsers = [];
+    users.forEach((user) => {
+      allUsers.push(user.username);
+    });
+    console.log("All users:", allUsers);
+    io.emit("receive_all_users", allUsers);
   });
 
   socket.on("disconnect", () => {
