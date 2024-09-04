@@ -39,10 +39,10 @@ function Chat({ username, room, messages, setMessages }) {
   // Scroll to the bottom of the chat when the room is opened or a new message is sent
   useEffect(() => {
     if (bottomRef.current) {
-      console.log("Scrolling to the bottom of the chat...", bottomRef.current);
+      // console.log("Scrolling to the bottom of the chat...", bottomRef.current);
       bottomRef.current.scrollIntoView({ behavior: "auto" });
     } else {
-      console.log("bottomRef.current is null");
+      // console.log("bottomRef.current is null");
     }
   }, [messages, room.name]);
 
@@ -51,7 +51,7 @@ function Chat({ username, room, messages, setMessages }) {
     if (socket && socket.connected) {
       // Listen for received messages -  NEED TO IMPLEMENT GROUP CHAT FUNCTIONALITY
       socket.on("recieve_message", (messageData) => {
-        console.log("Message received:", messageData); // Log the received message
+        // console.log("Message received:", messageData); // Log the received message
         let content = messageData.content;
         let sender = messageData.sender;
         let timestamp = messageData.timestamp;
@@ -103,14 +103,14 @@ function Chat({ username, room, messages, setMessages }) {
       }, 500);
       return; // If the message is empty, do nothing
     } // If the message is empty, do nothing
-    console.log(
-      "Sending message: " +
-        message +
-        " to room: " +
-        room.name +
-        " from user: " +
-        username
-    );
+    // console.log(
+    //   "Sending message: " +
+    //     message +
+    //     " to room: " +
+    //     room.name +
+    //     " from user: " +
+    //     username
+    // );
 
     let messageContent = {
       content: message,
@@ -133,7 +133,7 @@ function Chat({ username, room, messages, setMessages }) {
   };
 
   const getTimeStamp = (timestamp) => {
-    console.log("Timestamp:", timestamp);
+    // console.log("Timestamp:", timestamp);
     const date = new Date(timestamp);
 
     if (isToday(date)) {
@@ -246,9 +246,8 @@ function Chat({ username, room, messages, setMessages }) {
             {showScrollToBottom && (
               <div className="flex justify-center">
                 <button
-                  className="scroll-to-bottom fixed bottom-28 text-purple-500 border-2 border-purple-500 px-2 animate-bounce 
-                  transition ease-in-out delay-3 hover:bg-purple-500 hover:text-white duration-300"
-                  style={{ fontSize: "1.5rem", borderRadius: "50%" }}
+                  className="scroll-to-bottom text-[1.5rem] rounded-full fixed bottom-28 text-purple-500 border-2 border-purple-500 w-10 h-10 flex items-center justify-center animate-bounce 
+  transition ease-in-out delay-3 hover:bg-purple-500 hover:text-white duration-300"
                   onClick={() => {
                     bottomRef.current.scrollIntoView({ behavior: "smooth" });
                   }}

@@ -15,7 +15,7 @@ function MainPage({ username }) {
   useEffect(() => {
     if (socket && socket.connected) {
       socket.emit("join_server", username); // Emit a "join_server" event
-      socket.emit("fetch_rooms", username); // Emit a "fetch_rooms" event
+      socket.emit("fetch_rooms", username); // Emit a "fetch_rooms" event to get the rooms for the user
 
       // Listen for events from the server and log them
       socket.onAny((event, ...args) => {

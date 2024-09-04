@@ -20,15 +20,6 @@ const userSchema = new mongoose.Schema({
       _id: false, // Prevents automatic creation of _id for each participant
     },
   ], // Reference to the rooms the user is in
-  friends: [
-    {
-      id: mongoose.Schema.Types.ObjectId, // ObjectId for the friend
-      username: {
-        type: String,
-        required: true,
-      },
-    },
-  ], // Reference to the friends the user
   password: { type: String, required: true }, // Password field
 });
 

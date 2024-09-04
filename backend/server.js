@@ -5,6 +5,7 @@ import cors from "cors";
 import mongoose, { set } from "mongoose";
 import Rooms from "./models/rooms.js";
 import Users from "./models/users.js";
+import { create } from "node:domain";
 
 const app = express();
 const server = createServer(app);
@@ -53,6 +54,38 @@ async function find_room_in_db(sender, recipient) {
   return null;
 }
 
+async function create_room(sender, recipient) {
+  // check if the room already exists
+  const existing_room = await find_room_in_db(sender, recipient);
+  if (existing_room) {
+    console.log(
+      "Room already exists between:",
+      sender.username,
+      recipient.username
+    );
+    return;
+  }
+
+  // initialize the room
+  const room = new Rooms({
+    participants: [sender, recipient],
+    messages: [],
+  });
+
+  // save the room to the database
+  await room.save();
+
+  // add the room to both sender and recipients room list
+  await sender.updateOne({
+    $push: {
+      rooms: { id: room._id, name: recipient.username, is_group: false },
+    },
+  });
+  await recipient.updateOne({
+    $push: { rooms: { id: room._id, name: sender.username, is_group: false } },
+  });
+}
+
 let socket_ids = {}; // Dictionary to store username as key and socket_id as value
 let messages_cache = {}; // Implement caching properly
 
@@ -96,9 +129,14 @@ io.on("connection", (socket) => {
 
   socket.on("fetch_rooms", async (username) => {
     const user = await Users.findOne({ username: username });
-    let rooms = user.rooms;
-    console.log("Fetching rooms: ", rooms);
-    socket.emit("receive_rooms", rooms);
+
+    try {
+      let rooms = user.rooms;
+      console.log("Fetching rooms: ", rooms);
+      socket.emit("receive_rooms", rooms);
+    } catch (error) {
+      console.log("There was an error fetching rooms:", error);
+    }
   });
 
   socket.on("get_previous_messages", async (room_id) => {
@@ -122,6 +160,48 @@ io.on("connection", (socket) => {
     io.emit("receive_online_users", Object.keys(socket_ids)); // Emit the list of online users
   });
 
+  // Create a room with a user, no group messaging yet
+  socket.on("create_room", async (user, recipient) => {
+    console.log("Creating room with:", user, recipient);
+
+    const user_db = await Users.findOne({ username: user }); // Find the user in the database
+    const recipient_db = await Users.findOne({ username: recipient }); // Find the recipient in the database
+
+    // Check if the user and recipient exist, shouldn't happen
+    if (!user_db || !recipient_db) {
+      console.log("User not found:", user, recipient);
+      return;
+    }
+
+    await create_room(user_db, recipient_db); // Create a room with the user and recipient in the database and save it to each user
+
+    const user_socket_id = socket_ids[user]; // Get the user's socket ID from the dictionary
+    const recipient_socket_id = socket_ids[recipient.username]; // Get the recipient's socket ID from the dictionary
+
+    // Fetch the updated room lists for both users
+    const updatedUserRooms = await Users.findById(user_db._id).select("rooms");
+    const updatedRecipientRooms = await Users.findById(recipient_db._id).select(
+      "rooms"
+    );
+
+    // Emit the updated room lists to both users
+    io.to(socket_ids[user]).emit("receive_rooms", updatedUserRooms.rooms);
+    io.to(socket_ids[recipient]).emit(
+      "receive_rooms",
+      updatedRecipientRooms.rooms
+    );
+
+    console.log(`Updated rooms for ${user}:`, updatedUserRooms.rooms);
+    console.log(`Updated rooms for ${recipient}:`, updatedRecipientRooms.rooms);
+
+    // Emit a message to the recipient to notify them of the new room
+    io.to(recipient_socket_id).emit(
+      "recieve_message",
+      `${user} has created a room with you!`
+    );
+  });
+
+  // Send a direct message to a user
   socket.on("dm", async (content, room_id, to, from, is_group) => {
     console.log("Message received:", content, "from", from);
 
@@ -166,8 +246,11 @@ io.on("connection", (socket) => {
         " password: " +
         password
     );
+
     const existing_email = await Users.findOne({ email });
     const existing_username = await Users.findOne({ username });
+
+    // Check if the email or username already exists
     if (existing_email) {
       const response = "existing email";
       console.log("Email already exists");
@@ -180,6 +263,8 @@ io.on("connection", (socket) => {
       socket.emit("account_created", response);
       return;
     }
+
+    // Create a new user with the provided data and save it to the database if it doesn't already exist
     const user = new Users({
       email,
       username,
