@@ -4,10 +4,13 @@ import { Form } from "react-router-dom";
 import Input from "../components/Input";
 import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
+import { usernameContext } from "../App";
 
-const CreateAccount = ({ setUsername, setPassword }) => {
+const CreateAccount = ({ setPassword }) => {
   const navigate = useNavigate();
   const socket = useSocket();
+
+  const { setUsername } = useContext(usernameContext);
 
   useEffect(() => {
     const handleAccountCreated = (response) => {

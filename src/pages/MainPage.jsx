@@ -1,15 +1,20 @@
 import Chat from "./Chat";
 import SideBar from "../components/SideBar";
 import { useEffect, useState, createContext, useContext } from "react";
+
+import { usePalette } from "../context/PaletteContext";
 import { useSocket } from "../context/SocketContext";
 import { onlineUsersContext } from "../App";
+import { usernameContext } from "../App";
 
-function MainPage({ username }) {
-  const socket = useSocket(); // Use custom hook to get the socket object from the context
+function MainPage() {
   const [room, setRoom] = useState(""); // State for the room
   const [messages, setMessages] = useState([]); // State for the messages
 
   const { onlineUsers, setOnlineUsers } = useContext(onlineUsersContext); // Get the online users from the context
+  const socket = useSocket(); // Use custom hook to get the socket object from the context
+  const { togglePalette } = usePalette(); // Destructure palette from usePalette
+  const { username } = useContext(usernameContext); // Get the username from the context
 
   // Listen for events when the component mounts
   useEffect(() => {

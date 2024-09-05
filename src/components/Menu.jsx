@@ -1,20 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import CreateRoom from "./menu/CreateRoom";
 import ThemeMenu from "./menu/ThemeMenu";
 import LogoutMenu from "./menu/LogoutMenu";
+
+// context imports
 import { useSocket } from "../context/SocketContext";
+import { usePalette } from "../context/PaletteContext";
 
 function Menu({
   showMenu,
   setShowMenu,
   createRoomOpen,
-  allUsers,
   username,
   rooms,
   openChat,
 }) {
   const [currentMenu, setCurrentMenu] = useState("createRoom");
+
   const socket = useSocket(); // Use custom hook to get the socket object from the context
+  const { palette } = usePalette(); // Destructure palette from usePalette
 
   const openMenu = (menu) => {
     setCurrentMenu(menu);
@@ -22,8 +26,8 @@ function Menu({
 
   return (
     <div
-      className="absolute left-[20.5rem] bg-indigo-400 w-72 h-[25rem] mx-auto mt-3 rounded-xl opacity-90 shadow-md transition-all ease-in-out duration-300
-    hover:shadow-2xl hover:opacity-100"
+      className={`absolute left-[20.5rem] ${palette.menu} w-72 h-[25rem] mx-auto mt-3 rounded-xl opacity-90 shadow-md transition-all ease-in-out duration-300
+    hover:shadow-2xl hover:opacity-100`}
     >
       <div className="flex justify-center">
         <h5
@@ -38,7 +42,6 @@ function Menu({
       <div className="flex flex-col h-full">
         {currentMenu === "createRoom" && (
           <CreateRoom
-            allUsers={allUsers}
             username={username}
             rooms={rooms}
             openChat={openChat}
@@ -49,9 +52,11 @@ function Menu({
         {currentMenu === "logout" && <LogoutMenu />}
       </div>
 
-      <div className="bottomBar rounded-b-xl absolute bottom-0 w-full h-11 bg-indigo-500 grid grid-cols-3">
+      <div
+        className={`bottomBar ${palette.menuNav} rounded-b-xl absolute bottom-0 w-full h-11 transition-color ease-in-out duration-300 grid grid-cols-3`}
+      >
         <div
-          className="flex items-center justify-center rounded-bl-xl hover:bg-indigo-600"
+          className={`flex items-center justify-center rounded-bl-xl ${palette.menuNavHover}`}
           onClick={() => openMenu("createRoom")}
         >
           <img
@@ -65,7 +70,7 @@ function Menu({
           />
         </div>
         <div
-          className="flex items-center justify-center hover:bg-indigo-600"
+          className={`flex items-center justify-center ${palette.menuNavHover}`}
           onClick={() => openMenu("theme")}
         >
           <img
@@ -77,7 +82,7 @@ function Menu({
           />
         </div>
         <div
-          className="flex items-center justify-center rounded-br-xl hover:bg-indigo-600"
+          className={`flex items-center justify-center rounded-br-xl ${palette.menuNavHover}`}
           onClick={() => openMenu("logout")}
         >
           <img

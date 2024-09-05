@@ -1,12 +1,20 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import AvatarIcon from "../AvatarIcon";
-import { useSocket } from "../../context/SocketContext";
 
-function CreateRoom({ allUsers, username, rooms, openChat, setShowMenu }) {
+// context imports
+import { useSocket } from "../../context/SocketContext";
+import { allUsersContext } from "../../App";
+import { usernameContext } from "../../App";
+import { usePalette } from "../../context/PaletteContext";
+
+function CreateRoom({ rooms, openChat, setShowMenu }) {
   const [hoveredUser, setHoveredUser] = useState(null); // State for hovering over the add friend button
   const [selectedCreateRoom, setSelectedCreateRoom] = useState(null); // State to check if a room was selected for creation
 
+  const { allUsers } = useContext(allUsersContext); // Get the all users from the context
   const socket = useSocket(); // Use custom hook to get the socket object from the context
+  const { username } = useContext(usernameContext); // Get the username from the context
+  const { palette } = usePalette(); // Destructure palette from usePalette
 
   const createRoom = (user) => {
     if (rooms && rooms.find((room) => room.name === user)) {
@@ -26,7 +34,7 @@ function CreateRoom({ allUsers, username, rooms, openChat, setShowMenu }) {
   };
 
   return (
-    <div className="bg-indigo-400 text-gray-200 w-72 h-80 mx-auto rounded-xl shadow-2xl">
+    <div className="text-gray-200 w-72 h-80 mx-auto rounded-xl shadow-2xl">
       <div className="flex justify-center p-5">
         <h5 className="font-bold " style={{ fontSize: "1rem" }}>
           Create a room with someone.
@@ -39,7 +47,7 @@ function CreateRoom({ allUsers, username, rooms, openChat, setShowMenu }) {
             .map((user, index) => (
               <div key={index}>
                 <div
-                  className="flex rounded-md py-2 px-5 mx-auto items-center transition ease-in-out cursor-pointer hover:bg-purple-600"
+                  className={`flex rounded-md py-2 px-5 mx-auto items-center transition ease-in-out cursor-pointer ${palette.createRoomHover}`}
                   style={{ width: "95%" }}
                   onClick={() => {
                     createRoom(user);

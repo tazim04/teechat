@@ -1,22 +1,31 @@
 import "./stylesheets/SideBar.css";
 import { useEffect, useRef, useState, useContext } from "react";
-import { useSocket } from "../context/SocketContext";
 import { io } from "socket.io-client";
-import { onlineUsersContext } from "../App";
 import AvatarIcon from "./AvatarIcon";
 import { Squash as Hamburger } from "hamburger-react";
 import Menu from "./Menu";
 import CreateRoom from "./menu/CreateRoom";
+import { usernameContext } from "../App";
 
-function SideBar({ username, room, setRoom, messages, setMessages }) {
-  const socket = useSocket(); // Use custom hook to get the socket object from the context
+// context imports
+import { onlineUsersContext } from "../App";
+import { allUsersContext } from "../App";
+import { usePalette } from "../context/PaletteContext";
+import { useSocket } from "../context/SocketContext";
+
+function SideBar({ room, setRoom, messages, setMessages }) {
   const [rooms, setRooms] = useState([]); // State for the rooms
   const [createRoomOpen, setCreateRoomOpen] = useState(false); // State for the add friends modal
-  const [allUsers, setAllUsers] = useState([]); // State for all users
   // const [hoveredUser, setHoveredUser] = useState(null); // State for hovering over the add friend button
   const [showMenu, setShowMenu] = useState(false); // State for the menu
 
-  const { onlineUsers, setOnlineUsers } = useContext(onlineUsersContext); // Get the online users from the context
+  // states from context
+  const socket = useSocket(); // Use custom hook to get the socket object from the context
+  const { palette } = usePalette(); // Destructure palette from usePalette
+  const { onlineUsers, setOnlineUsers } = useContext(onlineUsersContext); // State holding online users
+  const { allUsers, setAllUsers } = useContext(allUsersContext); // State holding all users in the database
+  const { username } = useContext(usernameContext); // Get the username from the context
+
   // Socket.io event listeners
   useEffect(() => {
     if (socket) {
@@ -31,7 +40,7 @@ function SideBar({ username, room, setRoom, messages, setMessages }) {
       });
 
       socket.on("receive_all_users", (users) => {
-        setAllUsers(users);
+        setAllUsers(users); // Update the all users state
       });
 
       // Emit a "fetch_online_users" event to get list of online users
@@ -79,7 +88,7 @@ function SideBar({ username, room, setRoom, messages, setMessages }) {
   return (
     <div className="flex flex-row">
       <div
-        className="sidebar flex h-screen text-white bg-gradient-to-br from-indigo-700 to-purple-700 to-70%"
+        className={`flex h-screen transition-color ease-in-out duration-300 ${palette.sideBar}`}
         style={{ width: "20rem" }}
       >
         <div className="side-bar-body w-full">
@@ -87,9 +96,9 @@ function SideBar({ username, room, setRoom, messages, setMessages }) {
             <h1 className="title text-lg font-bold">Chats</h1>
             <div className="flex ml-auto pe-3">
               <div
-                className={`transition-colors duration-75 ease-in-out hover:bg-purple-600 rounded-xl ${
-                  showMenu ? "bg-indigo-500" : ""
-                }`}
+                className={`transition-color duration-75 ease-in-out ${
+                  palette.sideBarHover
+                } rounded-xl ${showMenu ? `${palette.menu}` : ""}`}
               >
                 <Hamburger
                   size={25}
@@ -105,7 +114,7 @@ function SideBar({ username, room, setRoom, messages, setMessages }) {
             {rooms.length > 0 ? (
               rooms.map((room, index) => (
                 <div
-                  className="flex rounded-md py-2 px-5 mx-auto items-center transition ease-in-out cursor-pointer hover:bg-purple-600"
+                  className={`flex rounded-md py-2 px-5 mx-auto items-center transition ease-in-out cursor-pointer ${palette.sideBarHover}`}
                   style={{ width: "95%" }}
                   key={index}
                   onClick={() => openChat(room)}
@@ -142,7 +151,6 @@ function SideBar({ username, room, setRoom, messages, setMessages }) {
           </div>
           {createRoomOpen && ( // Show the create room modal when the createRoomOpen state is true
             <CreateRoom
-              allUsers={allUsers}
               username={username}
               rooms={rooms}
               openChat={openChat}
@@ -158,7 +166,6 @@ function SideBar({ username, room, setRoom, messages, setMessages }) {
           showMenu={showMenu}
           setShowMenu={setShowMenu}
           createRoomOpen={createRoomOpen}
-          allUsers={allUsers}
           username={username}
           rooms={rooms}
           openChat={openChat}

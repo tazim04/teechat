@@ -305,6 +305,26 @@ io.on("connection", (socket) => {
 
     io.emit("receive_online_users", Object.keys(socket_ids)); // Emit the updated list of online users
   });
+
+  // Set the user's palette in the database
+  socket.on("set_palette", async (username, palette) => {
+    console.log("Setting palette for:", username, palette);
+    const user = await Users.findOne({ username: username });
+
+    if (!user) {
+      console.log("User not found:", username);
+      return;
+    }
+
+    await user.updateOne({ palette: palette }); // Update the user's palette in the database
+    console.log("Palette updated for:", username, palette);
+  });
+
+  socket.on("fetch_palette", async (username) => {
+    const user = await Users.findOne({ username: username });
+    console.log("Fetching palette for:", username, user.palette);
+    socket.emit("users_palette", user.palette); // Emit the user's palette to the client
+  });
 });
 
 server.listen(3000, () => {

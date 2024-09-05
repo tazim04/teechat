@@ -1,13 +1,16 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { set } from "mongoose";
 import { useForm } from "react-hook-form";
 import Input from "../components/Input";
 import { useSocket } from "../context/SocketContext";
+import { usernameContext } from "../App";
 
-function SignIn({ setUsername, setPassword }) {
+function SignIn({ setPassword }) {
   const [userNameContent, setUsernameContent] = useState(""); // State for the content in username input field
   const [passwordContent, setPasswordContent] = useState(""); // State for the content in password input field
+
+  const { setUsername } = useContext(usernameContext); // Get the username from the context
 
   const navigate = useNavigate();
   const {

@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
     },
   ], // Reference to the rooms the user is in
   password: { type: String, required: true }, // Password field
+  palette: { type: String, default: "purple" }, // Default palette is purple
 });
 
 userSchema.index({ username: 1 }); // Index the username field
