@@ -6,6 +6,9 @@ import { Squash as Hamburger } from "hamburger-react";
 import Menu from "./Menu";
 import CreateRoom from "./menu/CreateRoom";
 import { usernameContext } from "../App";
+import RoomCard from "./RoomCard";
+import { Tooltip } from "react-tooltip";
+import "./stylesheets/SideBar.css";
 
 // context imports
 import { onlineUsersContext } from "../App";
@@ -18,6 +21,7 @@ function SideBar({ room, setRoom, messages, setMessages }) {
   const [createRoomOpen, setCreateRoomOpen] = useState(false); // State for the add friends modal
   // const [hoveredUser, setHoveredUser] = useState(null); // State for hovering over the add friend button
   const [showMenu, setShowMenu] = useState(false); // State for the menu
+  const [showToolTip, setShowToolTip] = useState(false); // State for the tooltip
 
   // states from context
   const socket = useSocket(); // Use custom hook to get the socket object from the context
@@ -60,6 +64,14 @@ function SideBar({ room, setRoom, messages, setMessages }) {
     };
   }, [socket, setOnlineUsers, rooms]);
 
+  useEffect(() => {
+    if (rooms.length > 0) {
+      setShowToolTip(false); // Hide the tooltip if there are rooms
+    } else {
+      setShowToolTip(true); // Show the tooltip if there are no rooms
+    }
+  }, [rooms]);
+
   const openChat = (rooms) => {
     if (room && room.id === rooms.id) {
       return; // If the selected chat is the same as the current chat, return
@@ -99,6 +111,9 @@ function SideBar({ room, setRoom, messages, setMessages }) {
                 className={`transition-color duration-75 ease-in-out ${
                   palette.sideBarHover
                 } rounded-xl ${showMenu ? `${palette.menu}` : ""}`}
+                data-tooltip-id="first-room"
+                data-tooltip-content="Create your first room here!"
+                onMouseEnter={() => setShowToolTip(false)}
               >
                 <Hamburger
                   size={25}
@@ -110,53 +125,32 @@ function SideBar({ room, setRoom, messages, setMessages }) {
             </div>
           </div>
 
+          <Tooltip
+            id="first-room"
+            style={{
+              fontSize: "0.6rem",
+              borderRadius: "1rem",
+            }}
+            isOpen={showToolTip}
+          />
+
           <div className="flex flex-col flex-1 text-base">
             {rooms.length > 0 ? (
               rooms.map((room, index) => (
-                <div
-                  className={`flex rounded-md py-2 px-5 mx-auto items-center transition ease-in-out cursor-pointer ${palette.sideBarHover}`}
-                  style={{ width: "95%" }}
-                  key={index}
-                  onClick={() => openChat(room)}
-                >
-                  <AvatarIcon username={room.name} />
-                  <div
-                    className=""
-                    style={{
-                      position: "relative",
-                      right: "1.3rem",
-                      top: "0.8rem",
-                    }}
-                  >
-                    {checkOnline(room) ? (
-                      <span className="flex w-2.5 h-2.5 bg-green-400 rounded-full me-1.5 flex-shrink-0"></span>
-                    ) : (
-                      <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full me-1.5 flex-shrink-0"></span>
-                    )}
-                  </div>
-                  {room.name}
+                <div key={index}>
+                  <RoomCard
+                    room={room}
+                    openChat={openChat}
+                    checkOnline={checkOnline}
+                  />
                 </div>
               ))
             ) : (
-              <div className="flex flex-col items-center justify-center h-full mb-4">
+              <div className="flex flex-col items-center justify-center h-full mb-4 relative">
                 <h5 className="font-bold text-gray-200">No rooms :(</h5>
-                <div
-                  className={`h-10 w-10 mt-5 rounded-ful transition-all duration-100 ease-in-out bg-[url('./add_icon.png')] hover:bg-[url('./add_icon_active.png')] bg-contain bg-no-repeat
-                  ${createRoomOpen ? "rotate-45" : ""}
-                  `}
-                  onClick={() => setCreateRoomOpen(!createRoomOpen)}
-                ></div>
               </div>
             )}
           </div>
-          {createRoomOpen && ( // Show the create room modal when the createRoomOpen state is true
-            <CreateRoom
-              username={username}
-              rooms={rooms}
-              openChat={openChat}
-              setShowMenu={setShowMenu}
-            />
-          )}
         </div>
       </div>
 

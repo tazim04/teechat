@@ -5,18 +5,18 @@ const roomSchema = new mongoose.Schema(
   {
     participants: [
       {
-        id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        username: { type: String },
-        _id: false, // Prevents automatic creation of _id for each participant
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
     ],
     messages: [
       {
-        sender: String,
+        sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // References User object
         content: String,
         timestamp: { type: Date, default: Date.now },
       },
     ],
+    creator: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );

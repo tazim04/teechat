@@ -33,7 +33,15 @@ runMongoDB().catch(console.dir);
 
 async function add_message_in_db(roomID, message) {
   const room = await Rooms.findById(roomID);
-  await room.updateOne({ $push: { messages: message } });
+
+  // Get the sender's user data so we can store the sender's ID in the message
+  const sender = await Users.findOne({ username: message.sender });
+  const messageData = {
+    sender: sender.id,
+    content: message.content,
+    timestamp: message.timestamp,
+  };
+  await room.updateOne({ $push: { messages: messageData } });
 }
 
 async function get_previous_messages(roomID) {
@@ -66,9 +74,11 @@ async function create_room(sender, recipient) {
     return;
   }
 
+  console.log("Creating room between:", sender, recipient);
+
   // initialize the room
   const room = new Rooms({
-    participants: [sender, recipient],
+    participants: [sender._id, recipient._id],
     messages: [],
   });
 
@@ -167,6 +177,8 @@ io.on("connection", (socket) => {
     const user_db = await Users.findOne({ username: user }); // Find the user in the database
     const recipient_db = await Users.findOne({ username: recipient }); // Find the recipient in the database
 
+    console.log("User found:", user_db);
+
     // Check if the user and recipient exist, shouldn't happen
     if (!user_db || !recipient_db) {
       console.log("User not found:", user, recipient);
@@ -199,6 +211,55 @@ io.on("connection", (socket) => {
       "recieve_message",
       `${user} has created a room with you!`
     );
+  });
+
+  socket.on("delete_room", async (room_id) => {
+    console.log("Deleting room:", room_id);
+    try {
+      // Find the room and populate participants with full user data
+      const room = await Rooms.findById(room_id).populate("participants");
+
+      // Check if the room exists, do nothing if it doesn't
+      if (!room) {
+        console.log("Room not found:", room_id);
+        return;
+      }
+
+      const participants = room.participants; // Get the participants of the room
+
+      // Remove the room from the participants' room lists
+      for (const participant of participants) {
+        const user = await Users.findById(participant.id); // Find the user in the database
+
+        // Ensure the user exists
+        if (user) {
+          await user.updateOne({ $pull: { rooms: { id: room_id } } }); // Remove the room from the user's room list
+        }
+      }
+
+      // Delete the room from the database
+      await Rooms.deleteOne({ _id: room_id });
+
+      console.log(`Room ${room_id} deleted successfully.`);
+
+      // Emit the updated room lists to the participants
+      for (const participant of participants) {
+        const updatedRooms = await Users.findById(participant._id).select(
+          "rooms"
+        );
+        if (user) {
+          const updatedRooms = await Users.findById(user._id).select("rooms");
+          io.to(socket_ids[participant.username]).emit(
+            "receive_rooms",
+            updatedRooms.rooms
+          );
+        }
+      }
+
+      // Emit a message to the participants to notify them of the deletion (not implemented yet)
+    } catch (err) {
+      console.error("Error deleting room:", err);
+    }
   });
 
   // Send a direct message to a user

@@ -132,6 +132,8 @@ function Chat({ room, messages, setMessages }) {
     }, 2000);
   };
 
+  // console.log(room.id);
+
   return (
     <div className="flex flex-col flex-1 h-screen">
       {room ? ( // Check if the room (recipient) is selected

@@ -17,19 +17,20 @@ function CreateRoom({ rooms, openChat, setShowMenu }) {
   const { palette } = usePalette(); // Destructure palette from usePalette
 
   const createRoom = (user) => {
-    if (rooms && rooms.find((room) => room.name === user)) {
-      // Check if the room already exists
+    const existingRoom = rooms && rooms.find((room) => room.name === user);
+
+    if (existingRoom) {
+      // If the room exists, open it
       console.log("Room already exists with: ", user);
       setShowMenu(false); // Close the add friend modal
-      openChat(rooms.find((room) => room.name === user)); // Set the room to the existing chat
+      openChat(existingRoom); // Set the room to the existing chat
     } else {
-      // If the room does not exist, create a new room
+      // If the room does not exist, create a new one
       setSelectedCreateRoom(user); // Set the selected room for creation
       socket.emit("create_room", username, user); // Emit a "create_room" event with the selected user
       console.log("Create room with: ", user);
 
       setShowMenu(false); // Close the add friend modal
-      openChat(rooms.find((room) => room.name === user)); // Set the room to the new chat
     }
   };
 
