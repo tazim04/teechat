@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { Form } from "react-router-dom";
 import Input from "../components/Input";
 import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
-import { usernameContext } from "../App";
+// import { userContext } from "../App";
 
 const CreateAccount = ({ setPassword }) => {
   const navigate = useNavigate();
   const socket = useSocket();
 
-  const { setUsername } = useContext(usernameContext);
+  // const { setUser } = useContext(userContext);
 
   useEffect(() => {
     const handleAccountCreated = (response) => {
       if (response.username && response.username) {
         console.log("Account created successfully");
-        setUsername(response.username);
+        setUser({ useraname: response.username });
         setPassword(response.username);
         navigate("/main");
       } else if (response === "existing email") {

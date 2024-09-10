@@ -1,4 +1,3 @@
-import { fr, is } from "date-fns/locale";
 import mongoose from "mongoose";
 
 // Create a new schema for users

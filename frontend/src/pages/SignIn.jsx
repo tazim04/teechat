@@ -4,13 +4,13 @@ import { set } from "mongoose";
 import { useForm } from "react-hook-form";
 import Input from "../components/Input";
 import { useSocket } from "../context/SocketContext";
-import { usernameContext } from "../App";
+import { userContext } from "../App";
 
 function SignIn({ setPassword }) {
   const [userNameContent, setUsernameContent] = useState(""); // State for the content in username input field
   const [passwordContent, setPasswordContent] = useState(""); // State for the content in password input field
 
-  const { setUsername } = useContext(usernameContext); // Get the username from the context
+  const { setUser } = useContext(userContext); // Get setUser from the context
 
   const navigate = useNavigate();
   const {
@@ -24,9 +24,10 @@ function SignIn({ setPassword }) {
   useEffect(() => {
     // Set up the sign-in response listener once
     if (!socket) return;
-    socket.on("sign_in_response", (response) => {
+    socket.on("sign_in_response", (response, user) => {
       if (response) {
-        console.log("Sign in successful");
+        console.log("Sign in successful", user);
+        setUser(user);
         navigate("/main");
       } else {
         console.log("Sign in failed");
@@ -42,7 +43,6 @@ function SignIn({ setPassword }) {
 
   const onSubmit = handleSubmit((data) => {
     console.log("Sign In Data:", data);
-    setUsername(data.username);
     setPassword(data.password);
     // Emit a "sign_in" event to the server to check the user credentials
     socket.emit("sign_in", data.username, data.password);

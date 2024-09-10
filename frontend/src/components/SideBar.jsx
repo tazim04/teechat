@@ -1,11 +1,10 @@
 import "./stylesheets/SideBar.css";
-import { useEffect, useRef, useState, useContext } from "react";
+import { useEffect, useRef, useState, useContext, createContext } from "react";
 import { io } from "socket.io-client";
 import AvatarIcon from "./AvatarIcon";
 import { Squash as Hamburger } from "hamburger-react";
 import Menu from "./Menu";
 import CreateRoom from "./menu/CreateRoom";
-import { usernameContext } from "../App";
 import RoomCard from "./RoomCard";
 import { Tooltip } from "react-tooltip";
 import "./stylesheets/SideBar.css";
@@ -15,20 +14,27 @@ import { onlineUsersContext } from "../App";
 import { allUsersContext } from "../App";
 import { usePalette } from "../context/PaletteContext";
 import { useSocket } from "../context/SocketContext";
+import { userContext } from "../App";
 
-function SideBar({ room, setRoom, messages, setMessages }) {
-  const [rooms, setRooms] = useState([]); // State for the rooms
+// Create a context object for isOpen state for delete confirmation modal
+export const isOpenContext = createContext(false);
+
+function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
   const [createRoomOpen, setCreateRoomOpen] = useState(false); // State for the add friends modal
   // const [hoveredUser, setHoveredUser] = useState(null); // State for hovering over the add friend button
   const [showMenu, setShowMenu] = useState(false); // State for the menu
   const [showToolTip, setShowToolTip] = useState(false); // State for the tooltip
+  const [isOpen, setIsOpen] = useState(false); // State for the delete confirmation modal
 
   // states from context
   const socket = useSocket(); // Use custom hook to get the socket object from the context
   const { palette } = usePalette(); // Destructure palette from usePalette
   const { onlineUsers, setOnlineUsers } = useContext(onlineUsersContext); // State holding online users
   const { allUsers, setAllUsers } = useContext(allUsersContext); // State holding all users in the database
-  const { username } = useContext(usernameContext); // Get the username from the context
+  const { user } = useContext(userContext); // Get the user from the context
+
+  const username = user.username; // Get the username from the context
+  const [rooms, setRooms] = useState(user.rooms || []); // State for the rooms
 
   // Socket.io event listeners
   useEffect(() => {
@@ -72,17 +78,17 @@ function SideBar({ room, setRoom, messages, setMessages }) {
     }
   }, [rooms]);
 
-  const openChat = (rooms) => {
-    if (room && room.id === rooms.id) {
+  const openChat = (selected_room) => {
+    if (currentRoom && currentRoom.id === selected_room.id) {
       return; // If the selected chat is the same as the current chat, return
     }
-    setRoom(rooms); // Set the room to the selected chat
-    socket.emit("get_previous_messages", rooms.id); // Emit a "get_previous_messages" event
+    setCurrentRoom(selected_room); // Set the room to the selected chat
+    socket.emit("get_previous_messages", selected_room); // Emit a "get_previous_messages" event
 
     console.log(
-      "Set room to: " + rooms.id,
-      rooms.name,
-      "is_group: " + rooms.is_group
+      "Set room to: " + selected_room.id,
+      selected_room.name,
+      "is_group: " + selected_room.is_group
     ); // Log the selected chat
   };
 
@@ -105,7 +111,7 @@ function SideBar({ room, setRoom, messages, setMessages }) {
       >
         <div className="side-bar-body w-full">
           <div className="flex items-center justify-between ps-5 h-20 mb-5">
-            <h1 className="title text-lg font-bold">Chats</h1>
+            <h1 className="title text-lg font-bold">Rooms</h1>
             <div className="flex ml-auto pe-3">
               <div
                 className={`transition-color duration-75 ease-in-out ${
@@ -128,28 +134,31 @@ function SideBar({ room, setRoom, messages, setMessages }) {
           <Tooltip
             id="first-room"
             style={{
-              fontSize: "0.6rem",
+              fontSize: "0.8rem",
               borderRadius: "1rem",
+              zIndex: "9999",
             }}
             isOpen={showToolTip}
           />
 
           <div className="flex flex-col flex-1 text-base">
-            {rooms.length > 0 ? (
-              rooms.map((room, index) => (
-                <div key={index}>
-                  <RoomCard
-                    room={room}
-                    openChat={openChat}
-                    checkOnline={checkOnline}
-                  />
+            <isOpenContext.Provider value={{ isOpen, setIsOpen }}>
+              {rooms.length > 0 ? (
+                rooms.map((room, index) => (
+                  <div key={index}>
+                    <RoomCard
+                      room={room}
+                      openChat={openChat}
+                      checkOnline={checkOnline}
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full mb-4 relative">
+                  <h5 className="font-bold text-gray-200">No rooms :(</h5>
                 </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full mb-4 relative">
-                <h5 className="font-bold text-gray-200">No rooms :(</h5>
-              </div>
-            )}
+              )}
+            </isOpenContext.Provider>
           </div>
         </div>
       </div>

@@ -34,10 +34,8 @@ runMongoDB().catch(console.dir);
 async function add_message_in_db(roomID, message) {
   const room = await Rooms.findById(roomID);
 
-  // Get the sender's user data so we can store the sender's ID in the message
-  const sender = await Users.findOne({ username: message.sender });
   const messageData = {
-    sender: sender.id,
+    sender: message.sender,
     content: message.content,
     timestamp: message.timestamp,
   };
@@ -45,8 +43,15 @@ async function add_message_in_db(roomID, message) {
 }
 
 async function get_previous_messages(roomID) {
-  const room = await Rooms.findById(roomID);
+  console.log("get_previous_messages:", roomID);
+  // Find the room and populate the sender field with the user data, specifically the username
+  const room = await Rooms.findById(roomID).populate({
+    path: "messages.sender",
+    model: "User",
+    select: "username", // Select only the username and ID
+  });
   let prev_messages = room.messages;
+  console.log("Previous messages:", prev_messages);
   return prev_messages;
 }
 
@@ -72,6 +77,11 @@ async function create_room(sender, recipient) {
       recipient.username
     );
     return;
+  }
+
+  async function get_username_by_id(id) {
+    const user = await Users.findById(id);
+    return user.username;
   }
 
   console.log("Creating room between:", sender, recipient);
@@ -113,25 +123,27 @@ io.on("connection", (socket) => {
 
     if (user && user.password === password) {
       console.log("User signed in:", username);
-      socket.emit("sign_in_response", true);
+      const { password, ...userWithoutPassword } = user.toObject(); // Remove the password from the user object before sending it to the client
+      socket.emit("sign_in_response", true, userWithoutPassword);
     } else {
       console.log("User not found or password incorrect:", username);
       socket.emit("sign_in_response", false);
     }
   });
 
-  socket.once("join_server", async (username) => {
-    const user = await Users.findOne({ username: username }); // Get user from database
+  socket.once("join_server", async (user) => {
+    console.log(user);
+    const userDB = await Users.findOne({ username: user.username }); // Get user from database
 
-    if (!user) {
-      console.log("User not found:", username);
+    if (!userDB) {
+      console.log("User not found:", user);
       return;
     }
 
-    console.log("User joined server:", username);
+    console.log("User joined server:", user);
 
     // Add the user to the socket_ids dictionary
-    socket_ids[username] = socket.id;
+    socket_ids[user.username] = socket.id;
     io.emit("receive_online_users", Object.keys(socket_ids)); // Emit the updated list of online users
 
     console.log("Current online users:", socket_ids); // Log the list of online users
@@ -149,18 +161,22 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("get_previous_messages", async (room_id) => {
-    console.log("Fetching previous messages for room:", room_id);
-    if (messages_cache[room_id]) {
+  socket.on("get_previous_messages", async (room) => {
+    console.log("Fetching previous messages for room:", room);
+
+    const roomID = room.id;
+
+    // Check if the messages are in the cache
+    if (messages_cache[roomID]) {
       console.log("Messages found in cache.");
       io.to(socket.id).emit(
         "recieve_previous_messages",
-        messages_cache[room_id]
+        messages_cache[roomID]
       );
     } else {
-      let prevMessages = await get_previous_messages(room_id);
       console.log("Messages not in cache, fetching from DB.");
-      messages_cache[room_id] = prevMessages;
+      let prevMessages = await get_previous_messages(roomID); // Fetch the previous messages from the database
+      messages_cache[roomID] = prevMessages;
       io.to(socket.id).emit("recieve_previous_messages", prevMessages);
     }
   });
@@ -225,11 +241,14 @@ io.on("connection", (socket) => {
         return;
       }
 
-      const participants = room.participants; // Get the participants of the room
+      const participants = room.participants; // Get the participants of the room (all ids)
+
+      console.log("Participants:", participants);
 
       // Remove the room from the participants' room lists
       for (const participant of participants) {
-        const user = await Users.findById(participant.id); // Find the user in the database
+        const user = await Users.findById(participant.id); // Find the user in the Users collection
+        console.log("Deleting room from:", user.username);
 
         // Ensure the user exists
         if (user) {
@@ -247,8 +266,10 @@ io.on("connection", (socket) => {
         const updatedRooms = await Users.findById(participant._id).select(
           "rooms"
         );
-        if (user) {
-          const updatedRooms = await Users.findById(user._id).select("rooms");
+        if (participant) {
+          const updatedRooms = await Users.findById(participant._id).select(
+            "rooms"
+          );
           io.to(socket_ids[participant.username]).emit(
             "receive_rooms",
             updatedRooms.rooms
@@ -262,34 +283,51 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Send a direct message to a user
+  // Send a direct message to a user, from => user.id, to => room name, room_id is the id in Room collection
   socket.on("dm", async (content, room_id, to, from, is_group) => {
-    console.log("Message received:", content, "from", from);
-
     if (!is_group) {
-      const sender = await Users.findOne({ username: from });
+      // Direct messaging between two users
+      const sender = await Users.findOne({ _id: from });
       const recipient = await Users.findOne({ username: to });
 
+      console.log("Message received:", content, "from", sender);
+
+      // Check if the sender and recipient exist
       if (!sender || !recipient) {
         console.log("User not found:", to, sender);
         return;
       }
 
       const messageData = {
-        sender: sender.username,
+        sender: sender._id,
         content,
         timestamp: new Date(),
       };
 
-      await add_message_in_db(room_id, messageData);
+      await add_message_in_db(room_id, messageData); // Add the message to the database
+
+      console.log("messageData:", messageData);
+
+      // Store the message in cache with format for the frontend
+      const messageData_cache = {
+        sender: { _id: sender._id, username: sender.username },
+        content,
+        timestamp: new Date(),
+      };
 
       console.log("Message saved in DB, adding to cache.");
-      messages_cache[room_id].push(messageData); // Add the message to the cache
+      messages_cache[room_id].push(messageData_cache); // Add the message to the cache
 
       let recipient_socket_id = socket_ids[to]; // Get the recipient's socket ID from the dictionary
 
+      const message_to_send = {
+        sender: { _id: sender._id, username: sender.username },
+        content,
+        timestamp: new Date(),
+      };
+
       if (recipient_socket_id) {
-        io.to(recipient_socket_id).emit("recieve_message", messageData);
+        io.to(recipient_socket_id).emit("recieve_message", message_to_send);
       } else {
         console.log(`${to} is offline, message not sent but saved in DB`);
       }

@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import AvatarIcon from "../components/AvatarIcon";
 import { format, isToday } from "date-fns";
 import { usePalette } from "../context/PaletteContext";
+import { userContext } from "../App";
 
 function MessageBubble({
   msg,
-  username,
   isCurrentUser,
   showAvatar,
   prevSender,
@@ -14,6 +14,8 @@ function MessageBubble({
 }) {
   const [hoverMessage, setHoverMessage] = useState(false); // State for the hover message
   const { palette } = usePalette(); // Destructure palette from usePalette
+  const { user } = useContext(userContext); // Get the user from the context
+  const username = user.username; // Get the username from the context
 
   const getTimeStamp = (timestamp) => {
     // console.log("Timestamp:", timestamp);
@@ -69,7 +71,7 @@ function MessageBubble({
   ) : (
     <div className="flex justify-start">
       {showAvatar ? (
-        <AvatarIcon username={msg.sender} />
+        <AvatarIcon username={msg.sender.username} />
       ) : (
         <div className="w-10 h-10 me-3"></div> // Placeholder for the avatar
       )}

@@ -26,7 +26,7 @@ function Menu({
 
   return (
     <div
-      className={`absolute left-[20.5rem] ${palette.menu} w-72 h-[25rem] mx-auto mt-3 rounded-xl opacity-90 shadow-md transition-all ease-in-out duration-300
+      className={`absolute left-[20.5rem] ${palette.menu} w-80 h-[25rem] mx-auto mt-3 rounded-xl opacity-90 shadow-md transition-all ease-in-out duration-300
     hover:shadow-2xl hover:opacity-100`}
     >
       <div className="flex justify-center">
@@ -39,7 +39,7 @@ function Menu({
       </div>
 
       {/* Each menu conditionally rendered */}
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full w-full">
         {currentMenu === "createRoom" && (
           <CreateRoom
             username={username}

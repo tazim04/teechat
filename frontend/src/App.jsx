@@ -16,17 +16,17 @@ import {
 
 export const onlineUsersContext = createContext([]); // Create a context for the users online
 export const allUsersContext = createContext([]); // Create a context for all users in the database
-export const usernameContext = createContext(""); // Create a context for the username for easy access across components
+export const userContext = createContext({}); // Create a context for the user info for easy access across components
 
 function App() {
-  const [username, setUsername] = useState(""); // State for the username
+  const [user, setUser] = useState({}); // State for the user info
   const [password, setPassword] = useState(""); // State for the password
   const [onlineUsers, setOnlineUsers] = useState([]); // State for the users online
   const [allUsers, setAllUsers] = useState([]); // State for all users in the database
 
   return (
     <SocketProvider>
-      <usernameContext.Provider value={{ username, setUsername }}>
+      <userContext.Provider value={{ user, setUser }}>
         <PaletteProvider>
           <onlineUsersContext.Provider value={{ onlineUsers, setOnlineUsers }}>
             <allUsersContext.Provider value={{ allUsers, setAllUsers }}>
@@ -51,7 +51,7 @@ function App() {
             </allUsersContext.Provider>
           </onlineUsersContext.Provider>
         </PaletteProvider>
-      </usernameContext.Provider>
+      </userContext.Provider>
     </SocketProvider>
   );
 }

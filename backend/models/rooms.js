@@ -16,7 +16,6 @@ const roomSchema = new mongoose.Schema(
         timestamp: { type: Date, default: Date.now },
       },
     ],
-    creator: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );

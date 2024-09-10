@@ -2,13 +2,17 @@ import { set } from "mongoose";
 import { usePalette } from "../context/PaletteContext";
 import AvatarIcon from "./AvatarIcon";
 import ContextMenu from "./ContextMenu";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
+import { isOpenContext } from "./SideBar"; // Import the context object for the delete confirmation modal
+import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
 function RoomCard({ room, openChat, checkOnline }) {
   const { palette } = usePalette();
   const [showContextMenu, setShowContextMenu] = useState("");
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const contextMenuRef = useRef(null);
+
+  const { isOpen } = useContext(isOpenContext); // Get the isOpen state from the context
 
   const handleContextMenu = (e) => {
     e.preventDefault();
@@ -43,7 +47,7 @@ function RoomCard({ room, openChat, checkOnline }) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [isOpen]);
 
   return (
     <div className="flex row" style={{ position: "relative" }}>
@@ -80,12 +84,13 @@ function RoomCard({ room, openChat, checkOnline }) {
             left: `${menuPosition.x}px`,
           }}
         >
-          <ContextMenu
-            room_id={showContextMenu}
-            setShowContextMenu={setShowContextMenu}
-          />
+          <ContextMenu room={room} setShowContextMenu={setShowContextMenu} />
         </div>
       )}
+      <DeleteConfirmationModal
+        room={room}
+        setShowContextMenu={setShowContextMenu}
+      />
     </div>
   );
 }

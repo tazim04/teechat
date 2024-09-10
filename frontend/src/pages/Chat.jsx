@@ -4,9 +4,9 @@ import MessageBubble from "../components/MessageBubble";
 import { useEffect, useState, useRef, useContext } from "react";
 import "./stylesheets/Chat.css";
 import { usePalette } from "../context/PaletteContext";
-import { usernameContext } from "../App";
+import { userContext } from "../App";
 
-function Chat({ room, messages, setMessages }) {
+function Chat({ currentRoom, messages, setMessages }) {
   const socket = useSocket(); // Use custom hook to get the socket object from the context
   const [message, setMessage] = useState(""); // State for the message
   const [users, setUsers] = useState([]); // State for the users
@@ -16,7 +16,8 @@ function Chat({ room, messages, setMessages }) {
   const [emptyMessageAnimation, setEmptyMessageAnimation] = useState(false); // State for the empty message animation
 
   const { palette } = usePalette(); // Destructure palette from usePalette
-  const { username } = useContext(usernameContext); // Get the username from the context
+  const { user } = useContext(userContext); // Get the user info from the context
+  const username = user.username; // Get the username from the context
 
   const bottomRef = useRef(); // Reference to the bottom of the chat
 
@@ -44,7 +45,7 @@ function Chat({ room, messages, setMessages }) {
     } else {
       // console.log("bottomRef.current is null");
     }
-  }, [messages, room.name]);
+  }, [messages, currentRoom.name]);
 
   // Listen for events when the component mounts
   useEffect(() => {
@@ -65,7 +66,10 @@ function Chat({ room, messages, setMessages }) {
         setMessages((prevMessages) => {
           return {
             ...prevMessages,
-            [sender]: [...(prevMessages[sender] || []), messageContent], // Update the messages state for this dm
+            [currentRoom.name]: [
+              ...(prevMessages[currentRoom.name] || []),
+              messageContent,
+            ], // Update the messages state with this dm
           };
         });
       });
@@ -75,7 +79,7 @@ function Chat({ room, messages, setMessages }) {
         setMessages((prevMessages) => {
           return {
             ...prevMessages,
-            [room.name]: [...previousMessages], // Update the messages state for this dm
+            [currentRoom.name]: [...previousMessages], // Update the messages state for this dm
           };
         });
       });
@@ -88,7 +92,9 @@ function Chat({ room, messages, setMessages }) {
         socket.off("recieve_previous_messages");
       }
     };
-  }, [socket, room.name, username, setMessages]);
+  }, [socket, currentRoom, user, messages]);
+
+  console.log(messages);
 
   const onType = (e) => {
     let message = e.target.value;
@@ -103,27 +109,31 @@ function Chat({ room, messages, setMessages }) {
       }, 500);
       return; // If the message is empty, do nothing
     } // If the message is empty, do nothing
-    // console.log(
-    //   "Sending message: " +
-    //     message +
-    //     " to room: " +
-    //     room.name +
-    //     " from user: " +
-    //     username
-    // );
+
+    const sender = { _id: user._id, username: user.username }; // Get the sender info
 
     let messageContent = {
       content: message,
-      sender: username,
+      sender: sender,
       timestamp: Date.now(),
     };
     setMessages((prevMessages) => {
       return {
         ...prevMessages,
-        [room.name]: [...(prevMessages[room.name] || []), messageContent], // Update the messages state for this dm
+        [currentRoom.name]: [
+          ...(prevMessages[currentRoom.name] || []),
+          messageContent,
+        ], // Update the messages state for this dm
       };
     });
-    socket.emit("dm", message, room.id, room.name, username, room.is_group); // Emit a message, FOR NOW ROOM IS JUST A USER
+    socket.emit(
+      "dm",
+      message,
+      currentRoom.id,
+      currentRoom.name,
+      user._id,
+      currentRoom.is_group
+    ); // Emit a message, FOR NOW ROOM IS JUST A USER
     setMessage(""); // Clear the message input
 
     setSendAnimation(true); // Set the send animation to true
@@ -136,14 +146,15 @@ function Chat({ room, messages, setMessages }) {
 
   return (
     <div className="flex flex-col flex-1 h-screen">
-      {room ? ( // Check if the room (recipient) is selected
+      {currentRoom ? ( // Check if the room (recipient) is selected
         <div className="flex flex-col flex-1 overflow-hidden">
-          <ChatBar room={room} /> {/* Display the chat bar */}
+          <ChatBar room={currentRoom} /> {/* Display the chat bar */}
           <div className="flex-1 overflow-y-auto p-4">
             {/* Check if there are messages for the selected recipient */}
-            {messages[room.name] ? (
-              messages[room.name].map((msg, index, arr) => {
-                const isCurrentUser = msg.sender === username; // Check if the message is from the current user
+            {messages[currentRoom.name] ? (
+              messages[currentRoom.name].map((msg, index, arr) => {
+                // console.log(messages[currentRoom.name]);
+                const isCurrentUser = msg.sender.username === username; // Check if the message is from the current user
 
                 const prevSender = arr[index - 1]?.sender; // Get the previous sender
 
@@ -154,13 +165,12 @@ function Chat({ room, messages, setMessages }) {
                 const showAvatar =
                   index === 0 ||
                   timeDifference > 60000 ||
-                  prevSender !== msg.sender; // Check if the avatar should be displayed
+                  prevSender !== msg.sender.username; // Check if the avatar should be displayed
 
                 return (
                   <div key={index}>
                     <MessageBubble
                       msg={msg}
-                      username={username}
                       isCurrentUser={isCurrentUser}
                       showAvatar={showAvatar}
                       prevSender={prevSender}
@@ -195,7 +205,7 @@ function Chat({ room, messages, setMessages }) {
           <div className=" px-2 mx-3 mb-4 mt-5 border-gray-300 rounded-2xl border-2 flex">
             <input
               type="text"
-              placeholder={`Message ${room.name}`}
+              placeholder={`Message ${currentRoom.name}`}
               className="w-full h-12 font-medium focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-4 bg-white rounded-md py-2"
               value={message}
               onChange={onType}

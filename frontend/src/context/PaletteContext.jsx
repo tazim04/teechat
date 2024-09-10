@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import { useSocket } from "./SocketContext"; // Import the SocketContext
-import { usernameContext } from "../App";
+import { userContext } from "../App";
 
 const palettes = {
   purple: {
@@ -16,6 +16,7 @@ const palettes = {
     createRoomHover: "hover:bg-purple-600",
     scrollBottom: "text-purple-500 border-2 border-purple-500",
     scrollBottomHover: "hover:bg-purple-500 hover:text-white",
+    name: "Elixer",
   },
   orange: {
     messageBubble:
@@ -29,6 +30,7 @@ const palettes = {
     createRoomHover: "hover:bg-orange-600",
     scrollBottom: "text-orange-400 border-2 border-orange-400",
     scrollBottomHover: "hover:bg-orange-400 hover:text-white",
+    name: "Amber",
   },
   green: {
     messageBubble:
@@ -42,6 +44,7 @@ const palettes = {
     createRoomHover: "hover:bg-green-600",
     scrollBottom: "text-green-500 border-2 border-green-500",
     scrollBottomHover: "hover:bg-green-500 hover:text-white",
+    name: "Emerald",
   },
 };
 
@@ -54,7 +57,9 @@ export const usePalette = () => {
 export const PaletteProvider = ({ children }) => {
   const [palette, setPalette] = useState(palettes.purple); // Default palette
   const socket = useSocket(); // Use the socket from the context
-  const { username } = useContext(usernameContext); // Get the username from the context to check if the user is logged in
+  const { user } = useContext(userContext); // Get the user from the context to check if the user is logged in
+
+  const username = user.username; // Get the username from the context
 
   const togglePalette = (colour) => {
     setPalette(palettes[colour]);

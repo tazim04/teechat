@@ -1,16 +1,14 @@
 import { useSocket } from "../context/SocketContext";
-import { useState } from "react";
-import DeleteConfirmationModal from "./DeleteConfirmationModal";
+import { useState, useContext } from "react";
+import { isOpenContext } from "./SideBar";
 
-function ContextMenu({ room_id, setShowContextMenu }) {
+function ContextMenu({ room, setShowContextMenu }) {
   const socket = useSocket(); // Use custom hook to get the socket object from the context
-  const [isOpen, setIsOpen] = useState(false); // State for the modal visibility
+  const { setIsOpen } = useContext(isOpenContext); // State for the modal visibility
 
-  const deleteRoom = () => {
-    console.log("Deleting room: ", room_id);
-    // socket.emit("delete_room", room_id); // Emit a "delete_room" event
-    // setShowContextMenu(""); // Close the context menu
-    setIsOpen(true); // Show the modal
+  // Open modal to confirm user's choice to delete the room
+  const openConfirmationModal = () => {
+    setIsOpen(true);
   };
 
   return (
@@ -19,13 +17,12 @@ function ContextMenu({ room_id, setShowContextMenu }) {
         <li>
           <div
             className="cursor-pointer hover:bg-gray-300 rounded-md"
-            onClick={deleteRoom}
+            onClick={openConfirmationModal}
           >
             Delete Room
           </div>
         </li>
       </ul>
-      <DeleteConfirmationModal isOpen={isOpen} setIsOpen={setIsOpen} />
     </div>
   );
 }
