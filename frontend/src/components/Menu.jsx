@@ -16,6 +16,8 @@ function Menu({
   openChat,
 }) {
   const [currentMenu, setCurrentMenu] = useState("createRoom");
+  const [menuHeight, setMenuHeight] = useState(25);
+  const [zIndexVisible_gcName, setZIndexVisible_gcName] = useState(false);
 
   const socket = useSocket(); // Use custom hook to get the socket object from the context
   const { palette } = usePalette(); // Destructure palette from usePalette
@@ -24,10 +26,23 @@ function Menu({
     setCurrentMenu(menu);
   };
 
+  // useEffect to set the z-index of the menu to 10 when the menu is expanded for create room
+  useEffect(() => {
+    if (menuHeight > 25) {
+      const timer = setTimeout(() => {
+        setZIndexVisible_gcName(true);
+      }, 300); // 300ms delay
+      return () => clearTimeout(timer);
+    } else {
+      setZIndexVisible_gcName(false);
+    }
+  }, [menuHeight]);
+
   return (
     <div
-      className={`absolute left-[20.5rem] ${palette.menu} w-80 h-[25rem] mx-auto mt-3 rounded-xl opacity-90 shadow-md transition-all ease-in-out duration-300
+      className={`absolute left-[20.5rem] ${palette.menu} w-80 mx-auto mt-3 rounded-xl opacity-90 shadow-sm transition-all ease-in-out duration-300
     hover:shadow-2xl hover:opacity-100`}
+      style={{ height: `${menuHeight}rem` }}
     >
       <div className="flex justify-center">
         <h5
@@ -39,21 +54,29 @@ function Menu({
       </div>
 
       {/* Each menu conditionally rendered */}
-      <div className="flex flex-col h-full w-full">
+      <div
+        className={`flex flex-col h-full w-full relative transition-all duration-300 ${
+          zIndexVisible_gcName ? "" : "z-10"
+        }`}
+      >
         {currentMenu === "createRoom" && (
           <CreateRoom
             username={username}
             rooms={rooms}
             openChat={openChat}
             setShowMenu={setShowMenu}
+            menuHeight={menuHeight}
+            setMenuHeight={setMenuHeight}
           />
         )}
         {currentMenu === "theme" && <ThemeMenu />}
         {currentMenu === "logout" && <LogoutMenu />}
       </div>
 
+      {/* Bottom bar */}
       <div
         className={`bottomBar ${palette.menuNav} rounded-b-xl absolute bottom-0 w-full h-11 transition-color ease-in-out duration-300 grid grid-cols-3`}
+        style={{ zIndex: 9999 }}
       >
         <div
           className={`flex items-center justify-center rounded-bl-xl ${palette.menuNavHover}`}
