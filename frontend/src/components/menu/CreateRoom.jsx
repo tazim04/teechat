@@ -19,7 +19,6 @@ function CreateRoom({
   const [selectedCreateRoom, setSelectedCreateRoom] = useState(null); // State to check if a room was selected for creation
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown visibility
   const [groupChat, setGroupChat] = useState(false); // State for group chat visibility
-  const [selectedUsers, setSelectedUsers] = useState([]); // State for selected users for groupchat creation
   const [showCreateRoomBTN, setShowCreateRoomBTN] = useState(false);
   const [groupChatName, setGroupChatName] = useState("");
 
@@ -27,6 +26,10 @@ function CreateRoom({
   const socket = useSocket(); // Use custom hook to get the socket object from the context
   const { user } = useContext(userContext); // Get the user from the context
   const { palette } = usePalette(); // Destructure palette from usePalette
+
+  const [selectedUsers, setSelectedUsers] = useState([
+    { _id: user._id, username: user.username },
+  ]); // State for selected users for groupchat creation
 
   const username = user.username; // Get the username from the context
 
@@ -61,37 +64,40 @@ function CreateRoom({
     closeDropdown();
   };
 
-  const addToGroup = (user) => {
-    if (selectedUsers.includes(user)) {
-      console.log("Remove from group: ", user);
+  const addToGroup = (selected_user) => {
+    if (selectedUsers.includes(selected_user)) {
+      console.log("Remove from group: ", selected_user);
       setSelectedUsers(
-        selectedUsers.filter((selectedUser) => selectedUser !== user)
+        selectedUsers.filter((selectedUser) => selectedUser !== selected_user)
       ); // Remove the user from the selected users array
     } else {
-      console.log("Add to group: ", user);
-      setSelectedUsers([...selectedUsers, user]); // Add the user to the selected users array
+      console.log("Add to group: ", selected_user);
+      setSelectedUsers([...selectedUsers, selected_user]); // Add the user to the selected users array
       console.log("Selected users: ", selectedUsers);
     }
   };
 
-  const createRoom = (user) => {
-    const existingRoom = rooms && rooms.find((room) => room.name === user);
+  // Create a room with a user, {_id, username}
+  const createRoom = (selected_user) => {
+    const existingRoom =
+      rooms && rooms.find((room) => room.name === selected_user._id); // Check if the room already exists, name is the username of the user selected
 
     if (existingRoom) {
       // If the room exists, open it
-      console.log("Room already exists with: ", user);
+      console.log("Room already exists with: ", selected_user);
       setShowMenu(false); // Close the add friend modal
       openChat(existingRoom); // Set the room to the existing chat
     } else {
       // If the room does not exist, create a new one
-      setSelectedCreateRoom(user); // Set the selected room for creation
-      socket.emit("create_room", username, user); // Emit a "create_room" event with the selected user
-      console.log("Create room with: ", user);
+      setSelectedCreateRoom(selected_user); // Set the selected room for creation
+      socket.emit("create_room", user, selected_user); // Emit a "create_room" event with the selected user
+      console.log("Create room with: ", selected_user);
 
       setShowMenu(false); // Close the add friend modal
     }
   };
 
+  // Create a room with multiple users
   const createRoom_gc = () => {
     const existingRoom =
       rooms && rooms.find((room) => room.name === groupChatName);
@@ -102,6 +108,7 @@ function CreateRoom({
       openChat(existingRoom); // Set the room to the existing chat
     } else {
       console.log(`Creating room ${groupChatName} with users: `, selectedUsers);
+      socket.emit("create_room_gc", selectedUsers, groupChatName); // Emit "create_room_gc" event
     }
   };
 
@@ -149,7 +156,7 @@ function CreateRoom({
       <div className="px-auto text-base h-[15rem] pb-1 overflow-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-slate-700 scrollbar-track-slate-300">
         {allUsers.length > 0 ? (
           allUsers
-            .filter((user) => user !== username) // Filter out the current user
+            .filter((user) => user.username !== username) // Filter out the current user
             .map((user, index) => (
               <div key={index}>
                 <div
@@ -159,11 +166,11 @@ function CreateRoom({
                   onClick={() => {
                     groupChat ? addToGroup(user) : createRoom(user);
                   }}
-                  onMouseEnter={() => setHoveredUser(user)}
+                  onMouseEnter={() => setHoveredUser(user._id)}
                   onMouseLeave={() => setHoveredUser(null)}
                 >
-                  <AvatarIcon username={user} />
-                  {user}
+                  <AvatarIcon username={user.username} />
+                  {user.username}
                   {groupChat ? (
                     <span
                       className={`ml-auto p-2 rounded-full bg-gray-100 transition-all duration-100 ${
@@ -173,8 +180,9 @@ function CreateRoom({
                       } `}
                     ></span>
                   ) : (
-                    hoveredUser === user &&
-                    (rooms && rooms.find((room) => room.name === user) ? (
+                    hoveredUser === user._id &&
+                    (rooms &&
+                    rooms.find((room) => room.name === user.username) ? (
                       <div className="text-md ml-auto">Existing Chat</div>
                     ) : (
                       <div className="text-md ml-auto">
@@ -200,7 +208,7 @@ function CreateRoom({
       {/* Group Chat name and finalization */}
       <div
         className={`absolute top-[-11rem] w-full flex justify-center transition-all ease-in-out duration-300 ${
-          menuHeight > 25 ? "opacity-100" : "opacity-0"
+          menuHeight > 25 ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         style={{
           transform: `translateY(${menuHeight}rem) ${

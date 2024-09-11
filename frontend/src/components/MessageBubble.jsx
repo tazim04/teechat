@@ -54,13 +54,7 @@ function MessageBubble({
             className={`${
               palette.messageBubble
             } px-3 py-2 me-2 rounded-s-xl inline-block max-w-[320px] min-w-[0] break-words font-medium
-                ${
-                  index === 0 ||
-                  timeDifference > 60000 ||
-                  prevSender !== msg.sender
-                    ? "mt-3 rounded-br-xl"
-                    : "mt-1 rounded-r-xl"
-                }
+                ${showAvatar ? "mt-3 rounded-br-xl" : "mt-1 rounded-r-xl"}
                 `}
           >
             <p>{msg.content}</p>
@@ -69,7 +63,8 @@ function MessageBubble({
       </div>
     </div>
   ) : (
-    <div className="flex justify-start">
+    // If the message is not from the current user
+    <div className={`flex justify-start ${showAvatar ? "mt-4" : ""}`}>
       {showAvatar ? (
         <AvatarIcon username={msg.sender.username} />
       ) : (
@@ -83,9 +78,7 @@ function MessageBubble({
         >
           <div
             className={`bg-gray-100 px-3 py-2 border-gray-200 text-black rounded-e-xl  inline-block max-w-[320px] min-w-[0] break-words font-medium ${
-              index === 0 || timeDifference > 60000 || prevSender !== msg.sender
-                ? "mt-3 rounded-bl-xl"
-                : " mt-1 rounded-s-xl"
+              showAvatar ? "mt-4 rounded-bl-xl" : "mt-1 rounded-s-xl"
             }`}
           >
             <p>{msg.content}</p>

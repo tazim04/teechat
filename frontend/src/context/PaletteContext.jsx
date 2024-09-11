@@ -8,7 +8,7 @@ const palettes = {
       "bg-gradient-to-br from-purple-600 to-indigo-500 border-gray-200 text-white",
     send: "bg-purple-500 text-white hover:bg-purple-400",
     sideBar:
-      "text-white bg-gradient-to-br from-indigo-700 to-purple-700 to-70%",
+      "text-white bg-gradient-to-br from-indigo-700 to-purple-700 to-90%",
     sideBarHover: "hover:bg-indigo-600",
     menu: "bg-indigo-400",
     menuNav: "bg-indigo-500",
@@ -22,7 +22,7 @@ const palettes = {
     messageBubble:
       "bg-gradient-to-br from-amber-400 to-orange-400 border-gray-200 text-gray-100",
     send: "bg-orange-400 text-white hover:bg-amber-400",
-    sideBar: "text-white bg-gradient-to-br from-orange-500 to-amber-500 to-70%",
+    sideBar: "text-white bg-gradient-to-br from-orange-500 to-amber-500 to-90%",
     sideBarHover: "hover:bg-amber-600",
     menu: "bg-amber-500",
     menuNav: "bg-amber-500",
@@ -36,7 +36,7 @@ const palettes = {
     messageBubble:
       "bg-gradient-to-br from-green-500 to-emerald-500 border-gray-200 text-white",
     send: "bg-emerald-500 text-white hover:bg-green-400",
-    sideBar: "text-white bg-gradient-to-br from-emerald-500 to-teal-500 to-70%",
+    sideBar: "text-white bg-gradient-to-br from-emerald-500 to-teal-500 to-90%",
     sideBarHover: "hover:bg-green-600",
     menu: "bg-emerald-500",
     menuNav: "bg-emerald-500",

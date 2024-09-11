@@ -52,7 +52,7 @@ function Chat({ currentRoom, messages, setMessages }) {
     if (socket && socket.connected) {
       // Listen for received messages -  NEED TO IMPLEMENT GROUP CHAT FUNCTIONALITY
       socket.on("recieve_message", (messageData) => {
-        // console.log("Message received:", messageData); // Log the received message
+        console.log("Message received:", messageData); // Log the received message
         let content = messageData.content;
         let sender = messageData.sender;
         let timestamp = messageData.timestamp;
@@ -66,8 +66,8 @@ function Chat({ currentRoom, messages, setMessages }) {
         setMessages((prevMessages) => {
           return {
             ...prevMessages,
-            [currentRoom.name]: [
-              ...(prevMessages[currentRoom.name] || []),
+            [currentRoom._id]: [
+              ...(prevMessages[currentRoom._id] || []),
               messageContent,
             ], // Update the messages state with this dm
           };
@@ -79,7 +79,7 @@ function Chat({ currentRoom, messages, setMessages }) {
         setMessages((prevMessages) => {
           return {
             ...prevMessages,
-            [currentRoom.name]: [...previousMessages], // Update the messages state for this dm
+            [currentRoom._id]: [...previousMessages], // Update the messages state for this dm
           };
         });
       });
@@ -93,8 +93,6 @@ function Chat({ currentRoom, messages, setMessages }) {
       }
     };
   }, [socket, currentRoom, user, messages]);
-
-  console.log(messages);
 
   const onType = (e) => {
     let message = e.target.value;
@@ -120,8 +118,8 @@ function Chat({ currentRoom, messages, setMessages }) {
     setMessages((prevMessages) => {
       return {
         ...prevMessages,
-        [currentRoom.name]: [
-          ...(prevMessages[currentRoom.name] || []),
+        [currentRoom._id]: [
+          ...(prevMessages[currentRoom._id] || []),
           messageContent,
         ], // Update the messages state for this dm
       };
@@ -151,21 +149,24 @@ function Chat({ currentRoom, messages, setMessages }) {
           <ChatBar room={currentRoom} /> {/* Display the chat bar */}
           <div className="flex-1 overflow-y-auto p-4">
             {/* Check if there are messages for the selected recipient */}
-            {messages[currentRoom.name] ? (
-              messages[currentRoom.name].map((msg, index, arr) => {
+            {messages[currentRoom._id] ? (
+              messages[currentRoom._id].map((msg, index, arr) => {
                 // console.log(messages[currentRoom.name]);
                 const isCurrentUser = msg.sender.username === username; // Check if the message is from the current user
 
                 const prevSender = arr[index - 1]?.sender; // Get the previous sender
+                const nextSender = arr[index + 1]?.sender; // Get the next sender
+
+                console.log("Prev sender:", prevSender);
 
                 const currentMessageTime = new Date(msg.timestamp); // Get the current message time
                 const prevMessageTime = new Date(arr[index - 1]?.timestamp); // Get the previous message time
                 const timeDifference = currentMessageTime - prevMessageTime; // Calculate the time difference between the current and previous message
 
                 const showAvatar =
-                  index === 0 ||
-                  timeDifference > 60000 ||
-                  prevSender !== msg.sender.username; // Check if the avatar should be displayed
+                  index === 0 || // First message always shows the avatar
+                  timeDifference > 60000 || // Show the avatar if the time difference is more than 1 minute
+                  prevSender?.username !== msg.sender.username; // Show the avatar if the previous sender is different
 
                 return (
                   <div key={index}>
