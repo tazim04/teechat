@@ -6,21 +6,18 @@ import LogoutMenu from "./menu/LogoutMenu";
 // context imports
 import { useSocket } from "../context/SocketContext";
 import { usePalette } from "../context/PaletteContext";
+import { userContext } from "../App";
 
-function Menu({
-  showMenu,
-  setShowMenu,
-  createRoomOpen,
-  username,
-  rooms,
-  openChat,
-}) {
+function Menu({ showMenu, setShowMenu, createRoomOpen, rooms, openChat }) {
   const [currentMenu, setCurrentMenu] = useState("createRoom");
   const [menuHeight, setMenuHeight] = useState(25);
   const [zIndexVisible_gcName, setZIndexVisible_gcName] = useState(false);
 
   const socket = useSocket(); // Use custom hook to get the socket object from the context
   const { palette } = usePalette(); // Destructure palette from usePalette
+  const { user } = useContext(userContext); // Get the user from the context
+
+  const username = user.username; // Get the username from the context
 
   const openMenu = (menu) => {
     setCurrentMenu(menu);

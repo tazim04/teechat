@@ -3,16 +3,22 @@ import { usePalette } from "../context/PaletteContext";
 import AvatarIcon from "./AvatarIcon";
 import ContextMenu from "./ContextMenu";
 import { useState, useRef, useEffect, useContext } from "react";
-import { isOpenContext } from "./SideBar"; // Import the context object for the delete confirmation modal
+import { isDeleteOpenContext } from "./SideBar"; // Import the context object for the delete confirmation modal
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
-function RoomCard({ room, openChat, checkOnline }) {
+function RoomCard({
+  room,
+  openChat,
+  checkOnline,
+  selectedRoomContext,
+  setSelectedRoomContext,
+}) {
   const { palette } = usePalette();
   const [showContextMenu, setShowContextMenu] = useState("");
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const contextMenuRef = useRef(null);
 
-  const { isOpen } = useContext(isOpenContext); // Get the isOpen state from the context
+  const { isDeleteOpen } = useContext(isDeleteOpenContext); // Get the isDeleteOpen state from the context
 
   const handleContextMenu = (e) => {
     e.preventDefault();
@@ -25,6 +31,7 @@ function RoomCard({ room, openChat, checkOnline }) {
     console.log(e.target.id);
 
     setShowContextMenu(e.target.id); // Show the context menu for the clicked room (room id)
+    setSelectedRoomContext(room); // Set the selected room for the context menu
 
     console.log("Right Click");
   };
@@ -47,7 +54,7 @@ function RoomCard({ room, openChat, checkOnline }) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isDeleteOpen]);
 
   return (
     <div className="flex row" style={{ position: "relative" }}>
@@ -88,7 +95,7 @@ function RoomCard({ room, openChat, checkOnline }) {
         </div>
       )}
       <DeleteConfirmationModal
-        room={room}
+        room={selectedRoomContext}
         setShowContextMenu={setShowContextMenu}
       />
     </div>

@@ -1,17 +1,17 @@
 import { set } from "mongoose";
 import Modal from "react-modal";
 import { useContext } from "react";
-import { isOpenContext } from "./SideBar"; // Import the context object for the delete confirmation modal
+import { isDeleteOpenContext } from "./SideBar"; // Import the context object for the delete confirmation modal
 import { useSocket } from "../context/SocketContext";
 
 Modal.setAppElement("#root"); // Set the root element for the modal
 
-function DeleteConfirmationModal({ room }) {
-  const { isOpen, setIsOpen } = useContext(isOpenContext); // State for the modal visibility
+function DeleteConfirmationModal({ room, setShowContextMenu }) {
+  const { isDeleteOpen, setIsDeleteOpen } = useContext(isDeleteOpenContext); // State for the modal visibility
   const socket = useSocket(); // Use custom hook to get the socket object from the context
 
   const closeModal = () => {
-    setIsOpen(false);
+    setIsDeleteOpen(false);
   };
 
   const modalStyles = {
@@ -25,21 +25,24 @@ function DeleteConfirmationModal({ room }) {
   const deleteRoom = () => {
     console.log("Deleting room: ", room.name);
     socket.emit("delete_room", room.id); // Emit a "delete_room" event
-    setIsOpen(false); // Close the modal
+    setIsDeleteOpen(false); // Close the modal
   };
 
   return (
     <Modal
-      isOpen={isOpen}
+      isOpen={isDeleteOpen}
       overlayClassName="fixed inset-0 bg-gray-500 bg-opacity-20 flex justify-center items-center"
-      className="bg-gray-100 rounded-lg p-9 w-1/4 mx-auto shadow-lg"
+      className="bg-white rounded-lg w-full max-w-lg mx-auto shadow-lg p-6"
     >
       <h3 className="p-3">
         Delete <b>{room.name}</b> for all eternity?
       </h3>
       <div className="p-3 ">
         {room.is_group ? (
-          <p>Are you sure you want to delete {room.name}?</p>
+          <p>
+            Are you sure you want to delete <b>{room.name}</b>?{" "}
+            <span className="text-red-500 font-bold">You can't undo this.</span>
+          </p>
         ) : (
           <p>
             Are you sure you want to delete your room with <b>{room.name}</b>?{" "}

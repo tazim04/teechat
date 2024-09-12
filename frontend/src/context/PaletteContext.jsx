@@ -16,6 +16,7 @@ const palettes = {
     createRoomHover: "hover:bg-purple-600",
     scrollBottom: "text-purple-500 border-2 border-purple-500",
     scrollBottomHover: "hover:bg-purple-500 hover:text-white",
+    dropdownSelected: "bg-indigo-500",
     name: "Elixer",
   },
   orange: {
@@ -29,7 +30,8 @@ const palettes = {
     menuNavHover: "hover:bg-amber-600",
     createRoomHover: "hover:bg-orange-600",
     scrollBottom: "text-orange-400 border-2 border-orange-400",
-    scrollBottomHover: "hover:bg-orange-400 hover:text-white",
+    scrollBottomHover: "hover:bg-amber-600 hover:text-white",
+    dropdownSelected: "bg-orange-400",
     name: "Amber",
   },
   green: {
@@ -44,6 +46,7 @@ const palettes = {
     createRoomHover: "hover:bg-green-600",
     scrollBottom: "text-green-500 border-2 border-green-500",
     scrollBottomHover: "hover:bg-green-500 hover:text-white",
+    dropdownSelected: "bg-emerald-500",
     name: "Emerald",
   },
 };

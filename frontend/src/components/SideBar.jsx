@@ -16,15 +16,16 @@ import { usePalette } from "../context/PaletteContext";
 import { useSocket } from "../context/SocketContext";
 import { userContext } from "../App";
 
-// Create a context object for isOpen state for delete confirmation modal
-export const isOpenContext = createContext(false);
+// Create a context object for isDeleteOpen state for delete confirmation modal
+export const isDeleteOpenContext = createContext(false);
 
 function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
   const [createRoomOpen, setCreateRoomOpen] = useState(false); // State for the add friends modal
   // const [hoveredUser, setHoveredUser] = useState(null); // State for hovering over the add friend button
   const [showMenu, setShowMenu] = useState(false); // State for the menu
   const [showToolTip, setShowToolTip] = useState(false); // State for the tooltip
-  const [isOpen, setIsOpen] = useState(false); // State for the delete confirmation modal
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false); // State for the delete confirmation modal
+  const [selectedRoomContext, setSelectedRoomContext] = useState(""); // State for the selected room for the context menu
 
   // states from context
   const socket = useSocket(); // Use custom hook to get the socket object from the context
@@ -138,11 +139,13 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
               borderRadius: "1rem",
               zIndex: "9999",
             }}
-            isOpen={showToolTip}
+            isDeleteOpen={showToolTip}
           />
 
           <div className="flex flex-col flex-1 text-base">
-            <isOpenContext.Provider value={{ isOpen, setIsOpen }}>
+            <isDeleteOpenContext.Provider
+              value={{ isDeleteOpen, setIsDeleteOpen }}
+            >
               {rooms.length > 0 ? (
                 rooms.map((room, index) => (
                   <div key={index}>
@@ -150,6 +153,8 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
                       room={room}
                       openChat={openChat}
                       checkOnline={checkOnline}
+                      selectedRoomContext={selectedRoomContext}
+                      setSelectedRoomContext={setSelectedRoomContext}
                     />
                   </div>
                 ))
@@ -158,7 +163,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
                   <h5 className="font-bold text-gray-200">No rooms :(</h5>
                 </div>
               )}
-            </isOpenContext.Provider>
+            </isDeleteOpenContext.Provider>
           </div>
         </div>
       </div>
@@ -169,7 +174,6 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
           showMenu={showMenu}
           setShowMenu={setShowMenu}
           createRoomOpen={createRoomOpen}
-          username={username}
           rooms={rooms}
           openChat={openChat}
         />

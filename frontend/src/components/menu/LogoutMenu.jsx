@@ -1,4 +1,9 @@
+import { useContext } from "react";
+import { userContext } from "../../App";
+
 function LogoutMenu() {
+  const { user } = useContext(userContext); // Get the user from the context
+
   // For now, until jwt is implemented, we will redirect to the home page
   const handleLogout = () => {
     window.location.href = "/"; // Redirect to the home page
@@ -8,7 +13,7 @@ function LogoutMenu() {
     <div className="text-gray-200 w-full h-80 mx-auto rounded-xl shadow-2xl">
       <div className="flex justify-center p-5">
         <h5 className="font-bold " style={{ fontSize: "1rem" }}>
-          See you soon.
+          See you soon, {user.username}.
         </h5>
       </div>
       <div className="text-base absolute left-1/4 bottom-40">

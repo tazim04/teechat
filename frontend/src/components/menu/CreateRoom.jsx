@@ -128,8 +128,10 @@ function CreateRoom({
             {isDropdownOpen && (
               <ul className="absolute left-1/2 transform -translate-x-1/2 bg-gray-100 bg-opacity-15 rounded-lg z-[1] w-36 p-1 shadow mt-1">
                 <li
-                  className={`hover:bg-purple-600 rounded-md p-2 text-center ${
-                    groupChat ? "" : "bg-indigo-500"
+                  className={`${
+                    palette.createRoomHover
+                  } rounded-md p-2 text-center ${
+                    groupChat ? "" : palette.dropdownSelected
                   }`}
                   onClick={() => {
                     toggleGroupChat(false);
@@ -138,8 +140,10 @@ function CreateRoom({
                   someone
                 </li>
                 <li
-                  className={`hover:bg-purple-600 rounded-md p-2 text-center ${
-                    groupChat ? "bg-indigo-500" : ""
+                  className={`${
+                    palette.createRoomHover
+                  } rounded-md p-2 text-center ${
+                    groupChat ? palette.dropdownSelected : ""
                   }`}
                   onClick={() => {
                     toggleGroupChat(true);
