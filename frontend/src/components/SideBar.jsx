@@ -115,9 +115,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
             <h1 className="title text-lg font-bold">Rooms</h1>
             <div className="flex ml-auto pe-3">
               <div
-                className={`transition-color duration-75 ease-in-out ${
-                  palette.sideBarHover
-                } rounded-xl ${showMenu ? `${palette.menu}` : ""}`}
+                className="transition-color duration-75 ease-in-out hover:bg-opacity-40 hover:bg-gray-300 rounded-xl"
                 data-tooltip-id="first-room"
                 data-tooltip-content="Create your first room here!"
                 onMouseEnter={() => setShowToolTip(false)}
@@ -139,7 +137,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
               borderRadius: "1rem",
               zIndex: "9999",
             }}
-            isDeleteOpen={showToolTip}
+            isOpen={showToolTip}
           />
 
           <div className="flex flex-col flex-1 text-base">

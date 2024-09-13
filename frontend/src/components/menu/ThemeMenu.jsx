@@ -25,8 +25,21 @@ function ThemeMenu() {
       </div>
 
       {/* Container for the theme buttons */}
-      <div className="flex justify-center p-5 space-x-8">
-        {/* Theme Option 1 - Elixer */}
+      <div className="flex justify-center p-5 space-x-7 text-md">
+        <div className="flex flex-col items-center">
+          <button
+            className={`bg-gradient-to-br from-purple-700 to-rose-700 p-4 rounded-full transition-colors duration-300 ${
+              palette.name === "Magenta" ? "border-2 border-white" : ""
+            }`}
+            onClick={() => handleThemeChange("default")}
+          ></button>
+          <p
+            className={`mt-2 ${palette.name === "Magenta" ? "font-bold" : ""}`}
+          >
+            Magenta
+          </p>
+        </div>
+
         <div className="flex flex-col items-center">
           <button
             className={`bg-gradient-to-br from-indigo-700 to-purple-700 to-70% p-4 rounded-full transition-colors duration-300 ${
@@ -39,7 +52,6 @@ function ThemeMenu() {
           </p>
         </div>
 
-        {/* Theme Option 2 - Amber */}
         <div className="flex flex-col items-center">
           <button
             className={`bg-gradient-to-br from-orange-500 to-amber-500 to-70% p-4 rounded-full transition-colors duration-300 ${
@@ -52,7 +64,6 @@ function ThemeMenu() {
           </p>
         </div>
 
-        {/* Theme Option 3 - Emerald */}
         <div className="flex flex-col items-center">
           <button
             className={`bg-gradient-to-br from-emerald-500 to-teal-500 to-70% p-4 rounded-full transition-colors duration-300 ${

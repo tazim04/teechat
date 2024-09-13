@@ -6,6 +6,7 @@ import Chat from "./pages/Chat.jsx";
 import MainPage from "./pages/MainPage.jsx";
 import SignIn from "./pages/SignIn.jsx";
 import CreateAccount from "./pages/CreateAccount.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
 import { io } from "socket.io-client";
 import {
   BrowserRouter as Router,
@@ -35,15 +36,7 @@ function App() {
                   {/* Redirect "/" to "/sign-in" */}
                   <Route
                     path="/"
-                    element={<Navigate to="/sign-in" replace />}
-                  />
-                  <Route
-                    path="/sign-in"
-                    element={<SignIn setPassword={setPassword} />}
-                  />
-                  <Route
-                    path="/create-account"
-                    element={<CreateAccount setPassword={setPassword} />}
+                    element={<LandingPage setPassword={setPassword} />}
                   />
                   <Route path="/main" element={<MainPage />} />
                 </Routes>

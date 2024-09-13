@@ -8,7 +8,16 @@ export default {
       lg: ["1.8rem", "2rem"],
       xl: ["2rem", "2.25rem"],
     },
-    extend: {},
+    extend: {
+      animation: {
+        gradient: "gradient 8s linear infinite",
+      },
+      keyframes: {
+        gradient: {
+          to: { "background-position": "200% center" },
+        },
+      },
+    },
   },
   plugins: [require("tailwind-scrollbar")({ nocompatible: true })],
 };

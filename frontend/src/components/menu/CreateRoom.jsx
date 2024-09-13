@@ -48,7 +48,11 @@ function CreateRoom({
   }, [groupChatName]);
 
   useEffect(() => {
-    setMenuHeight(selectedUsers.length && groupChat > 0 ? 31 : 25); // Set the menu height based on the group chat state
+    if (groupChat && selectedUsers.length > 1) {
+      setMenuHeight(31);
+    } else {
+      setMenuHeight(25); // Default menu height
+    }
   }, [selectedUsers, groupChat]);
 
   const toggleDropdown = () => {

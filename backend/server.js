@@ -48,6 +48,7 @@ async function add_message_in_db(roomID, message) {
 
 async function get_previous_messages(roomID) {
   console.log("get_previous_messages:", roomID);
+
   // Find the room and populate the sender field with the user data, specifically the username
   const room = await Rooms.findById(roomID).populate({
     path: "messages.sender",
@@ -172,10 +173,12 @@ io.on("connection", (socket) => {
 
     const rooms = user.rooms; // Get the user's rooms, this will be used to subscribe to all group rooms
     let rooms_to_join = [];
-    for (const room of rooms) {
-      if (room.is_group) {
-        console.log("Joining group room:", room);
-        rooms_to_join.push(room.id);
+    if (rooms) {
+      for (const room of rooms) {
+        if (room.is_group) {
+          console.log("Joining group room:", room);
+          rooms_to_join.push(room.id);
+        }
       }
     }
     socket.join(rooms_to_join); // Join all group rooms
@@ -195,6 +198,12 @@ io.on("connection", (socket) => {
 
   socket.on("get_previous_messages", async (room) => {
     console.log("Fetching previous messages for room:", room);
+
+    // Join the room if it's a group room and the socket is not already in the room
+    if (room.is_group && !socket.rooms.has(room.id)) {
+      console.log("Joining group room:", room.id);
+      socket.join(room.id); // Join the group room
+    }
 
     const roomID = room.id;
 
@@ -365,100 +374,63 @@ io.on("connection", (socket) => {
 
   // Send a direct message to a user, from => user.id, to => room name, room_id is the id in Room collection
   socket.on("dm", async (content, room_id, to, from, is_group) => {
-    if (!is_group) {
-      // Direct messaging between two users
-      const sender = await Users.findById(from);
-      const recipient = await Users.findOne({ username: to });
+    // Find the sender in the Users collection
+    const sender = await Users.findById(from);
+    let recipient = "";
+    let recipient_socket_id = "";
 
-      console.log("Message received:", content, "from", sender);
+    // if its a group chat, grab the room from Rooms via room_id, if its a dm grab the recipient from Users via username
+    if (is_group) {
+      recipient = await Rooms.findById(room_id);
+    } else {
+      recipient = await Users.findOne({ username: to });
+      recipient_socket_id = socket_ids[to]; // Get the recipient's socket ID from the dictionary
+    }
 
-      // Check if the sender and recipient exist
-      if (!sender || !recipient) {
-        console.log("User not found:", to, sender);
-        return;
-      }
+    console.log("Message received:", content, "from", sender);
 
-      const messageData = {
-        sender: sender._id,
-        content,
-        timestamp: new Date(),
-      };
+    // Check if the sender and recipient exist
+    if (!sender || !recipient) {
+      console.log("Sender or recipient not found:", sender, recipient);
+      return;
+    }
 
-      await add_message_in_db(room_id, messageData); // Add the message to the database
+    const messageData = {
+      sender: sender._id,
+      content,
+      timestamp: new Date(),
+    };
 
-      console.log("messageData:", messageData);
+    await add_message_in_db(room_id, messageData); // Add the message to the database
 
-      // Store the message in cache with format for the frontend
-      const messageData_cache = {
-        sender: { _id: sender._id, username: sender.username },
-        content,
-        timestamp: new Date(),
-      };
+    console.log("messageData:", messageData);
 
-      console.log("Message saved in DB, adding to cache.");
-      messages_cache[room_id].push(messageData_cache); // Add the message to the cache
+    // Store the message in cache with format for the frontend
+    const messageData_cache = {
+      sender: { _id: sender._id, username: sender.username },
+      content,
+      timestamp: new Date(),
+    };
 
-      let recipient_socket_id = socket_ids[to]; // Get the recipient's socket ID from the dictionary
+    console.log("Message saved in DB, adding to cache.");
+    messages_cache[room_id].push(messageData_cache); // Add the message to the cache
 
-      const message_to_send = {
-        sender: { _id: sender._id, username: sender.username },
-        content,
-        timestamp: new Date(),
-      };
+    const message_to_send = {
+      sender: { _id: sender._id, username: sender.username },
+      content,
+      timestamp: new Date(),
+    };
 
+    // Emit the message, if dm send to socket_id, if group send to room_id
+    if (is_group) {
+      console.log("Sending message to room:", room_id);
+      socket.to(room_id).emit("recieve_message", message_to_send);
+    } else {
       if (recipient_socket_id) {
         io.to(recipient_socket_id).emit("recieve_message", message_to_send);
       } else {
         console.log(`${to} is offline, message not sent but saved in DB`);
       }
-    } else {
-      // Group messaging
-      console.log(
-        "Group message received:",
-        content,
-        "from",
-        from,
-        "to",
-        to,
-        room_id
-      );
-
-      const sender = await Users.findById(from);
-      const room = await Rooms.findById(room_id); // Find the room in the Rooms collection
-
-      if (!sender || !room) {
-        console.log("Sender or room not found:", sender, room);
-        return;
-      }
-
-      const messageData = {
-        sender: sender._id,
-        content,
-        timestamp: new Date(),
-      };
-
-      await add_message_in_db(room_id, messageData); // Add the message to the database
-
-      console.log("messageData:", messageData);
-
-      // Store the message in cache with format for the frontend
-      const messageData_cache = {
-        sender: { _id: sender._id, username: sender.username },
-        content,
-        timestamp: new Date(),
-      };
-
-      console.log("Message saved in DB, adding to cache.");
-      messages_cache[room_id].push(messageData_cache); // Add the message to the cache
-
-      const message_to_send = {
-        sender: { _id: sender._id, username: sender.username },
-        content,
-        timestamp: new Date(),
-      };
-
-      console.log("Sending message to room:", room_id);
-      socket.to(room_id).emit("recieve_message", message_to_send);
     }
   });
 
@@ -496,7 +468,12 @@ io.on("connection", (socket) => {
       rooms: [],
       password,
     });
-    const response = { username, password };
+
+    const response = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+    };
     try {
       await user.save();
       console.log("Account created for:", username);

@@ -59,7 +59,7 @@ function RoomCard({
   return (
     <div className="flex row" style={{ position: "relative" }}>
       <div
-        className={`flex rounded-md py-2 px-5 mx-auto items-center transition ease-in-out cursor-pointer ${palette.sideBarHover}`}
+        className={`flex rounded-md py-2 px-5 mx-auto items-center transition ease-in-out cursor-pointer hover:bg-opacity-40 hover:bg-gray-300`}
         style={{ width: "95%" }}
         onClick={() => openChat(room)}
         onContextMenu={handleContextMenu}
@@ -74,11 +74,12 @@ function RoomCard({
             top: "0.8rem",
           }}
         >
-          {checkOnline(room) ? (
-            <span className="flex w-2.5 h-2.5 bg-green-400 rounded-full me-1.5 flex-shrink-0"></span>
-          ) : (
-            <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full me-1.5 flex-shrink-0"></span>
-          )}
+          {!room.is_group &&
+            (checkOnline(room) ? (
+              <span className="flex w-2.5 h-2.5 bg-green-400 rounded-full me-1.5 flex-shrink-0"></span>
+            ) : (
+              <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full me-1.5 flex-shrink-0"></span>
+            ))}
         </div>
         {room.name}
       </div>

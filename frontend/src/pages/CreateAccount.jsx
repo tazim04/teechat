@@ -4,19 +4,23 @@ import { Form } from "react-router-dom";
 import Input from "../components/Input";
 import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
-// import { userContext } from "../App";
+import { userContext } from "../App";
 
-const CreateAccount = ({ setPassword }) => {
+const CreateAccount = ({ setPassword, setShowCreateAccount }) => {
   const navigate = useNavigate();
   const socket = useSocket();
 
-  // const { setUser } = useContext(userContext);
+  const { setUser } = useContext(userContext);
 
   useEffect(() => {
     const handleAccountCreated = (response) => {
       if (response.username && response.username) {
-        console.log("Account created successfully");
-        setUser({ useraname: response.username });
+        console.log("Account created successfully", response);
+        setUser({
+          _id: response._id,
+          username: response.username,
+          email: response.email,
+        });
         setPassword(response.username);
         navigate("/main");
       } else if (response === "existing email") {
@@ -36,7 +40,7 @@ const CreateAccount = ({ setPassword }) => {
         socket.off("account_created", handleAccountCreated);
       }
     };
-  }, [socket, navigate, username, password]); // Dependencies include username and password to ensure they are up-to-date
+  }, [socket, navigate]);
 
   const {
     register,
@@ -54,20 +58,28 @@ const CreateAccount = ({ setPassword }) => {
   });
 
   const clickSignIn = () => {
-    navigate("/sign-in");
+    setShowCreateAccount(false);
   };
 
   return (
-    <div className="flex justify-center py-16 2xl:py-52">
+    <div className="">
+      <button
+        className="absolute top-5 left-5 px-3 py-1 bg-gray-100 hover:bg-opacity-40 bg-opacity-70 rounded-lg font-semibold"
+        onClick={() => setShowCreateAccount(false)}
+      >
+        Back
+      </button>
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         <form className=" space-y-3" onSubmit={onSubmit} noValidate>
           <img
-            className="mx-auto h-20 w-auto mb-5"
+            className="mx-auto h-28 w-auto"
             src="./favicon.png"
             alt="TeeChat"
           />
 
-          <h2 className="text-center font-bold mb-6">Create an account</h2>
+          <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+            Create an account
+          </h2>
           <h5 className="text-center mb-6">
             Create an account to start chatting with the world!
           </h5>

@@ -1,12 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useContext } from "react";
-import { set } from "mongoose";
 import { useForm } from "react-hook-form";
 import Input from "../components/Input";
 import { useSocket } from "../context/SocketContext";
 import { userContext } from "../App";
 
-function SignIn({ setPassword }) {
+function SignIn({ setPassword, setShowSignIn }) {
   const [userNameContent, setUsernameContent] = useState(""); // State for the content in username input field
   const [passwordContent, setPasswordContent] = useState(""); // State for the content in password input field
 
@@ -49,19 +48,20 @@ function SignIn({ setPassword }) {
   });
 
   const handleCreateAccount = () => {
-    navigate("/create-account");
+    // navigate("/create-account");
+    setShowSignIn(false);
   };
 
   return (
-    <div className="flex min-h-full flex-col justify-center px-6 py-24 2xl:py-80 lg:px-8">
+    <div className="">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         <img
-          className="mx-auto h-20 w-auto"
+          className="mx-auto h-28 w-auto"
           src="./favicon.png"
           alt="TeeChat"
         />
         <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-          Sign in
+          Welcome to TeeChat.
         </h2>
       </div>
 
@@ -112,7 +112,7 @@ function SignIn({ setPassword }) {
           <div>
             <button
               type="submit"
-              className="flex w-full justify-center rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+              className="flex w-full justify-center rounded-md bg-purple-600 px-3 py-2 text-md font-semibold leading-6 text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
             >
               Sign in
             </button>
@@ -122,7 +122,7 @@ function SignIn({ setPassword }) {
         <h5 className="mt-6 text-center leading-9 tracking-tight text-gray-900">
           Don't have an account? &nbsp;
           <div
-            className="inline-flex hover:cursor-pointer text-purple-600 hover:text-purple-400 font-semibold"
+            className="inline-flex hover:cursor-pointer text-purple-500 hover:text-purple-800 font-semibold"
             onClick={handleCreateAccount}
           >
             Create an account.

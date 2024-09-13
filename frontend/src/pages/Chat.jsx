@@ -124,6 +124,7 @@ function Chat({ currentRoom, messages, setMessages }) {
         ], // Update the messages state for this dm
       };
     });
+
     socket.emit(
       "dm",
       message,
@@ -227,8 +228,12 @@ function Chat({ currentRoom, messages, setMessages }) {
           </div>
         </div>
       ) : (
-        <div className="flex justify-center py-10">
-          <h1>Hi {username}!</h1>
+        <div className="flex flex-col justify-center items-center h-full">
+          <img src="/favicon.png" alt="TeeChat" className="w-auto h-28" />
+          <h2 className="text-2xl font-bold leading-9 tracking-tight text-gray-900">
+            TeeChat
+          </h2>
+          <p className="mt-4">Welcome back {username}!</p>
         </div>
       )}
     </div>
