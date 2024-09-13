@@ -43,6 +43,7 @@ function MainPage() {
         messages={messages}
         setMessages={setMessages}
       />
+
       <Chat
         currentRoom={currentRoom}
         messages={messages}

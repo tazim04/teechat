@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, useContext } from "react";
 import "./stylesheets/Chat.css";
 import { usePalette } from "../context/PaletteContext";
 import { userContext } from "../App";
+import RoomInfoBar from "../components/RoomInfoBar";
 
 function Chat({ currentRoom, messages, setMessages }) {
   const socket = useSocket(); // Use custom hook to get the socket object from the context
@@ -14,6 +15,7 @@ function Chat({ currentRoom, messages, setMessages }) {
   const [atBottom, setAtBottom] = useState(true); // State for the scroll position
   const [sendAnimation, setSendAnimation] = useState(false); // State for the send animation
   const [emptyMessageAnimation, setEmptyMessageAnimation] = useState(false); // State for the empty message animation
+  const [showRoomInfo, setShowRoomInfo] = useState(false); // State for the room info bar
 
   const { palette } = usePalette(); // Destructure palette from usePalette
   const { user } = useContext(userContext); // Get the user info from the context
@@ -144,10 +146,16 @@ function Chat({ currentRoom, messages, setMessages }) {
   // console.log(room.id);
 
   return (
-    <div className="flex flex-col flex-1 h-screen">
+    <div className="flex flex-row w-full h-screen">
+      {/* <ChatBar room={currentRoom} /> Display the chat bar */}
+
       {currentRoom ? ( // Check if the room (recipient) is selected
         <div className="flex flex-col flex-1 overflow-hidden">
-          <ChatBar room={currentRoom} /> {/* Display the chat bar */}
+          <ChatBar
+            room={currentRoom}
+            showRoomInfo={showRoomInfo}
+            setShowRoomInfo={setShowRoomInfo}
+          />
           <div className="flex-1 overflow-y-auto p-4">
             {/* Check if there are messages for the selected recipient */}
             {messages[currentRoom._id] ? (
@@ -228,13 +236,20 @@ function Chat({ currentRoom, messages, setMessages }) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col justify-center items-center h-full">
+        <div className="flex flex-1 flex-col justify-center items-center h-full">
           <img src="/favicon.png" alt="TeeChat" className="w-auto h-28" />
           <h2 className="text-2xl font-bold leading-9 tracking-tight text-gray-900">
             TeeChat
           </h2>
-          <p className="mt-4">Welcome back {username}!</p>
+          <p className="mt-4 text-[1.3rem]">Welcome back {username}!</p>
         </div>
+      )}
+      {showRoomInfo && (
+        <RoomInfoBar
+          room={currentRoom}
+          showRoomInfo={showRoomInfo}
+          setShowRoomInfo={setShowRoomInfo}
+        />
       )}
     </div>
   );

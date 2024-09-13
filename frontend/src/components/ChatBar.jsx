@@ -1,8 +1,8 @@
 import { onlineUsersContext } from "../App";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { usePalette } from "../context/PaletteContext";
 
-function ChatBar({ room }) {
+function ChatBar({ room, showRoomInfo, setShowRoomInfo }) {
   const { onlineUsers } = useContext(onlineUsersContext); // Get the online users from the context
   const { palette } = usePalette(); // Destructure palette from usePalette
 
@@ -12,9 +12,15 @@ function ChatBar({ room }) {
     return user ? true : false;
   };
 
+  const roomInfoClick = () => {
+    // Function to handle the room info click
+    console.log("Room info clicked:", room); // Log the room info
+    setShowRoomInfo(true); // Set the showRoomInfo state to true
+  };
+
   return (
     <div className={`bg-gray-50 h-20 border-b-2 shadow-sm border-b-gray-200`}>
-      <div className="flex">
+      <div className="flex relative">
         <img
           src={`https://ui-avatars.com/api/?name=${room.name}&background=random&color=fff`}
           alt="avatar"
@@ -33,6 +39,15 @@ function ChatBar({ room }) {
             </span>
           )}
         </div>
+        {!showRoomInfo && (
+          <div
+            className="absolute right-6 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all duration-300 
+          bg-gray-500 bg-opacity-0 hover:bg-opacity-30 active:bg-opacity-80"
+            onClick={roomInfoClick}
+          >
+            <img src="/dots.png" alt="info" className="h-6" />
+          </div>
+        )}
       </div>
     </div>
   );
