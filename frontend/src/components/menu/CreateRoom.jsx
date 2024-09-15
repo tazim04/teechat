@@ -177,7 +177,13 @@ function CreateRoom({
                   onMouseEnter={() => setHoveredUser(user._id)}
                   onMouseLeave={() => setHoveredUser(null)}
                 >
-                  <AvatarIcon username={user.username} />
+                  <div className="w-10 h-10 me-5">
+                    <AvatarIcon
+                      name={user.username}
+                      showStatus={false}
+                      isOnline={false}
+                    />
+                  </div>
                   {user.username}
                   {groupChat ? (
                     <span

@@ -65,7 +65,13 @@ function RoomCard({
         onContextMenu={handleContextMenu}
         id={room.id}
       >
-        <AvatarIcon username={room.name} />
+        <div className="w-10 h-10">
+          <AvatarIcon
+            name={room.name}
+            showStatus={!room.is_group}
+            isOnline={checkOnline(room)}
+          />
+        </div>
         <div
           className=""
           style={{
@@ -73,15 +79,8 @@ function RoomCard({
             right: "1.3rem",
             top: "0.8rem",
           }}
-        >
-          {!room.is_group &&
-            (checkOnline(room) ? (
-              <span className="flex w-2.5 h-2.5 bg-green-400 rounded-full me-1.5 flex-shrink-0"></span>
-            ) : (
-              <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full me-1.5 flex-shrink-0"></span>
-            ))}
-        </div>
-        {room.name}
+        ></div>
+        <div className="absolute left-24">{room.name}</div>
       </div>
       {showContextMenu === room.id && (
         <div

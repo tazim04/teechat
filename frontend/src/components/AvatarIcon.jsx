@@ -1,10 +1,20 @@
-function AvatarIcon({ username }) {
+function AvatarIcon({ name, showStatus, isOnline }) {
   return (
-    <img
-      src={`https://ui-avatars.com/api/?name=${username}&background=random&color=fff`}
-      alt="avatar"
-      className="rounded-full w-10 h-10 me-3"
-    />
+    <div className="relative">
+      <img
+        src={`https://ui-avatars.com/api/?name=${name}&background=random&color=fff`}
+        alt="avatar"
+        className="rounded-full"
+      />
+      <div className="absolute left-8 bottom-[0.1rem]">
+        {showStatus &&
+          (isOnline ? (
+            <span className="flex w-2.5 h-2.5 bg-green-400 rounded-full flex-shrink-0"></span>
+          ) : (
+            <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full flex-shrink-0"></span>
+          ))}
+      </div>
+    </div>
   );
 }
 

@@ -318,6 +318,18 @@ io.on("connection", (socket) => {
     socket.join(room._id); // Join the group room
   });
 
+  socket.on("fetch_room_participants", async (room_id) => {
+    const room = await Rooms.findById(room_id).populate({
+      path: "participants",
+      model: "User",
+      select: "_id, username, email",
+    });
+
+    const participants = room.participants; // Get the participants of the room
+
+    socket.emit("receive_room_participants", participants); // Emit the participants to the client
+  });
+
   socket.on("delete_room", async (room_id) => {
     console.log("Deleting room:", room_id);
     try {

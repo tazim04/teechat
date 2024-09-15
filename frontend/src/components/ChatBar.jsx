@@ -15,7 +15,7 @@ function ChatBar({ room, showRoomInfo, setShowRoomInfo }) {
   const roomInfoClick = () => {
     // Function to handle the room info click
     console.log("Room info clicked:", room); // Log the room info
-    setShowRoomInfo(true); // Set the showRoomInfo state to true
+    setShowRoomInfo(!showRoomInfo); // Set the showRoomInfo state to true
   };
 
   return (
@@ -39,15 +39,20 @@ function ChatBar({ room, showRoomInfo, setShowRoomInfo }) {
             </span>
           )}
         </div>
-        {!showRoomInfo && (
-          <div
-            className="absolute right-6 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all duration-300 
+        <div
+          className="absolute right-6 top-1/2 transform -translate-y-1/2 p-1 rounded-full transition-all duration-300 
           bg-gray-500 bg-opacity-0 hover:bg-opacity-30 active:bg-opacity-80"
-            onClick={roomInfoClick}
-          >
-            <img src="/dots.png" alt="info" className="h-6" />
-          </div>
-        )}
+          onClick={roomInfoClick}
+        >
+          {
+            // Add a conditional statement to check if the room is a group
+            showRoomInfo ? (
+              <img src="/room_info_active.png" alt="info" className="h-7" />
+            ) : (
+              <img src="/room_info.png" alt="info" className="h-7" />
+            )
+          }
+        </div>
       </div>
     </div>
   );

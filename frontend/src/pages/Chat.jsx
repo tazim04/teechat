@@ -15,7 +15,7 @@ function Chat({ currentRoom, messages, setMessages }) {
   const [atBottom, setAtBottom] = useState(true); // State for the scroll position
   const [sendAnimation, setSendAnimation] = useState(false); // State for the send animation
   const [emptyMessageAnimation, setEmptyMessageAnimation] = useState(false); // State for the empty message animation
-  const [showRoomInfo, setShowRoomInfo] = useState(false); // State for the room info bar
+  const [showRoomInfo, setShowRoomInfo] = useState(true); // State for the room info bar
 
   const { palette } = usePalette(); // Destructure palette from usePalette
   const { user } = useContext(userContext); // Get the user info from the context
@@ -244,7 +244,7 @@ function Chat({ currentRoom, messages, setMessages }) {
           <p className="mt-4 text-[1.3rem]">Welcome back {username}!</p>
         </div>
       )}
-      {showRoomInfo && (
+      {showRoomInfo && currentRoom && (
         <RoomInfoBar
           room={currentRoom}
           showRoomInfo={showRoomInfo}

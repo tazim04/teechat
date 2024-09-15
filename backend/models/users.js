@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
       },
       name: String,
       is_group: Boolean,
-      _id: false, // Prevents automatic creation of _id for each participant
+      _id: false, // Prevents automatic creation of _id
     },
   ], // Reference to the rooms the user is in
   password: { type: String, required: true }, // Password field

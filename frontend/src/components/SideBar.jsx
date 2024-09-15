@@ -93,14 +93,14 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
     ); // Log the selected chat
   };
 
-  const checkOnline = (contact) => {
-    console.log("Checking online: ", contact);
+  const checkOnline = (room) => {
+    console.log("Checking online: ", room);
     console.log("Online users: ", onlineUsers);
 
-    // Check if the contact's name is included in the onlineUsers array
-    const isOnline = onlineUsers.includes(contact.name);
+    // Check if the room's name is included in the onlineUsers array
+    const isOnline = onlineUsers.includes(room.name);
 
-    console.log(`Is ${contact.name} online: `, isOnline);
+    console.log(`Is ${room.name} online: `, isOnline);
     return isOnline;
   };
 
