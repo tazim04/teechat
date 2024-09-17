@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// Create a new schema for users
+// Schema for Users collection
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true },
   username: {
@@ -11,8 +11,8 @@ const userSchema = new mongoose.Schema({
   rooms: [
     {
       id: {
-        type: mongoose.Schema.Types.ObjectId, // Ensure room ID is an ObjectId
-        ref: "Room", // Reference to Room model if you need to populate later
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Room", // Reference to Room model for population
       },
       name: String,
       is_group: Boolean,
@@ -21,10 +21,17 @@ const userSchema = new mongoose.Schema({
   ], // Reference to the rooms the user is in
   password: { type: String, required: true }, // Password field
   palette: { type: String, default: "default" }, // Default palette is purple
+  birthday: { type: Date, required: true }, // Birthday field
+  interests: [{ type: String }], // Bio field, description of user
+  socials: {
+    facebook: { type: String },
+    instagram: { type: String },
+    linkedin: { type: String },
+  }, // Social media fields
 });
 
 userSchema.index({ username: 1 }); // Index the username field
 
 const User = mongoose.model("User", userSchema); // Create a model from the schema
 
-export default User; // Export the model
+export default User;

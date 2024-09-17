@@ -9,7 +9,7 @@ const palettes = {
     send: "bg-rose-500 text-white hover:bg-rose-400",
     sideBar: "text-white bg-gradient-to-br from-purple-600 to-rose-600 to-80%",
     menu: "bg-[#C8247B]",
-    menuNav: "bg-[#C8247B]",
+    menuNav: "bg-[#d6298d]",
     menuNavHover: "hover:bg-purple-600",
     createRoomHover: "hover:bg-purple-600",
     scrollBottom: "text-rose-500 border-2 border-rose-500",

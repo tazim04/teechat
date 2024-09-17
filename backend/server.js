@@ -11,7 +11,7 @@ const app = express();
 const server = createServer(app);
 
 const uri =
-  "mongodb+srv://tazim720:sEmi6GzM5S68SO49@messaging-app-cluster.jq4v6uf.mongodb.net/messaging-app?retryWrites=true&w=majority&appName=messaging-app-cluster";
+  "mongodb+srv://tazim720:ZisGFg0rXcoq3rAS@messaging-app-cluster.jq4v6uf.mongodb.net/messaging-app?retryWrites=true&w=majority&appName=messaging-app-cluster";
 
 const clientOptions = {
   serverApi: { version: "1", strict: true, deprecationErrors: true },
@@ -319,13 +319,15 @@ io.on("connection", (socket) => {
   });
 
   socket.on("fetch_room_participants", async (room_id) => {
+    console.log("Fetching participants for room:", room_id);
     const room = await Rooms.findById(room_id).populate({
       path: "participants",
       model: "User",
-      select: "_id, username, email",
+      select: "_id, username email birthday interests socials",
     });
 
     const participants = room.participants; // Get the participants of the room
+    console.log("Participants:", participants);
 
     socket.emit("receive_room_participants", participants); // Emit the participants to the client
   });

@@ -166,7 +166,7 @@ function Chat({ currentRoom, messages, setMessages }) {
                 const prevSender = arr[index - 1]?.sender; // Get the previous sender
                 const nextSender = arr[index + 1]?.sender; // Get the next sender
 
-                console.log("Prev sender:", prevSender);
+                // console.log("Prev sender:", prevSender);
 
                 const currentMessageTime = new Date(msg.timestamp); // Get the current message time
                 const prevMessageTime = new Date(arr[index - 1]?.timestamp); // Get the previous message time

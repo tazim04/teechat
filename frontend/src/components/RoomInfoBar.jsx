@@ -2,26 +2,48 @@ import { useState, useContext, useEffect } from "react";
 import AvatarIcon from "./AvatarIcon";
 import { onlineUsersContext } from "../App";
 import { useSocket } from "../context/SocketContext";
+import { userContext } from "../App";
 import { set } from "mongoose";
 import { Tooltip } from "react-tooltip";
+import ProfilePopout from "./ProfilePopout";
+import { format, isToday } from "date-fns";
 
 function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo }) {
   const { onlineUsers } = useContext(onlineUsersContext);
   const socket = useSocket();
+  const { user } = useContext(userContext); // Get the user info from the context
 
   const [participants, setParticipants] = useState([]);
   const [addParticipantHover, setAddParticipantHover] = useState(false);
   const [showAddParticipant, setShowAddParticipant] = useState(false);
+  const [activeProfile, setActiveProfile] = useState(null);
 
-  const checkOnline = (room) => {
-    console.log("Checking online: ", room);
-    console.log("Online users: ", onlineUsers);
+  const checkOnline = (participant) => {
+    // console.log("Checking online: ", participant);
+    // console.log("Online users: ", onlineUsers);
 
     // Check if the room's name is included in the onlineUsers array
-    const isOnline = onlineUsers.includes(room.name);
+    const isOnline = onlineUsers.includes(participant.username);
 
-    console.log(`Is ${room.name} online: `, isOnline);
+    // console.log(`Is ${participant.username} online: `, isOnline);
     return isOnline;
+  };
+
+  const formatBirthday = (birthday) => {
+    const date = new Date(birthday);
+
+    return format(date, "MMMM d, yyyy");
+  };
+
+  const toggleProfileClick = (participant) => {
+    if (activeProfile === null) {
+      setActiveProfile(participant._id);
+    } else {
+      setActiveProfile(
+        participant._id === activeProfile ? null : participant._id
+      );
+    }
+    console.log("Active profile: ", activeProfile);
   };
 
   const addParticipantClick = () => {
@@ -33,10 +55,12 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo }) {
     if (socket) {
       if (room.is_group) {
         socket.emit("fetch_room_participants", room.id);
+      } else {
+        socket.emit("fetch_user", room.id);
       }
 
       socket.on("receive_room_participants", (participants) => {
-        console.log("Participants: ", participants);
+        // console.log("Participants: ", participants);
         setParticipants(participants);
       });
     }
@@ -53,33 +77,56 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo }) {
       </button>
       <div className="flex flex-col items-center h-full p-4">
         <div className="ms-3 mt-16 h-20 w-20">
-          <AvatarIcon
-            name={room.name}
-            showStatus={false}
-            isOnline={checkOnline(room)}
-          />
+          <AvatarIcon name={room.name} showStatus={false} isOnline={false} />
         </div>
         <div className="flex justify-center">
           <h2 className="text-lg text-center font-bold">{room.name}</h2>
         </div>
-        <div className="mt-10 ml-3 flex flex-col w-full">
+        <div className="mt-10 ml-1 flex flex-col w-full">
           {room.is_group ? (
             <div>
               <p className="font-medium text-[1rem] mb-3">
                 Roommates - {participants.length}
               </p>
               {participants.map((participant, index) => (
-                <div key={index} className="flex flex-row mb-3">
-                  <div className="w-10 h-10 me-5">
-                    <AvatarIcon
-                      name={participant.username}
-                      showStatus={false}
-                      isOnline={checkOnline({ name: participant })}
-                    />
+                <div key={index} className="relative">
+                  <div
+                    onClick={() => toggleProfileClick(participant)}
+                    className={`flex flex-row p-2 rounded-lg cursor-pointer ${
+                      participant.username === user.username
+                        ? "bg-gray-200 bg-opacity-50"
+                        : ""
+                    } transition-all ease-in-out duration-100 hover:bg-gray-300`}
+                    data-tooltip-id="profile"
+                    data-tooltip-html={`
+                  <div class='flex flex-col items-center'>
+                  <p>Username: ${participant.username}</p>
                   </div>
-                  <p className="text-[1.1rem] font-medium my-auto text-gray-900">
-                    {participant.username}
-                  </p>
+                    `}
+                  >
+                    <div className="w-10 h-10 me-5">
+                      <AvatarIcon
+                        name={participant.username}
+                        showStatus={true}
+                        isOnline={checkOnline(participant)}
+                      />
+                    </div>
+                    <p className="text-[1.1rem] font-medium my-auto text-gray-700 select-none">
+                      {participant.username}
+                      {/* {console.log("Participant: ", participant, "User: ", user)} */}
+                      <span className="text-[0.8rem] ml-20 text-gray-600">
+                        {participant.username === user.username ? "me" : ""}
+                      </span>
+                    </p>
+                  </div>
+
+                  {activeProfile === participant._id && (
+                    <ProfilePopout
+                      participant={participant}
+                      setActiveProfile={setActiveProfile}
+                      isOnline={checkOnline(participant)}
+                    />
+                  )}
                 </div>
               ))}
 

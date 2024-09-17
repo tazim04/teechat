@@ -47,9 +47,13 @@ function ChatBar({ room, showRoomInfo, setShowRoomInfo }) {
           {
             // Add a conditional statement to check if the room is a group
             showRoomInfo ? (
-              <img src="/room_info_active.png" alt="info" className="h-7" />
+              <img
+                src="/room_info_active.png"
+                alt="info"
+                className="h-5 2xl:h-7"
+              />
             ) : (
-              <img src="/room_info.png" alt="info" className="h-7" />
+              <img src="/room_info.png" alt="info" className="h-5 2xl:h-7" />
             )
           }
         </div>

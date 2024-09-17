@@ -1,7 +1,6 @@
 import "./stylesheets/SideBar.css";
 import { useEffect, useRef, useState, useContext, createContext } from "react";
 import { io } from "socket.io-client";
-import AvatarIcon from "./AvatarIcon";
 import { Squash as Hamburger } from "hamburger-react";
 import Menu from "./Menu";
 import CreateRoom from "./menu/CreateRoom";
