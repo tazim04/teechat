@@ -56,12 +56,16 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo }) {
       if (room.is_group) {
         socket.emit("fetch_room_participants", room.id);
       } else {
-        socket.emit("fetch_user", room.id);
+        socket.emit("fetch_user", user._id, room.id);
       }
 
       socket.on("receive_room_participants", (participants) => {
         // console.log("Participants: ", participants);
         setParticipants(participants);
+      });
+      socket.on("receive_user", (user) => {
+        // console.log("User: ", user);
+        setParticipants([user]);
       });
     }
   }, [room]);
@@ -153,7 +157,9 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo }) {
             </div>
           ) : (
             // add more details for users on account creation (birthday, gender, social media link, etc)
-            <div></div>
+            <div>
+              <p>{participants[0]?.useranme}</p>
+            </div>
           )}
         </div>
       </div>

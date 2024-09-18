@@ -6,6 +6,7 @@ import mongoose, { set } from "mongoose";
 import Rooms from "./models/rooms.js";
 import Users from "./models/users.js";
 import { create } from "node:domain";
+import Room from "./models/rooms.js";
 
 const app = express();
 const server = createServer(app);
@@ -318,6 +319,27 @@ io.on("connection", (socket) => {
     socket.join(room._id); // Join the group room
   });
 
+  socket.on("fetch_user", async (user_id, room_id) => {
+    const user = await Users.findById(user_id);
+    if (!user) {
+      console.log("User not found:", user_id);
+      return;
+    }
+
+    const room = await Rooms.findById(room_id).populate({
+      path: "participants",
+      model: "User",
+      select: "_id, username email birthday interests socials",
+    });
+
+    const other_user = room.participants.find(
+      (participant) => participant._id != user_id // Find the other participant in the room
+    );
+
+    console.log("Other user:", other_user);
+    socket.emit("receive_user", other_user); // Emit the other user to the client
+  });
+
   socket.on("fetch_room_participants", async (room_id) => {
     console.log("Fetching participants for room:", room_id);
     const room = await Rooms.findById(room_id).populate({
@@ -448,55 +470,58 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("create_account", async (email, username, password) => {
-    console.log(
-      "Creating account for:",
-      username +
-        " with the following data: email: " +
-        email +
-        " password: " +
-        password
-    );
+  socket.on(
+    "create_account",
+    async (email, username, password, birthday, interests, socials) => {
+      console.log(
+        "Creating account for:",
+        username +
+          " with the following data: email: " +
+          email +
+          " password: " +
+          password
+      );
 
-    const existing_email = await Users.findOne({ email });
-    const existing_username = await Users.findOne({ username });
+      const existing_email = await Users.findOne({ email });
+      const existing_username = await Users.findOne({ username });
 
-    // Check if the email or username already exists
-    if (existing_email) {
-      const response = "existing email";
-      console.log("Email already exists");
-      socket.emit("account_created", response);
-      return;
+      // Check if the email or username already exists
+      if (existing_email) {
+        const response = "existing email";
+        console.log("Email already exists");
+        socket.emit("account_created", response);
+        return;
+      }
+      if (existing_username) {
+        const response = "existing username";
+        console.log("Username already exists");
+        socket.emit("account_created", response);
+        return;
+      }
+
+      // Create a new user with the provided data and save it to the database if it doesn't already exist
+      const user = new Users({
+        email,
+        username,
+        rooms: [],
+        password,
+      });
+
+      const response = {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+      };
+      try {
+        await user.save();
+        console.log("Account created for:", username);
+        socket.emit("account_created", response);
+      } catch (error) {
+        console.log("Error creating account:", error);
+        socket.emit("account_created", null);
+      }
     }
-    if (existing_username) {
-      const response = "existing username";
-      console.log("Username already exists");
-      socket.emit("account_created", response);
-      return;
-    }
-
-    // Create a new user with the provided data and save it to the database if it doesn't already exist
-    const user = new Users({
-      email,
-      username,
-      rooms: [],
-      password,
-    });
-
-    const response = {
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-    };
-    try {
-      await user.save();
-      console.log("Account created for:", username);
-      socket.emit("account_created", response);
-    } catch (error) {
-      console.log("Error creating account:", error);
-      socket.emit("account_created", null);
-    }
-  });
+  );
 
   socket.on("fetch_all_users", async () => {
     const users = await Users.find({});

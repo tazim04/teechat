@@ -1,58 +1,23 @@
-import React, { useEffect, useState, useContext } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Form } from "react-router-dom";
 import Input from "../components/Input";
-import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
-import { userContext } from "../App";
 
-const CreateAccount = ({
-  setPassword,
+function SetUpProfile({
   setShowCreateAccount,
   setShowSetUp,
-  accountData,
   setAccountData,
+  accountData,
   handleBackClick,
-}) => {
-  const navigate = useNavigate();
+}) {
   const socket = useSocket();
-
-  const { setUser } = useContext(userContext);
-
-  useEffect(() => {
-    const handleAccountCreated = (response) => {
-      if (response.username && response.username) {
-        console.log("Account created successfully", response);
-        setUser({
-          _id: response._id,
-          username: response.username,
-          email: response.email,
-        });
-        setPassword(response.username);
-        navigate("/main");
-      } else if (response === "existing email") {
-        alert("Email already exists");
-      } else if (response === "existing username") {
-        alert("Username already exists");
-      }
-    };
-
-    if (socket && socket.connected) {
-      socket.on("account_created", handleAccountCreated);
-    }
-
-    // Cleanup listeners on component unmount
-    return () => {
-      if (socket) {
-        socket.off("account_created", handleAccountCreated);
-      }
-    };
-  }, [socket, navigate]);
 
   const {
     register,
-    formState: { errors },
     handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
   } = useForm();
 
   const onSubmit = handleSubmit((data) => {
@@ -60,20 +25,29 @@ const CreateAccount = ({
     if (data.password === data.confirmPassword) {
       setAccountData({
         ...accountData,
-
-        email: data.email,
-        username: data.username,
-        password: data.password,
+        birthday: data.birthday,
+        interests: data.interests,
+        socials: data.socials,
       }); // Store account data in state
-      setShowCreateAccount(false); // Hide create account form
+
+      console.log("Account Data:", accountData);
+
+      //   if (socket) {
+      //     socket.emit("create_account", {
+      //       email: accountData.email,
+      //       username: accountData.username,
+      //       password: accountData.password,
+      //       birthday: accountData.birthday,
+      //       interests: accountData.interests,
+      //       socials: accountData.socials,
+      //     });
+      //   }
+
+      //   setShowSetUp(false); // Show set up profile form
     } else {
       alert("Passwords do not match");
     }
   });
-
-  // const clickSignIn = () => {
-  //   setShowCreateAccount(false);
-  // };
 
   return (
     <div className="">
@@ -98,28 +72,24 @@ const CreateAccount = ({
             Create an account to start chatting with the world!
           </h5>
           <Input
-            type="email"
+            type="birthday"
             register={register}
             errors={errors}
-            defaultValue={accountData.email}
+            defaultValue={accountData.birthday}
           />
           <Input
-            type="username"
+            type="interests"
             register={register}
             errors={errors}
-            defaultValue={accountData.username}
+            defaultValue={accountData.interests}
+            setValue={setValue}
+            watch={watch}
           />
           <Input
-            type="password"
+            type="socials"
             register={register}
             errors={errors}
-            defaultValue={accountData.password}
-          />
-          <Input
-            type="confirmPassword"
-            register={register}
-            errors={errors}
-            defaultValue={accountData.confirmPassword}
+            defaultValue={accountData.socials}
           />
 
           <div>
@@ -127,7 +97,7 @@ const CreateAccount = ({
               type="submit"
               className="flex w-full justify-center rounded-md bg-purple-600 my-6 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
             >
-              Next
+              Create Account
             </button>
           </div>
           <div>
@@ -145,6 +115,6 @@ const CreateAccount = ({
       </div>
     </div>
   );
-};
+}
 
-export default CreateAccount;
+export default SetUpProfile;
