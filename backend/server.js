@@ -529,6 +529,7 @@ io.on("connection", (socket) => {
         await user.save();
         console.log("Account created for:", username);
         socket.emit("account_created", response);
+        socket.emit("users_palette", "default");
       } catch (error) {
         console.log("Error creating account:", error);
         socket.emit("account_created", null);
