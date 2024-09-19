@@ -1,16 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useForm } from "react-hook-form";
 import Input from "../components/Input";
 import { useSocket } from "../context/SocketContext";
+import { Link, useNavigate } from "react-router-dom";
+import { userContext } from "../App";
 
 function SetUpProfile({
   setShowCreateAccount,
   setShowSetUp,
-  setAccountData,
-  accountData,
+  profileData,
+  setProfileData,
+  createAccountData,
   handleBackClick,
 }) {
   const socket = useSocket();
+  const navigate = useNavigate();
+  const { setUser } = useContext(userContext);
 
   const {
     register,
@@ -23,31 +28,83 @@ function SetUpProfile({
   const onSubmit = handleSubmit((data) => {
     console.log("Data:", data);
     if (data.password === data.confirmPassword) {
-      setAccountData({
-        ...accountData,
+      setProfileData({
         birthday: data.birthday,
         interests: data.interests,
         socials: data.socials,
       }); // Store account data in state
 
-      console.log("Account Data:", accountData);
+      console.log("Account Data:", profileData);
 
-      //   if (socket) {
-      //     socket.emit("create_account", {
-      //       email: accountData.email,
-      //       username: accountData.username,
-      //       password: accountData.password,
-      //       birthday: accountData.birthday,
-      //       interests: accountData.interests,
-      //       socials: accountData.socials,
-      //     });
-      //   }
+      setUser({
+        username: createAccountData.username,
+        email: createAccountData.email,
+        palette: "default",
+        birthday: data.birthday,
+        interests: data.interests,
+        socials: data.socials,
+      });
 
-      //   setShowSetUp(false); // Show set up profile form
+      if (socket) {
+        // Emit a "create_account" event to the server
+        socket.emit(
+          "create_account",
+          createAccountData.email,
+          createAccountData.username,
+          createAccountData.password,
+          data.birthday,
+          data.interests,
+          data.socials
+        );
+      }
+
+      setShowSetUp(false); // Show set up profile form
+      navigate("/main"); // Navigate to main page
     } else {
       alert("Passwords do not match");
     }
   });
+
+  // Handle account creation response
+  useEffect(() => {
+    const handleAccountCreated = (response) => {
+      // Handle account creation response
+      if (
+        response !== null &&
+        response !== "existing email" &&
+        response !== "existing username"
+      ) {
+        console.log("Account created successfully");
+        setUser({
+          _id: response._id,
+          useraname: response.username,
+          email: response.email,
+          birthday: response.birthday,
+          interests: response.interests,
+          socials: response.socials,
+        });
+        setPassword(response.username);
+        navigate("/main");
+      } else if (response === "existing email") {
+        alert("Email already exists");
+      } else if (response === "existing username") {
+        alert("Username already exists");
+      } else {
+        alert("Account creation failed");
+      }
+    };
+
+    if (socket && socket.connected) {
+      socket.on("account_created", handleAccountCreated);
+    }
+
+    // Cleanup listeners on component unmount
+    return () => {
+      if (socket) {
+        socket.off("account_created", handleAccountCreated);
+      }
+    };
+  }, [socket, navigate]);
 
   return (
     <div className="">
@@ -68,20 +125,18 @@ function SetUpProfile({
           <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
             Create an account
           </h2>
-          <h5 className="text-center mb-6">
-            Create an account to start chatting with the world!
-          </h5>
+          <h5 className="text-center mb-6">Let's get to know you better!</h5>
           <Input
             type="birthday"
             register={register}
             errors={errors}
-            defaultValue={accountData.birthday}
+            defaultValue={profileData.birthday}
           />
           <Input
             type="interests"
             register={register}
             errors={errors}
-            defaultValue={accountData.interests}
+            defaultValue={profileData.interests}
             setValue={setValue}
             watch={watch}
           />
@@ -89,7 +144,7 @@ function SetUpProfile({
             type="socials"
             register={register}
             errors={errors}
-            defaultValue={accountData.socials}
+            defaultValue={profileData.socials}
           />
 
           <div>

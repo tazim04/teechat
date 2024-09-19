@@ -476,10 +476,16 @@ io.on("connection", (socket) => {
       console.log(
         "Creating account for:",
         username +
-          " with the following data: email: " +
+          " with the following data: " +
           email +
-          " password: " +
-          password
+          " " +
+          password +
+          " " +
+          birthday +
+          " " +
+          interests +
+          " " +
+          socials
       );
 
       const existing_email = await Users.findOne({ email });
@@ -505,12 +511,19 @@ io.on("connection", (socket) => {
         username,
         rooms: [],
         password,
+        birthday,
+        interests,
+        socials,
       });
 
+      // sinced rooms is empty, no need to send it to the client on account creation
       const response = {
         _id: user._id,
         username: user.username,
         email: user.email,
+        birthday: user.birthday,
+        interests: user.interests,
+        socials: user.socials,
       };
       try {
         await user.save();

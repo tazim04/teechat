@@ -1,4 +1,3 @@
-import "./stylesheets/SideBar.css";
 import { useEffect, useRef, useState, useContext, createContext } from "react";
 import { io } from "socket.io-client";
 import { Squash as Hamburger } from "hamburger-react";
@@ -6,7 +5,6 @@ import Menu from "./Menu";
 import CreateRoom from "./menu/CreateRoom";
 import RoomCard from "./RoomCard";
 import { Tooltip } from "react-tooltip";
-import "./stylesheets/SideBar.css";
 
 // context imports
 import { onlineUsersContext } from "../App";

@@ -10,45 +10,12 @@ const CreateAccount = ({
   setPassword,
   setShowCreateAccount,
   setShowSetUp,
-  accountData,
-  setAccountData,
+  createAccountData,
+  setCreateAccountData,
   handleBackClick,
 }) => {
   const navigate = useNavigate();
   const socket = useSocket();
-
-  const { setUser } = useContext(userContext);
-
-  useEffect(() => {
-    const handleAccountCreated = (response) => {
-      if (response.username && response.username) {
-        console.log("Account created successfully", response);
-        setUser({
-          _id: response._id,
-          username: response.username,
-          email: response.email,
-        });
-        setPassword(response.username);
-        navigate("/main");
-      } else if (response === "existing email") {
-        alert("Email already exists");
-      } else if (response === "existing username") {
-        alert("Username already exists");
-      }
-    };
-
-    if (socket && socket.connected) {
-      socket.on("account_created", handleAccountCreated);
-    }
-
-    // Cleanup listeners on component unmount
-    return () => {
-      if (socket) {
-        socket.off("account_created", handleAccountCreated);
-      }
-    };
-  }, [socket, navigate]);
-
   const {
     register,
     formState: { errors },
@@ -58,13 +25,12 @@ const CreateAccount = ({
   const onSubmit = handleSubmit((data) => {
     console.log("Data:", data);
     if (data.password === data.confirmPassword) {
-      setAccountData({
-        ...accountData,
-
+      setCreateAccountData({
         email: data.email,
         username: data.username,
         password: data.password,
       }); // Store account data in state
+      setPassword(data.password); // Set the password state
       setShowCreateAccount(false); // Hide create account form
     } else {
       alert("Passwords do not match");
@@ -101,25 +67,25 @@ const CreateAccount = ({
             type="email"
             register={register}
             errors={errors}
-            defaultValue={accountData.email}
+            defaultValue={createAccountData.email}
           />
           <Input
             type="username"
             register={register}
             errors={errors}
-            defaultValue={accountData.username}
+            defaultValue={createAccountData.username}
           />
           <Input
             type="password"
             register={register}
             errors={errors}
-            defaultValue={accountData.password}
+            defaultValue={createAccountData.password}
           />
           <Input
             type="confirmPassword"
             register={register}
             errors={errors}
-            defaultValue={accountData.confirmPassword}
+            defaultValue={createAccountData.confirmPassword}
           />
 
           <div>

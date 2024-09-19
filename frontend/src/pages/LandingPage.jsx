@@ -13,13 +13,19 @@ function LandingPage({ setPassword }) {
   const [navigateToSignIn, setNavigateToSignIn] = useState(false); // State to track "Back" navigation
   const [navigateToCreateAccount, setNavigateToCreateAccount] = useState(false); // State to track "Back" navigation
 
-  const [accountData, setAccountData] = useState({
+  const [createAccountData, setCreateAccountData] = useState({
     email: "",
     username: "",
     password: "",
+  });
+  const [profileData, setProfileData] = useState({
     birthday: "",
-    interests: "",
-    socials: "",
+    interests: [],
+    socials: {
+      facebook: "",
+      instagram: "",
+      linkedin: "",
+    },
   });
 
   const handleBackClick_createAccount = () => {
@@ -34,7 +40,7 @@ function LandingPage({ setPassword }) {
   return (
     <div className="flex bg-gradient-to-r from-purple-600 via-rose-600 to-purple-600 bg-[length:200%_auto] animate-gradient h-screen flex-col justify-center">
       <div
-        className="relative bg-gray-200 bg-opacity-50 mx-auto flex justify-center items-center h-[45rem] w-[40rem] shadow-md rounded-xl overflow-auto"
+        className="relative bg-gray-200 bg-opacity-60 mx-auto flex justify-center items-center h-[45rem] w-[40rem] shadow-md rounded-xl overflow-auto"
         style={{ maxHeight: "90vh" }}
       >
         {/* SignIn Transition */}
@@ -71,8 +77,8 @@ function LandingPage({ setPassword }) {
               setPassword={setPassword}
               setShowCreateAccount={setShowCreateAccount}
               setShowSetUp={setShowSetUp}
-              accountData={accountData}
-              setAccountData={setAccountData}
+              createAccountData={createAccountData}
+              setCreateAccountData={setCreateAccountData}
               handleBackClick={handleBackClick_createAccount}
             />
           </div>
@@ -95,8 +101,9 @@ function LandingPage({ setPassword }) {
             <SetUpProfile
               setShowCreateAccount={setShowCreateAccount}
               setShowSetUp={setShowSetUp}
-              accountData={accountData}
-              setAccountData={setAccountData}
+              profileData={profileData}
+              setProfileData={setProfileData}
+              createAccountData={createAccountData}
               handleBackClick={handleBackClick_setUp}
             />
           </div>

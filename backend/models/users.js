@@ -19,10 +19,10 @@ const userSchema = new mongoose.Schema({
       _id: false, // Prevents automatic creation of _id
     },
   ], // Reference to the rooms the user is in
-  password: { type: String, required: true }, // Password field
-  palette: { type: String, default: "default" }, // Default palette is purple
-  birthday: { type: Date, required: true }, // Birthday field
-  interests: [{ type: String }], // Bio field, description of user
+  password: { type: String, required: true },
+  palette: { type: String, default: "default" },
+  birthday: { type: Date, required: true },
+  interests: [{ type: String }],
   socials: {
     facebook: { type: String },
     instagram: { type: String },
