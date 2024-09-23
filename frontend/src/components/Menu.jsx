@@ -6,9 +6,9 @@ import LogoutMenu from "./menu/LogoutMenu";
 // context imports
 import { useSocket } from "../context/SocketContext";
 import { usePalette } from "../context/PaletteContext";
-import { userContext } from "../App";
+import { userContext } from "../context/UserContext";
 
-function Menu({ showMenu, setShowMenu, createRoomOpen, rooms, openChat }) {
+function Menu({ showMenu, setShowMenu, rooms, openChat }) {
   const [currentMenu, setCurrentMenu] = useState("createRoom");
   const [menuHeight, setMenuHeight] = useState(25);
   const [zIndexVisible_gcName, setZIndexVisible_gcName] = useState(false);

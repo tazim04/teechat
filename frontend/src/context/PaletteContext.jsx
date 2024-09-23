@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import { useSocket } from "./SocketContext"; // Import the SocketContext
-import { userContext } from "../App";
+import { userContext } from "./UserContext.jsx"; // Import the UserContext
 
 const palettes = {
   default: {
@@ -81,8 +81,7 @@ export const PaletteProvider = ({ children }) => {
 
   useEffect(() => {
     if (socket && socket.connected && username) {
-      console.log("Fetching palette for user: ", username);
-      socket.emit("fetch_palette", username); // Request the user's palette from the server
+      console.log("Fetching palette for user: ", user);
 
       socket.on("users_palette", (usersPalette) => {
         setPalette(palettes[usersPalette]); // Set the palette based on server response

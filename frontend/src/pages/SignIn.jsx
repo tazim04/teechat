@@ -3,7 +3,7 @@ import { useState, useEffect, useContext } from "react";
 import { useForm } from "react-hook-form";
 import Input from "../components/Input";
 import { useSocket } from "../context/SocketContext";
-import { userContext } from "../App";
+import { userContext } from "../context/UserContext";
 
 function SignIn({ setPassword, setShowSignIn }) {
   const [userNameContent, setUsernameContent] = useState(""); // State for the content in username input field

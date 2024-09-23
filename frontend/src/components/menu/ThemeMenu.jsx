@@ -1,6 +1,6 @@
 import { usePalette } from "../../context/PaletteContext";
 import { useSocket } from "../../context/SocketContext";
-import { userContext } from "../../App";
+import { userContext } from "../../context/UserContext";
 import { useContext } from "react";
 
 function ThemeMenu() {

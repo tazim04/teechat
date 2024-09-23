@@ -2,7 +2,7 @@ import { useState, useContext } from "react";
 import AvatarIcon from "../components/AvatarIcon";
 import { format, isToday } from "date-fns";
 import { usePalette } from "../context/PaletteContext";
-import { userContext } from "../App";
+import { userContext } from "../context/UserContext";
 
 function MessageBubble({
   msg,

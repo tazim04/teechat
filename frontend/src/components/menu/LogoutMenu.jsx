@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { userContext } from "../../App";
+import { userContext } from "../../context/UserContext";
 
 function LogoutMenu() {
   const { user } = useContext(userContext); // Get the user from the context

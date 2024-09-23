@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import Input from "../components/Input";
 import { useSocket } from "../context/SocketContext";
 import { Link, useNavigate } from "react-router-dom";
-import { userContext } from "../App";
+import { userContext } from "../context/UserContext";
 
 function SetUpProfile({
   setShowCreateAccount,
@@ -28,22 +28,16 @@ function SetUpProfile({
   const onSubmit = handleSubmit((data) => {
     console.log("Data:", data);
     if (data.password === data.confirmPassword) {
+      const socials = {
+        instagram: data?.instagram,
+        facebook: data?.facebook,
+        linkedin: data?.linkedin,
+      };
       setProfileData({
         birthday: data.birthday,
         interests: data.interests,
-        socials: data.socials,
+        socials: socials,
       }); // Store account data in state
-
-      console.log("Account Data:", profileData);
-
-      setUser({
-        username: createAccountData.username,
-        email: createAccountData.email,
-        palette: "default",
-        birthday: data.birthday,
-        interests: data.interests,
-        socials: data.socials,
-      });
 
       if (socket) {
         // Emit a "create_account" event to the server
@@ -54,12 +48,9 @@ function SetUpProfile({
           createAccountData.password,
           data.birthday,
           data.interests,
-          data.socials
+          socials
         );
       }
-
-      setShowSetUp(false); // Show set up profile form
-      navigate("/main"); // Navigate to main page
     } else {
       alert("Passwords do not match");
     }
@@ -74,16 +65,16 @@ function SetUpProfile({
         response !== "existing email" &&
         response !== "existing username"
       ) {
-        console.log("Account created successfully");
+        console.log("Account created successfully", response);
+
         setUser({
           _id: response._id,
-          useraname: response.username,
+          username: response.username,
           email: response.email,
           birthday: response.birthday,
           interests: response.interests,
           socials: response.socials,
         });
-        setPassword(response.username);
         navigate("/main");
       } else if (response === "existing email") {
         alert("Email already exists");

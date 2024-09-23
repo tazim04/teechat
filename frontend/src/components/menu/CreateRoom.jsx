@@ -3,8 +3,8 @@ import AvatarIcon from "../AvatarIcon";
 
 // context imports
 import { useSocket } from "../../context/SocketContext";
-import { allUsersContext } from "../../App";
-import { userContext } from "../../App";
+import { allUsersContext } from "../../context/AllUsersContext";
+import { userContext } from "../../context/UserContext";
 import { usePalette } from "../../context/PaletteContext";
 import { set } from "mongoose";
 

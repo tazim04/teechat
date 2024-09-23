@@ -4,7 +4,7 @@ import MessageBubble from "../components/MessageBubble";
 import { useEffect, useState, useRef, useContext } from "react";
 import "./stylesheets/Chat.css";
 import { usePalette } from "../context/PaletteContext";
-import { userContext } from "../App";
+import { userContext } from "../context/UserContext";
 import RoomInfoBar from "../components/RoomInfoBar";
 
 function Chat({ currentRoom, messages, setMessages }) {
@@ -146,11 +146,11 @@ function Chat({ currentRoom, messages, setMessages }) {
   // console.log(room.id);
 
   return (
-    <div className="flex flex-row w-full h-screen">
+    <div className="flex flex-row flex-1">
       {/* <ChatBar room={currentRoom} /> Display the chat bar */}
 
       {currentRoom ? ( // Check if the room (recipient) is selected
-        <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1 h-screen">
           <ChatBar
             room={currentRoom}
             showRoomInfo={showRoomInfo}

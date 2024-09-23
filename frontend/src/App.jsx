@@ -8,6 +8,9 @@ import SignIn from "./pages/SignIn.jsx";
 import CreateAccount from "./pages/CreateAccount.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import { io } from "socket.io-client";
+import { onlineUsersContext } from "./context/OnlineUsersContext.jsx";
+import { allUsersContext } from "./context/AllUsersContext.jsx";
+import { userContext } from "./context/UserContext.jsx";
 import {
   BrowserRouter as Router,
   Routes,
@@ -15,9 +18,10 @@ import {
   Navigate,
 } from "react-router-dom";
 
-export const onlineUsersContext = createContext([]); // Create a context for the users online
-export const allUsersContext = createContext([]); // Create a context for all users in the database
-export const userContext = createContext({}); // Create a context for the user info for easy access across components
+// Moved these to separate files in the context folder to avoid HMR issues //
+// export const onlineUsersContext = createContext([]); // Create a context for the users online
+// export const allUsersContext = createContext([]); // Create a context for all users in the database
+// export const userContext = createContext({}); // Create a context for the user info for easy access across components
 
 function App() {
   const [user, setUser] = useState({}); // State for the user info

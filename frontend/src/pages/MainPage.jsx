@@ -4,8 +4,8 @@ import { useEffect, useState, createContext, useContext } from "react";
 
 import { usePalette } from "../context/PaletteContext";
 import { useSocket } from "../context/SocketContext";
-import { onlineUsersContext } from "../App";
-import { userContext } from "../App";
+import { onlineUsersContext } from "../context/OnlineUsersContext";
+import { userContext } from "../context/UserContext";
 
 function MainPage() {
   const [currentRoom, setCurrentRoom] = useState(""); // State for the current room
@@ -20,6 +20,10 @@ function MainPage() {
   useEffect(() => {
     if (socket && socket.connected) {
       socket.emit("join_server", user); // Emit a "join_server" event
+      console.log("user: ", user);
+      if (user._id) {
+        socket.emit("fetch_palette", user._id); // Emit a "fetch_palette" event
+      }
 
       // Listen for events from the server and log them
       socket.onAny((event, ...args) => {

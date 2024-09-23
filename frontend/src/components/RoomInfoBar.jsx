@@ -1,8 +1,8 @@
 import { useState, useContext, useEffect } from "react";
 import AvatarIcon from "./AvatarIcon";
-import { onlineUsersContext } from "../App";
+import { onlineUsersContext } from "../context/OnlineUsersContext";
 import { useSocket } from "../context/SocketContext";
-import { userContext } from "../App";
+import { userContext } from "../context/UserContext";
 import { set } from "mongoose";
 import { Tooltip } from "react-tooltip";
 import ProfilePopout from "./ProfilePopout";

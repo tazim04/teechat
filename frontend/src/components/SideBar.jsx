@@ -7,17 +7,16 @@ import RoomCard from "./RoomCard";
 import { Tooltip } from "react-tooltip";
 
 // context imports
-import { onlineUsersContext } from "../App";
-import { allUsersContext } from "../App";
+import { onlineUsersContext } from "../context/OnlineUsersContext";
+import { allUsersContext } from "../context/AllUsersContext";
 import { usePalette } from "../context/PaletteContext";
 import { useSocket } from "../context/SocketContext";
-import { userContext } from "../App";
+import { userContext } from "../context/UserContext";
 
 // Create a context object for isDeleteOpen state for delete confirmation modal
 export const isDeleteOpenContext = createContext(false);
 
 function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
-  const [createRoomOpen, setCreateRoomOpen] = useState(false); // State for the add friends modal
   // const [hoveredUser, setHoveredUser] = useState(null); // State for hovering over the add friend button
   const [showMenu, setShowMenu] = useState(false); // State for the menu
   const [showToolTip, setShowToolTip] = useState(false); // State for the tooltip
@@ -102,9 +101,9 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
   };
 
   return (
-    <div className="flex flex-row">
+    <div className="flex flex-row h-screen">
       <div
-        className={`flex h-screen transition-color ease-in-out duration-300 ${palette.sideBar}`}
+        className={`flex transition-color ease-in-out duration-300 ${palette.sideBar}`}
         style={{ width: "20rem" }}
       >
         <div className="side-bar-body w-full">
@@ -130,14 +129,14 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
           <Tooltip
             id="first-room"
             style={{
-              fontSize: "0.8rem",
+              fontSize: "1rem",
               borderRadius: "1rem",
               zIndex: "9999",
             }}
             isOpen={showToolTip}
           />
 
-          <div className="flex flex-col flex-1 text-base">
+          <div className="col text-base">
             <isDeleteOpenContext.Provider
               value={{ isDeleteOpen, setIsDeleteOpen }}
             >
@@ -154,7 +153,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
                   </div>
                 ))
               ) : (
-                <div className="flex flex-col items-center justify-center h-full mb-4 relative">
+                <div className="mx-auto my-[30rem]">
                   <h5 className="font-bold text-gray-200">No rooms :(</h5>
                 </div>
               )}
@@ -168,7 +167,6 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
         <Menu
           showMenu={showMenu}
           setShowMenu={setShowMenu}
-          createRoomOpen={createRoomOpen}
           rooms={rooms}
           openChat={openChat}
         />

@@ -4,7 +4,7 @@ import { Form } from "react-router-dom";
 import Input from "../components/Input";
 import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
-import { userContext } from "../App";
+import { userContext } from "../context/UserContext";
 
 const CreateAccount = ({
   setPassword,

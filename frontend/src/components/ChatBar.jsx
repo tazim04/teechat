@@ -1,4 +1,4 @@
-import { onlineUsersContext } from "../App";
+import { onlineUsersContext } from "../context/OnlineUsersContext";
 import { useContext, useState } from "react";
 import { usePalette } from "../context/PaletteContext";
 

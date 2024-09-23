@@ -185,6 +185,73 @@ io.on("connection", (socket) => {
     socket.join(rooms_to_join); // Join all group rooms
   });
 
+  socket.on(
+    "create_account",
+    async (email, username, password, birthday, interests, socials) => {
+      console.log(
+        "Creating account for:",
+        username +
+          " with the following data: " +
+          email +
+          " " +
+          password +
+          " " +
+          birthday +
+          " " +
+          interests +
+          " " +
+          socials
+      );
+
+      const existing_email = await Users.findOne({ email });
+      const existing_username = await Users.findOne({ username });
+
+      // Check if the email or username already exists
+      if (existing_email) {
+        const response = "existing email";
+        console.log("Email already exists");
+        socket.emit("account_created", response);
+        return;
+      }
+      if (existing_username) {
+        const response = "existing username";
+        console.log("Username already exists");
+        socket.emit("account_created", response);
+        return;
+      }
+
+      // Create a new user with the provided data and save it to the database if it doesn't already exist
+      const user = new Users({
+        email,
+        username,
+        rooms: [],
+        password,
+        birthday,
+        interests,
+        socials,
+      });
+
+      // sinced rooms is empty, no need to send it to the client on account creation
+      const response = {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        birthday: user.birthday,
+        interests: user.interests,
+        socials: user.socials,
+      };
+      try {
+        await user.save(); // Save the user to the database
+        console.log("Account created for:", username);
+        socket.emit("account_created", response);
+        // socket.emit("users_palette", "default");
+      } catch (error) {
+        console.log("Error creating account:", error);
+        socket.emit("account_created", null);
+      }
+    }
+  );
+
   socket.on("fetch_rooms", async (username) => {
     const user = await Users.findOne({ username: username });
 
@@ -195,6 +262,16 @@ io.on("connection", (socket) => {
     } catch (error) {
       console.log("There was an error fetching rooms:", error);
     }
+  });
+
+  socket.on("fetch_all_users", async () => {
+    const users = await Users.find({});
+    let allUsers = [];
+    users.forEach((user) => {
+      allUsers.push({ _id: user._id, username: user.username });
+    });
+    console.log("All users:", allUsers);
+    io.emit("receive_all_users", allUsers);
   });
 
   socket.on("get_previous_messages", async (room) => {
@@ -470,81 +547,46 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on(
-    "create_account",
-    async (email, username, password, birthday, interests, socials) => {
-      console.log(
-        "Creating account for:",
-        username +
-          " with the following data: " +
-          email +
-          " " +
-          password +
-          " " +
-          birthday +
-          " " +
-          interests +
-          " " +
-          socials
-      );
+  // Add a user to a group room
+  socket.on("add_user_to_room", async (room_id, user_id) => {
+    const user = await Users.findById(user_id); // Find the user in the Users collection
+    const room = await Rooms.findById(room_id); // Find the room in the Rooms collection
 
-      const existing_email = await Users.findOne({ email });
-      const existing_username = await Users.findOne({ username });
-
-      // Check if the email or username already exists
-      if (existing_email) {
-        const response = "existing email";
-        console.log("Email already exists");
-        socket.emit("account_created", response);
-        return;
-      }
-      if (existing_username) {
-        const response = "existing username";
-        console.log("Username already exists");
-        socket.emit("account_created", response);
-        return;
-      }
-
-      // Create a new user with the provided data and save it to the database if it doesn't already exist
-      const user = new Users({
-        email,
-        username,
-        rooms: [],
-        password,
-        birthday,
-        interests,
-        socials,
-      });
-
-      // sinced rooms is empty, no need to send it to the client on account creation
-      const response = {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        birthday: user.birthday,
-        interests: user.interests,
-        socials: user.socials,
-      };
-      try {
-        await user.save();
-        console.log("Account created for:", username);
-        socket.emit("account_created", response);
-        socket.emit("users_palette", "default");
-      } catch (error) {
-        console.log("Error creating account:", error);
-        socket.emit("account_created", null);
-      }
+    if (!user || !room) {
+      console.log("User or room not found:", user, room);
+      return;
     }
-  );
 
-  socket.on("fetch_all_users", async () => {
-    const users = await Users.find({});
-    let allUsers = [];
-    users.forEach((user) => {
-      allUsers.push({ _id: user._id, username: user.username });
+    console.log("Adding user to room:", user, room);
+
+    // Add the user to the room's participants
+    await room.updateOne({ $push: { participants: user_id } });
+
+    // Add the room to the user's room list
+    await user.updateOne({
+      $push: { rooms: { id: room_id, name: room.name, is_group: true } },
     });
-    console.log("All users:", allUsers);
-    io.emit("receive_all_users", allUsers);
+  });
+
+  // Remove a user from a group room
+  socket.on("remove_user_from_room", async (room_id, user_id) => {
+    const user = await Users.findById(user_id); // Find the user in the Users collection
+    const room = await Rooms.findById(room_id); // Find the room in the Rooms collection
+
+    if (!user || !room) {
+      console.log("User or room not found:", user, room);
+      return;
+    }
+
+    console.log("Removing user from room:", user, room);
+
+    // Remove the user from the room's participants
+    await room.updateOne({ $pull: { participants: user_id } });
+
+    // Remove the room from the user's room list
+    await user.updateOne({
+      $pull: { rooms: { id: room_id } },
+    });
   });
 
   socket.on("disconnect", () => {
@@ -575,9 +617,10 @@ io.on("connection", (socket) => {
     console.log("Palette updated for:", username, palette);
   });
 
-  socket.on("fetch_palette", async (username) => {
-    const user = await Users.findOne({ username: username });
-    console.log("Fetching palette for:", username, user.palette);
+  socket.on("fetch_palette", async (user_id) => {
+    console.log("fetch_palette:", user_id);
+    const user = await Users.findById(user_id);
+    console.log("Fetching palette for:", user);
     socket.emit("users_palette", user.palette); // Emit the user's palette to the client
   });
 });
