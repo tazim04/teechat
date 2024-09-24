@@ -12,6 +12,8 @@ function RoomCard({
   checkOnline,
   selectedRoomContext,
   setSelectedRoomContext,
+  currentRoom,
+  setCurrentRoom,
 }) {
   const { palette } = usePalette();
   const [showContextMenu, setShowContextMenu] = useState("");
@@ -97,6 +99,8 @@ function RoomCard({
       <DeleteConfirmationModal
         room={selectedRoomContext}
         setShowContextMenu={setShowContextMenu}
+        currentRoom={currentRoom}
+        setCurrentRoom={setCurrentRoom}
       />
     </div>
   );

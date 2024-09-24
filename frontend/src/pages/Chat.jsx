@@ -48,7 +48,7 @@ function Chat({ currentRoom, messages, setMessages }) {
     } else {
       // console.log("bottomRef.current is null");
     }
-  }, [messages, currentRoom.name]);
+  }, [messages, currentRoom]);
 
   // Listen for events when the component mounts
   useEffect(() => {
@@ -178,7 +178,10 @@ function Chat({ currentRoom, messages, setMessages }) {
             {/* Check if there are messages for the selected recipient */}
             {messages[currentRoom._id] ? (
               messages[currentRoom._id].map((msg, index, arr) => {
-                // console.log(messages[currentRoom.name]);
+                if (!msg.sender) {
+                  return; // If the message sender is not available, return
+                }
+
                 const isCurrentUser = msg.sender.username === username; // Check if the message is from the current user
 
                 const prevSender = arr[index - 1]?.sender; // Get the previous sender

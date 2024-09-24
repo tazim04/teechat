@@ -83,8 +83,8 @@ function CreateRoom({
 
   // Create a room with a user, {_id, username}
   const createRoom = (selected_user) => {
-    const existingRoom =
-      rooms && rooms.find((room) => room.name === selected_user._id); // Check if the room already exists, name is the username of the user selected
+    const roomName = selected_user.username;
+    const existingRoom = rooms && rooms.find((room) => room.name === roomName); // Check if the room already exists, name is the username of the user selected
 
     if (existingRoom) {
       // If the room exists, open it

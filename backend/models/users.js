@@ -10,13 +10,11 @@ const userSchema = new mongoose.Schema({
   },
   rooms: [
     {
-      id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Room", // Reference to Room model for population
-      },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Room", // Reference to Room model for population
       // name: String,
       // is_group: Boolean,
-      _id: false, // Prevents automatic creation of _id
+      // _id: false, // Prevents automatic creation of _id
     },
   ], // Reference to the rooms the user is in
   password: { type: String, required: true },
@@ -30,7 +28,8 @@ const userSchema = new mongoose.Schema({
   }, // Social media fields
 });
 
-userSchema.index({ username: 1 }); // Index the username field
+// Index on username for faster lookups
+userSchema.index({ username: 1 });
 
 const User = mongoose.model("User", userSchema); // Create a model from the schema
 

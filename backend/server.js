@@ -65,7 +65,8 @@ async function find_room_in_db(sender, recipient) {
   let sender_rooms = sender.rooms;
 
   for (let room of sender_rooms) {
-    if (room.name === recipient.username && room.is_group === false) {
+    const r = room.id; // room.id now contains the full room data, due to populate
+    if (r.name === recipient.username && r.is_group === false) {
       const roomData = await Rooms.findById(room.id);
       return roomData;
     }
@@ -102,18 +103,16 @@ async function create_room(sender, recipient) {
   // add the room to both sender and recipients room list
   await sender.updateOne({
     $push: {
-      rooms: { id: room._id },
+      rooms: room._id,
     },
   });
   await recipient.updateOne({
-    $push: { rooms: { id: room._id } },
+    $push: { rooms: room._id },
   });
 }
 // participants is an array of user objects {_id, username}
 async function create_room_gc(participants, roomName) {
   // for gc, no need to check if the room already exists
-
-  // console.log("async create_room_gc:", participants, roomName);
 
   let participants_ids = participants.map((participant) => participant._id);
 
@@ -130,7 +129,7 @@ async function create_room_gc(participants, roomName) {
     const user = await Users.findById(participant); // Find the user in the Users collection
     await participant.updateOne({
       $push: {
-        rooms: { id: room._id },
+        rooms: room._id,
       },
     });
   }
@@ -261,12 +260,17 @@ io.on("connection", (socket) => {
 
     try {
       // Find the user in the database and populate the 'rooms' field
-      const user = await Users.findOne({ username: username })
-        .select("rooms")
-        .populate({
-          path: "rooms.id", // Populate the 'id' field inside 'rooms' array with Room details
-          populate: { path: "participants", select: "username" }, // Also populate participants within each room
-        });
+      // const user = await Users.findOne({ username: username })
+      //   .select("rooms")
+      //   .populate({
+      //     path: "rooms.id", // Populate the 'id' field inside 'rooms' array with Room details
+      //     populate: { path: "participants", select: "username" }, // Also populate participants within each room
+      //   });
+
+      const user = await Users.findOne({ username: username }).populate({
+        path: "rooms",
+        populate: { path: "participants", select: "username" },
+      }); // Find the user in the database and populate the 'rooms' field
 
       if (!user) {
         console.log("User not found:", username);
@@ -277,17 +281,17 @@ io.on("connection", (socket) => {
       console.log("fetch_rooms:", user.rooms);
 
       const rooms = user?.rooms.map((room) => {
-        const roomData = room?.id; // room.id now contains the full room data
-        if (roomData.is_group) {
-          console.log(roomData.name, " is a group room");
-          roomData.name = roomData.name; // Set the room name to the group chat name
+        if (room.is_group) {
+          console.log(room.name, " is a group room");
+          room.name = room.name; // Set the room name to the group chat name
         } else {
           console.log("Room is not a group room");
-          roomData.name = roomData.participants.find(
+          room.name = room.participants.find(
             (participant) => participant.username !== username
           ).username; // Set the room name to the other participant's username
         }
-        return roomData;
+        console.log("Room name:", room.name);
+        return room;
       });
       console.log("Rooms:", rooms);
       socket.emit("receive_rooms", rooms);
@@ -349,8 +353,26 @@ io.on("connection", (socket) => {
   socket.on("create_room", async (user, recipient) => {
     console.log("Creating room with:", user.username, recipient.username);
 
-    const user_db = await Users.findOne({ _id: user._id }); // Find the user in the database
-    const recipient_db = await Users.findOne({ _id: recipient._id }); // Find the recipient in the database
+    // const user_db = await Users.findOne({ _id: user._id })
+    //   .select("rooms")
+    //   .populate({
+    //     path: "rooms.id", // Populate the 'id' field inside 'rooms' array with Room details
+    //     populate: { path: "participants", select: "username" }, // Also populate participants within each room
+    //   }); // Find the user in the database
+    const user_db = await Users.findOne({ _id: user._id }).populate({
+      path: "rooms",
+      populate: { path: "participants", select: "username" },
+    }); // Find the user in the database and populate the 'rooms' field
+    // const recipient_db = await Users.findOne({ _id: recipient._id })
+    //   .select("rooms")
+    //   .populate({
+    //     path: "rooms.id", // Populate the 'id' field inside 'rooms' array with Room details
+    //     populate: { path: "participants", select: "username" }, // Also populate participants within each room
+    //   }); // Find the recipient in the database
+    const recipient_db = await Users.findOne({ _id: recipient._id }).populate({
+      path: "rooms",
+      populate: { path: "participants", select: "username" },
+    }); // Find the recipient in the database and populate the 'rooms' field
 
     // Check if the user and recipient exist, shouldn't happen
     if (!user_db || !recipient_db) {
@@ -363,25 +385,56 @@ io.on("connection", (socket) => {
     const user_socket_id = socket_ids[user.username]; // Get the user's socket ID from the dictionary
     const recipient_socket_id = socket_ids[recipient.username]; // Get the recipient's socket ID from the dictionary
 
-    console.log("User socket ID:", user_socket_id);
+    // console.log("User socket ID:", user_socket_id);
 
     // Fetch the updated room lists for both users
-    const updatedUserRooms = await Users.findById(user_db._id).select("rooms");
-    const updatedRecipientRooms = await Users.findById(recipient_db._id).select(
-      "rooms"
+    const user_updatedRooms = await Users.findById(user._id).populate({
+      path: "rooms",
+      populate: { path: "participants", select: "username" },
+    });
+    const recipient_updatedRooms = await Users.findById(recipient._id).populate(
+      {
+        path: "rooms",
+        populate: { path: "participants", select: "username" },
+      }
     );
+
+    // Update the room names for both users to display the other participant's username
+    const updatedUserRooms = user_updatedRooms?.rooms.map((room) => {
+      if (room.is_group) {
+        console.log(room.name, " is a group room");
+        room.name = room.name; // Set the room name to the group chat name
+      } else {
+        console.log("Room is not a group room");
+        room.name = room.participants.find(
+          (participant) => participant.username !== user.username
+        ).username; // Set the room name to the other participant's username
+      }
+      console.log("Room name:", room.name);
+      return room;
+    });
+    const updatedRecipientRooms = recipient_updatedRooms?.rooms.map((room) => {
+      if (room.is_group) {
+        console.log(room.name, " is a group room");
+        room.name = room.name; // Set the room name to the group chat name
+      } else {
+        console.log("Room is not a group room");
+        room.name = room.participants.find(
+          (participant) => participant.username !== recipient.username
+        ).username; // Set the room name to the other participant's username
+      }
+      console.log("Room name:", room.name);
+      return room;
+    });
 
     // Emit the updated room lists to both users
-    io.to(user_socket_id).emit("receive_rooms", updatedUserRooms.rooms);
-    io.to(recipient_socket_id).emit(
-      "receive_rooms",
-      updatedRecipientRooms.rooms
-    );
+    io.to(user_socket_id).emit("receive_rooms", updatedUserRooms);
+    io.to(recipient_socket_id).emit("receive_rooms", updatedRecipientRooms);
 
-    console.log(`Updated rooms for ${user.username}:`, updatedUserRooms.rooms);
+    console.log(`Updated rooms for ${user.username}:`, updatedUserRooms);
     console.log(
       `Updated rooms for ${recipient.username}:`,
-      updatedRecipientRooms.rooms
+      updatedRecipientRooms
     );
 
     // Emit a message to the recipient to notify them of the new room
@@ -511,16 +564,35 @@ io.on("connection", (socket) => {
 
       // Emit the updated room lists to the participants
       for (const participant of participants) {
-        const updatedRooms = await Users.findById(participant._id).select(
-          "rooms"
-        );
         if (participant) {
-          const updatedRooms = await Users.findById(participant._id).select(
-            "rooms"
+          const participant_updatedRooms = await Users.findById(
+            participant._id
+          ).populate({
+            path: "rooms",
+            populate: { path: "participants", select: "username" },
+          });
+
+          // Update the room names for both users to display the other participant's username
+          const updatedParticipantRooms = participant_updatedRooms?.rooms.map(
+            (room) => {
+              if (room.is_group) {
+                console.log(room.name, " is a group room");
+                room.name = room.name; // Set the room name to the group chat name
+              } else {
+                console.log("Room is not a group room");
+                room.name = room.participants.find(
+                  (other_participant) =>
+                    other_participant.username !== participant.username
+                ).username; // Set the room name to the other participant's username
+              }
+              console.log("Room name:", room.name);
+              return room;
+            }
           );
+
           io.to(socket_ids[participant.username]).emit(
             "receive_rooms",
-            updatedRooms.rooms
+            updatedParticipantRooms
           );
         }
       }

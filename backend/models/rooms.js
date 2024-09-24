@@ -24,6 +24,6 @@ const roomSchema = new mongoose.Schema(
 
 const Room = mongoose.model("Room", roomSchema); // Create a model from the schema
 
-roomSchema.index({ "participants.id": 1 }); // Index on 'participants.id'
+roomSchema.index({ "participants._id": 1 }); // Index on 'participants.id'
 
 export default Room; // Export the model

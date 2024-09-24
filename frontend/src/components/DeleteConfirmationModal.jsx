@@ -6,7 +6,12 @@ import { useSocket } from "../context/SocketContext";
 
 Modal.setAppElement("#root"); // Set the root element for the modal
 
-function DeleteConfirmationModal({ room, setShowContextMenu }) {
+function DeleteConfirmationModal({
+  room,
+  setShowContextMenu,
+  currentRoom,
+  setCurrentRoom,
+}) {
   const { isDeleteOpen, setIsDeleteOpen } = useContext(isDeleteOpenContext); // State for the modal visibility
   const socket = useSocket(); // Use custom hook to get the socket object from the context
 
@@ -26,6 +31,9 @@ function DeleteConfirmationModal({ room, setShowContextMenu }) {
     console.log("Deleting room: ", room.name);
     socket.emit("delete_room", room._id); // Emit a "delete_room" event
     setIsDeleteOpen(false); // Close the modal
+    if (room._id === currentRoom._id) {
+      setCurrentRoom(null); // Close the chat if the current room is deleted
+    }
   };
 
   return (

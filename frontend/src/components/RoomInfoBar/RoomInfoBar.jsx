@@ -48,26 +48,6 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo, participants }) {
     setShowAddParticipant(!showAddParticipant); // Toggle the showAddParticipant state
   };
 
-  // useEffect(() => {
-  //   if (socket) {
-  //     console.log("Room: ", room);
-  //     if (room.is_group) {
-  //       socket.emit("fetch_room_participants", room._id);
-  //     } else {
-  //       socket.emit("fetch_user", user._id, room._id);
-  //     }
-
-  //     socket.on("receive_room_participants", (participants) => {
-  //       // console.log("Participants: ", participants);
-  //       setParticipants(participants);
-  //     });
-  //     socket.on("receive_user", (user) => {
-  //       // console.log("User: ", user);
-  //       setParticipants([user]);
-  //     });
-  //   }
-  // }, [room]);
-
   return (
     <div className="relative w-[18rem] bg-gray-100 border-2 border-l-gray-200 h-full shadow-lg transition-transform duration-300">
       <button

@@ -153,6 +153,8 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
                       checkOnline={checkOnline}
                       selectedRoomContext={selectedRoomContext}
                       setSelectedRoomContext={setSelectedRoomContext}
+                      currentRoom={currentRoom}
+                      setCurrentRoom={setCurrentRoom}
                     />
                   </div>
                 ))

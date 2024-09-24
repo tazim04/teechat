@@ -64,7 +64,7 @@ function ProfilePopout({ participant, setActiveProfile, isOnline }) {
             <p className="font-semibold text-[0.9rem] text-gray-800">
               My Interests
             </p>
-            <div>
+            <div className="w-[15rem] overflow-x-auto whitespace-nowrap">
               {participant.interests.map((interest, index) => (
                 <span
                   key={index}
