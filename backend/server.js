@@ -74,6 +74,33 @@ async function find_room_in_db(sender, recipient) {
   return null;
 }
 
+async function getRoomsWithNames(user) {
+  console.log("getRoomsWithNames:", user);
+  if (!user) {
+    console.log("User not found:", user);
+    return []; // Return an empty array if the user is not found
+  }
+  const user_populatedRooms = await Users.findById(user._id).populate({
+    path: "rooms",
+    populate: { path: "participants", select: "username" },
+  });
+
+  const rooms = user_populatedRooms?.rooms.map((room) => {
+    if (room.is_group) {
+      console.log(room.name, " is a group room");
+      room.name = room.name; // Set the room name to the group chat name
+    } else {
+      console.log("Room is not a group room");
+      room.name = room.participants.find(
+        (participant) => participant.username !== user.username
+      ).username; // Set the room name to the other participant's username
+    }
+    console.log("Room name:", room.name);
+    return room;
+  });
+  return rooms;
+}
+
 // Create a room between two users and save it to the database
 async function create_room(sender, recipient) {
   // check if the room already exists
@@ -267,32 +294,28 @@ io.on("connection", (socket) => {
       //     populate: { path: "participants", select: "username" }, // Also populate participants within each room
       //   });
 
-      const user = await Users.findOne({ username: username }).populate({
-        path: "rooms",
-        populate: { path: "participants", select: "username" },
-      }); // Find the user in the database and populate the 'rooms' field
+      // const user = await Users.findOne({ username: username }).populate({
+      //   path: "rooms",
+      //   populate: { path: "participants", select: "username" },
+      // }); // Find the user in the database and populate the 'rooms' field
 
-      if (!user) {
-        console.log("User not found:", username);
-        socket.emit("receive_rooms", []); // Emit an empty array if the user is not found
-        return;
-      }
+      // const rooms = user?.rooms.map((room) => {
+      //   if (room.is_group) {
+      //     console.log(room.name, " is a group room");
+      //     room.name = room.name; // Set the room name to the group chat name
+      //   } else {
+      //     console.log("Room is not a group room");
+      //     room.name = room.participants.find(
+      //       (participant) => participant.username !== username
+      //     ).username; // Set the room name to the other participant's username
+      //   }
+      //   console.log("Room name:", room.name);
+      //   return room;
+      // });
 
-      console.log("fetch_rooms:", user.rooms);
+      const user = await Users.findOne({ username: username });
+      const rooms = await getRoomsWithNames(user); // Get the rooms with the other participant's username as the room name
 
-      const rooms = user?.rooms.map((room) => {
-        if (room.is_group) {
-          console.log(room.name, " is a group room");
-          room.name = room.name; // Set the room name to the group chat name
-        } else {
-          console.log("Room is not a group room");
-          room.name = room.participants.find(
-            (participant) => participant.username !== username
-          ).username; // Set the room name to the other participant's username
-        }
-        console.log("Room name:", room.name);
-        return room;
-      });
       console.log("Rooms:", rooms);
       socket.emit("receive_rooms", rooms);
     } catch (error) {
@@ -353,22 +376,11 @@ io.on("connection", (socket) => {
   socket.on("create_room", async (user, recipient) => {
     console.log("Creating room with:", user.username, recipient.username);
 
-    // const user_db = await Users.findOne({ _id: user._id })
-    //   .select("rooms")
-    //   .populate({
-    //     path: "rooms.id", // Populate the 'id' field inside 'rooms' array with Room details
-    //     populate: { path: "participants", select: "username" }, // Also populate participants within each room
-    //   }); // Find the user in the database
     const user_db = await Users.findOne({ _id: user._id }).populate({
       path: "rooms",
       populate: { path: "participants", select: "username" },
     }); // Find the user in the database and populate the 'rooms' field
-    // const recipient_db = await Users.findOne({ _id: recipient._id })
-    //   .select("rooms")
-    //   .populate({
-    //     path: "rooms.id", // Populate the 'id' field inside 'rooms' array with Room details
-    //     populate: { path: "participants", select: "username" }, // Also populate participants within each room
-    //   }); // Find the recipient in the database
+
     const recipient_db = await Users.findOne({ _id: recipient._id }).populate({
       path: "rooms",
       populate: { path: "participants", select: "username" },
@@ -388,44 +400,46 @@ io.on("connection", (socket) => {
     // console.log("User socket ID:", user_socket_id);
 
     // Fetch the updated room lists for both users
-    const user_updatedRooms = await Users.findById(user._id).populate({
-      path: "rooms",
-      populate: { path: "participants", select: "username" },
-    });
-    const recipient_updatedRooms = await Users.findById(recipient._id).populate(
-      {
-        path: "rooms",
-        populate: { path: "participants", select: "username" },
-      }
-    );
+    // const user_updatedRooms = await Users.findById(user._id).populate({
+    //   path: "rooms",
+    //   populate: { path: "participants", select: "username" },
+    // });
+    // const recipient_updatedRooms = await Users.findById(recipient._id).populate(
+    //   {
+    //     path: "rooms",
+    //     populate: { path: "participants", select: "username" },
+    //   }
+    // );
 
-    // Update the room names for both users to display the other participant's username
-    const updatedUserRooms = user_updatedRooms?.rooms.map((room) => {
-      if (room.is_group) {
-        console.log(room.name, " is a group room");
-        room.name = room.name; // Set the room name to the group chat name
-      } else {
-        console.log("Room is not a group room");
-        room.name = room.participants.find(
-          (participant) => participant.username !== user.username
-        ).username; // Set the room name to the other participant's username
-      }
-      console.log("Room name:", room.name);
-      return room;
-    });
-    const updatedRecipientRooms = recipient_updatedRooms?.rooms.map((room) => {
-      if (room.is_group) {
-        console.log(room.name, " is a group room");
-        room.name = room.name; // Set the room name to the group chat name
-      } else {
-        console.log("Room is not a group room");
-        room.name = room.participants.find(
-          (participant) => participant.username !== recipient.username
-        ).username; // Set the room name to the other participant's username
-      }
-      console.log("Room name:", room.name);
-      return room;
-    });
+    // // Update the room names for both users to display the other participant's username
+    // const updatedUserRooms = user_updatedRooms?.rooms.map((room) => {
+    //   if (room.is_group) {
+    //     console.log(room.name, " is a group room");
+    //     room.name = room.name; // Set the room name to the group chat name
+    //   } else {
+    //     console.log("Room is not a group room");
+    //     room.name = room.participants.find(
+    //       (participant) => participant.username !== user.username
+    //     ).username; // Set the room name to the other participant's username
+    //   }
+    //   console.log("Room name:", room.name);
+    //   return room;
+    // });
+    // const updatedRecipientRooms = recipient_updatedRooms?.rooms.map((room) => {
+    //   if (room.is_group) {
+    //     console.log(room.name, " is a group room");
+    //     room.name = room.name; // Set the room name to the group chat name
+    //   } else {
+    //     console.log("Room is not a group room");
+    //     room.name = room.participants.find(
+    //       (participant) => participant.username !== recipient.username
+    //     ).username; // Set the room name to the other participant's username
+    //   }
+    //   console.log("Room name:", room.name);
+    //   return room;
+    // });
+    const updatedUserRooms = await getRoomsWithNames(user_db);
+    const updatedRecipientRooms = await getRoomsWithNames(recipient_db);
 
     // Emit the updated room lists to both users
     io.to(user_socket_id).emit("receive_rooms", updatedUserRooms);
