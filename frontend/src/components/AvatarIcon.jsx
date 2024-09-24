@@ -4,7 +4,7 @@ function AvatarIcon({ name, showStatus, isOnline }) {
       <img
         src={`https://ui-avatars.com/api/?name=${name}&background=random&color=fff`}
         alt="avatar"
-        className="rounded-full"
+        className="rounded-full shadow-md"
       />
       <div className="absolute left-[1.9rem] bottom-[0.1rem]">
         {showStatus &&

@@ -57,7 +57,7 @@ async function get_previous_messages(roomID) {
     select: "username", // Select only the username and ID
   });
   let prev_messages = room.messages;
-  console.log("Previous messages:", prev_messages);
+  // console.log("Previous messages:", prev_messages);
   return prev_messages;
 }
 
@@ -90,6 +90,8 @@ async function create_room(sender, recipient) {
 
   // initialize the room
   const room = new Rooms({
+    name: null,
+    is_group: false,
     participants: [sender._id, recipient._id],
     messages: [],
   });
@@ -100,22 +102,24 @@ async function create_room(sender, recipient) {
   // add the room to both sender and recipients room list
   await sender.updateOne({
     $push: {
-      rooms: { id: room._id, name: recipient.username, is_group: false },
+      rooms: { id: room._id },
     },
   });
   await recipient.updateOne({
-    $push: { rooms: { id: room._id, name: sender.username, is_group: false } },
+    $push: { rooms: { id: room._id } },
   });
 }
 // participants is an array of user objects {_id, username}
 async function create_room_gc(participants, roomName) {
   // for gc, no need to check if the room already exists
 
-  console.log("async create_room_gc:", participants, roomName);
+  // console.log("async create_room_gc:", participants, roomName);
 
   let participants_ids = participants.map((participant) => participant._id);
 
   const room = new Rooms({
+    name: roomName,
+    is_group: true,
     participants: participants_ids,
     messages: [],
   }); // Create a new room with the participants
@@ -126,7 +130,7 @@ async function create_room_gc(participants, roomName) {
     const user = await Users.findById(participant); // Find the user in the Users collection
     await participant.updateOne({
       $push: {
-        rooms: { id: room._id, name: roomName, is_group: true },
+        rooms: { id: room._id },
       },
     });
   }
@@ -146,11 +150,11 @@ io.on("connection", (socket) => {
     const user = await Users.findOne({ username: username });
 
     if (user && user.password === password) {
-      console.log("User signed in:", username);
+      // console.log("User signed in:", username);
       const { password, ...userWithoutPassword } = user.toObject(); // Remove the password from the user object before sending it to the client
       socket.emit("sign_in_response", true, userWithoutPassword);
     } else {
-      console.log("User not found or password incorrect:", username);
+      // console.log("User not found or password incorrect:", username);
       socket.emit("sign_in_response", false);
     }
   });
@@ -170,7 +174,7 @@ io.on("connection", (socket) => {
     socket_ids[user.username] = socket.id;
     io.emit("receive_online_users", Object.keys(socket_ids)); // Emit the updated list of online users
 
-    console.log("Current online users:", socket_ids); // Log the list of online users
+    // console.log("Current online users:", socket_ids); // Log the list of online users
 
     const rooms = user.rooms; // Get the user's rooms, this will be used to subscribe to all group rooms
     let rooms_to_join = [];
@@ -209,13 +213,13 @@ io.on("connection", (socket) => {
       // Check if the email or username already exists
       if (existing_email) {
         const response = "existing email";
-        console.log("Email already exists");
+        // console.log("Email already exists");
         socket.emit("account_created", response);
         return;
       }
       if (existing_username) {
         const response = "existing username";
-        console.log("Username already exists");
+        // console.log("Username already exists");
         socket.emit("account_created", response);
         return;
       }
@@ -253,14 +257,43 @@ io.on("connection", (socket) => {
   );
 
   socket.on("fetch_rooms", async (username) => {
-    const user = await Users.findOne({ username: username });
+    console.log("Fetching rooms for:", username);
 
     try {
-      let rooms = user.rooms;
-      console.log("Fetching rooms: ", rooms);
+      // Find the user in the database and populate the 'rooms' field
+      const user = await Users.findOne({ username: username })
+        .select("rooms")
+        .populate({
+          path: "rooms.id", // Populate the 'id' field inside 'rooms' array with Room details
+          populate: { path: "participants", select: "username" }, // Also populate participants within each room
+        });
+
+      if (!user) {
+        console.log("User not found:", username);
+        socket.emit("receive_rooms", []); // Emit an empty array if the user is not found
+        return;
+      }
+
+      console.log("fetch_rooms:", user.rooms);
+
+      const rooms = user?.rooms.map((room) => {
+        const roomData = room?.id; // room.id now contains the full room data
+        if (roomData.is_group) {
+          console.log(roomData.name, " is a group room");
+          roomData.name = roomData.name; // Set the room name to the group chat name
+        } else {
+          console.log("Room is not a group room");
+          roomData.name = roomData.participants.find(
+            (participant) => participant.username !== username
+          ).username; // Set the room name to the other participant's username
+        }
+        return roomData;
+      });
+      console.log("Rooms:", rooms);
       socket.emit("receive_rooms", rooms);
     } catch (error) {
       console.log("There was an error fetching rooms:", error);
+      socket.emit("receive_rooms", []); // Emit an empty array if there is an error
     }
   });
 
@@ -277,26 +310,33 @@ io.on("connection", (socket) => {
   socket.on("get_previous_messages", async (room) => {
     console.log("Fetching previous messages for room:", room);
 
-    // Join the room if it's a group room and the socket is not already in the room
-    if (room.is_group && !socket.rooms.has(room.id)) {
-      console.log("Joining group room:", room.id);
-      socket.join(room.id); // Join the group room
-    }
+    try {
+      const roomID = room._id;
 
-    const roomID = room.id;
+      console.log("Room ID:", roomID);
 
-    // Check if the messages are in the cache
-    if (messages_cache[roomID]) {
-      console.log("Messages found in cache.");
-      io.to(socket.id).emit(
-        "recieve_previous_messages",
-        messages_cache[roomID]
-      );
-    } else {
-      console.log("Messages not in cache, fetching from DB.");
-      let prevMessages = await get_previous_messages(roomID); // Fetch the previous messages from the database
-      messages_cache[roomID] = prevMessages;
-      io.to(socket.id).emit("recieve_previous_messages", prevMessages);
+      // Join the room if it's a group room and the socket is not already in the room
+      if (room.is_group && !socket.rooms.has(room.id)) {
+        console.log("Joining group room:", room.id);
+        socket.join(roomID); // Join the group room
+      }
+
+      // Check if the messages are in the cache
+      if (messages_cache[roomID]) {
+        console.log("Messages found in cache.");
+        io.to(socket.id).emit(
+          "recieve_previous_messages",
+          messages_cache[roomID]
+        );
+      } else {
+        console.log("Messages not in cache, fetching from DB.");
+        let prevMessages = await get_previous_messages(roomID); // Fetch the previous messages from the database
+        messages_cache[roomID] = prevMessages;
+        io.to(socket.id).emit("recieve_previous_messages", prevMessages);
+      }
+    } catch (error) {
+      console.log("There was an error fetching previous messages:", error);
+      io.to(socket.id).emit("recieve_previous_messages", []); // Emit an empty array if there is an error
     }
   });
 
@@ -305,7 +345,7 @@ io.on("connection", (socket) => {
     io.emit("receive_online_users", Object.keys(socket_ids)); // Emit the list of online users
   });
 
-  // Create a room with a user, no group messaging yet, user & recipient {_id, username}
+  // Create a room with a user, user & recipient {_id, username}
   socket.on("create_room", async (user, recipient) => {
     console.log("Creating room with:", user.username, recipient.username);
 
@@ -397,24 +437,30 @@ io.on("connection", (socket) => {
   });
 
   socket.on("fetch_user", async (user_id, room_id) => {
-    const user = await Users.findById(user_id);
-    if (!user) {
-      console.log("User not found:", user_id);
-      return;
+    try {
+      const user = await Users.findById(user_id);
+      if (!user) {
+        console.log("User not found:", user_id);
+        return;
+      }
+
+      console.log("Fetching user:", user);
+
+      const room = await Rooms.findById(room_id).populate({
+        path: "participants",
+        model: "User",
+        select: "_id, username email birthday interests socials",
+      });
+
+      const other_user = room.participants.find(
+        (participant) => participant._id != user_id // Find the other participant in the room
+      );
+
+      console.log("Other user:", other_user);
+      socket.emit("receive_user", other_user); // Emit the other user to the client
+    } catch (error) {
+      console.log("Error fetching user:", error);
     }
-
-    const room = await Rooms.findById(room_id).populate({
-      path: "participants",
-      model: "User",
-      select: "_id, username email birthday interests socials",
-    });
-
-    const other_user = room.participants.find(
-      (participant) => participant._id != user_id // Find the other participant in the room
-    );
-
-    console.log("Other user:", other_user);
-    socket.emit("receive_user", other_user); // Emit the other user to the client
   });
 
   socket.on("fetch_room_participants", async (room_id) => {
@@ -422,7 +468,7 @@ io.on("connection", (socket) => {
     const room = await Rooms.findById(room_id).populate({
       path: "participants",
       model: "User",
-      select: "_id, username email birthday interests socials",
+      select: "_id username email birthday interests socials",
     });
 
     const participants = room.participants; // Get the participants of the room

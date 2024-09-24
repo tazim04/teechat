@@ -25,11 +25,11 @@ function SignIn({ setPassword, setShowSignIn }) {
     if (!socket) return;
     socket.on("sign_in_response", (response, user) => {
       if (response) {
-        console.log("Sign in successful", user);
+        // console.log("Sign in successful", user);
         setUser(user);
         navigate("/main");
       } else {
-        console.log("Sign in failed");
+        // console.log("Sign in failed");
         alert("Username or password is incorrect");
       }
     });
@@ -41,7 +41,7 @@ function SignIn({ setPassword, setShowSignIn }) {
   }, [socket, navigate]);
 
   const onSubmit = handleSubmit((data) => {
-    console.log("Sign In Data:", data);
+    // console.log("Sign In Data:", data);
     setPassword(data.password);
     // Emit a "sign_in" event to the server to check the user credentials
     socket.emit("sign_in", data.username, data.password);

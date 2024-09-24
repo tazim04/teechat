@@ -24,7 +24,7 @@ function DeleteConfirmationModal({ room, setShowContextMenu }) {
 
   const deleteRoom = () => {
     console.log("Deleting room: ", room.name);
-    socket.emit("delete_room", room.id); // Emit a "delete_room" event
+    socket.emit("delete_room", room._id); // Emit a "delete_room" event
     setIsDeleteOpen(false); // Close the modal
   };
 

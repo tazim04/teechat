@@ -57,13 +57,13 @@ function RoomCard({
   }, [isDeleteOpen]);
 
   return (
-    <div className="flex row" style={{ position: "relative" }}>
+    <div className="flex row" style={{ position: "relative" }} id={room.name}>
       <div
         className={`flex rounded-md py-2 px-5 mx-auto items-center transition ease-in-out cursor-pointer hover:bg-opacity-40 hover:bg-gray-300`}
         style={{ width: "95%" }}
         onClick={() => openChat(room)}
         onContextMenu={handleContextMenu}
-        id={room.id}
+        id={room._id}
       >
         <div className="w-10 h-10">
           <AvatarIcon
@@ -82,7 +82,7 @@ function RoomCard({
         ></div>
         <div className="absolute left-24">{room.name}</div>
       </div>
-      {showContextMenu === room.id && (
+      {showContextMenu === room._id && (
         <div
           ref={contextMenuRef}
           className="fixed"

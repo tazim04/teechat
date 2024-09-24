@@ -31,7 +31,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
   const { user } = useContext(userContext); // Get the user from the context
 
   const username = user.username; // Get the username from the context
-  const [rooms, setRooms] = useState(user.rooms || []); // State for the rooms
+  const [rooms, setRooms] = useState([]); // State for the rooms
 
   // Socket.io event listeners
   useEffect(() => {
@@ -55,6 +55,9 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
 
       // Emit a "fetch_all_users" event to get list of all users in the database
       socket.emit("fetch_all_users");
+
+      // Emit a "fetch_rooms" event to get the list of rooms
+      socket.emit("fetch_rooms", username);
     }
 
     return () => {
@@ -65,7 +68,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
         socket.off("receive_all_users");
       }
     };
-  }, [socket, setOnlineUsers, rooms]);
+  }, [socket, username]);
 
   useEffect(() => {
     if (rooms.length > 0) {
@@ -76,9 +79,10 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
   }, [rooms]);
 
   const openChat = (selected_room) => {
-    if (currentRoom && currentRoom.id === selected_room.id) {
+    if (currentRoom && currentRoom._id === selected_room._id) {
       return; // If the selected chat is the same as the current chat, return
     }
+    console.log("Opening chat: ", selected_room); // Log the selected chat
     setCurrentRoom(selected_room); // Set the room to the selected chat
     socket.emit("get_previous_messages", selected_room); // Emit a "get_previous_messages" event
 
@@ -153,7 +157,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
                   </div>
                 ))
               ) : (
-                <div className="mx-auto my-[30rem]">
+                <div className="flex justify-center my-[30rem]">
                   <h5 className="font-bold text-gray-200">No rooms :(</h5>
                 </div>
               )}

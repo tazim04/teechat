@@ -1,6 +1,7 @@
 import { onlineUsersContext } from "../context/OnlineUsersContext";
 import { useContext, useState } from "react";
 import { usePalette } from "../context/PaletteContext";
+import AvatarIcon from "./AvatarIcon";
 
 function ChatBar({ room, showRoomInfo, setShowRoomInfo }) {
   const { onlineUsers } = useContext(onlineUsersContext); // Get the online users from the context
@@ -24,7 +25,7 @@ function ChatBar({ room, showRoomInfo, setShowRoomInfo }) {
         <img
           src={`https://ui-avatars.com/api/?name=${room.name}&background=random&color=fff`}
           alt="avatar"
-          className="rounded-full w-auto h-14 my-3 mx-6"
+          className="rounded-full w-auto h-14 my-3 mx-6 shadow-sm"
         />
         <div className="my-auto">
           <h4>{room.name}</h4>

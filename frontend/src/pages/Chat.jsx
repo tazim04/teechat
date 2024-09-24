@@ -5,7 +5,7 @@ import { useEffect, useState, useRef, useContext } from "react";
 import "./stylesheets/Chat.css";
 import { usePalette } from "../context/PaletteContext";
 import { userContext } from "../context/UserContext";
-import RoomInfoBar from "../components/RoomInfoBar";
+import RoomInfoBar from "../components/RoomInfoBar/RoomInfoBar";
 
 function Chat({ currentRoom, messages, setMessages }) {
   const socket = useSocket(); // Use custom hook to get the socket object from the context
@@ -16,6 +16,7 @@ function Chat({ currentRoom, messages, setMessages }) {
   const [sendAnimation, setSendAnimation] = useState(false); // State for the send animation
   const [emptyMessageAnimation, setEmptyMessageAnimation] = useState(false); // State for the empty message animation
   const [showRoomInfo, setShowRoomInfo] = useState(true); // State for the room info bar
+  const [participants, setParticipants] = useState([]); // State for the participants for RoomInfoBar
 
   const { palette } = usePalette(); // Destructure palette from usePalette
   const { user } = useContext(userContext); // Get the user info from the context
@@ -85,6 +86,23 @@ function Chat({ currentRoom, messages, setMessages }) {
           };
         });
       });
+
+      // Fetch the participants for the room for RoomInfoBar
+      if (currentRoom) {
+        if (currentRoom.is_group) {
+          socket.emit("fetch_room_participants", currentRoom._id);
+        } else {
+          socket.emit("fetch_user", user._id, currentRoom._id);
+        }
+
+        socket.on("receive_room_participants", (participants) => {
+          // console.log("Participants: ", participants);
+          setParticipants(participants);
+        });
+        socket.on("receive_user", (otherUser) => {
+          setParticipants([otherUser]);
+        });
+      }
     }
     return () => {
       // Clean up the event listeners
@@ -92,6 +110,8 @@ function Chat({ currentRoom, messages, setMessages }) {
       if (socket) {
         socket.off("recieve_message");
         socket.off("recieve_previous_messages");
+        socket.off("receive_room_participants");
+        socket.off("receive_user");
       }
     };
   }, [socket, currentRoom, user, messages]);
@@ -130,7 +150,7 @@ function Chat({ currentRoom, messages, setMessages }) {
     socket.emit(
       "dm",
       message,
-      currentRoom.id,
+      currentRoom._id,
       currentRoom.name,
       user._id,
       currentRoom.is_group
@@ -142,8 +162,6 @@ function Chat({ currentRoom, messages, setMessages }) {
       setSendAnimation(false); // Reset the send animation
     }, 2000);
   };
-
-  // console.log(room.id);
 
   return (
     <div className="flex flex-row flex-1">
@@ -249,6 +267,7 @@ function Chat({ currentRoom, messages, setMessages }) {
           room={currentRoom}
           showRoomInfo={showRoomInfo}
           setShowRoomInfo={setShowRoomInfo}
+          participants={participants}
         />
       )}
     </div>

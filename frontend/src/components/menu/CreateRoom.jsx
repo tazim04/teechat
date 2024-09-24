@@ -108,11 +108,12 @@ function CreateRoom({
 
     if (existingRoom) {
       console.log("Room already exists with: ", groupChatName);
-      setShowMenu(false); // Close the add friend modal
+      setShowMenu(false); // Close modal
       openChat(existingRoom); // Set the room to the existing chat
     } else {
       console.log(`Creating room ${groupChatName} with users: `, selectedUsers);
       socket.emit("create_room_gc", selectedUsers, groupChatName); // Emit "create_room_gc" event
+      setShowMenu(false); // Close modal
     }
   };
 

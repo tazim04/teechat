@@ -14,8 +14,8 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Room", // Reference to Room model for population
       },
-      name: String,
-      is_group: Boolean,
+      // name: String,
+      // is_group: Boolean,
       _id: false, // Prevents automatic creation of _id
     },
   ], // Reference to the rooms the user is in

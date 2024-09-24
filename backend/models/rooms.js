@@ -3,6 +3,8 @@ import mongoose, { mongo } from "mongoose";
 // Scheme for rooms
 const roomSchema = new mongoose.Schema(
   {
+    name: { type: String, required: false },
+    is_group: { type: Boolean, default: true },
     participants: [
       {
         type: mongoose.Schema.Types.ObjectId,
