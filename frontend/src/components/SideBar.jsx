@@ -159,7 +159,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
                   </div>
                 ))
               ) : (
-                <div className="flex justify-center my-[30rem]">
+                <div className="flex justify-center align-middle items-center">
                   <h5 className="font-bold text-gray-200">No rooms :(</h5>
                 </div>
               )}
