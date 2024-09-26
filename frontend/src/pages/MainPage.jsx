@@ -1,6 +1,7 @@
 import Chat from "./Chat";
 import SideBar from "../components/SideBar";
 import { useEffect, useState, createContext, useContext } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 import { usePalette } from "../context/PaletteContext";
 import { useSocket } from "../context/SocketContext";
@@ -16,6 +17,13 @@ function MainPage() {
   const { togglePalette } = usePalette(); // Destructure palette from usePalette
   const { user } = useContext(userContext); // Get the user from the context
 
+  const disconnected_notify = () => {
+    toast.remove();
+    toast.error("Disconnected from server. Please refresh the page.", {
+      duration: Infinity,
+    });
+  };
+
   // Listen for events when the component mounts
   useEffect(() => {
     if (socket && socket.connected) {
@@ -29,6 +37,8 @@ function MainPage() {
       socket.onAny((event, ...args) => {
         console.log(event, args);
       });
+    } else if (!socket) {
+      disconnected_notify();
     }
     return () => {
       if (socket) {
@@ -53,6 +63,7 @@ function MainPage() {
         messages={messages}
         setMessages={setMessages}
       />
+      <Toaster />
     </div>
   );
 }

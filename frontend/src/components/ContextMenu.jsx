@@ -2,7 +2,7 @@ import { useSocket } from "../context/SocketContext";
 import { useState, useContext } from "react";
 import { isDeleteOpenContext } from "./SideBar";
 
-function ContextMenu({ room, setShowContextMenu }) {
+function ContextMenu({ setShowContextMenu }) {
   const socket = useSocket(); // Use custom hook to get the socket object from the context
   const { setIsDeleteOpen } = useContext(isDeleteOpenContext); // State for the modal visibility
 

@@ -82,12 +82,12 @@ async function getRoomsWithNames(user) {
   }
   const user_populatedRooms = await Users.findById(user._id).populate({
     path: "rooms",
-    populate: { path: "participants", select: "username" },
+    populate: "participants",
   });
 
   const rooms = user_populatedRooms?.rooms.map((room) => {
     if (room.is_group) {
-      console.log(room.name, " is a group room");
+      console.log(room.name, "is a group room");
       room.name = room.name; // Set the room name to the group chat name
     } else {
       console.log("Room is not a group room");
@@ -286,33 +286,6 @@ io.on("connection", (socket) => {
     console.log("Fetching rooms for:", username);
 
     try {
-      // Find the user in the database and populate the 'rooms' field
-      // const user = await Users.findOne({ username: username })
-      //   .select("rooms")
-      //   .populate({
-      //     path: "rooms.id", // Populate the 'id' field inside 'rooms' array with Room details
-      //     populate: { path: "participants", select: "username" }, // Also populate participants within each room
-      //   });
-
-      // const user = await Users.findOne({ username: username }).populate({
-      //   path: "rooms",
-      //   populate: { path: "participants", select: "username" },
-      // }); // Find the user in the database and populate the 'rooms' field
-
-      // const rooms = user?.rooms.map((room) => {
-      //   if (room.is_group) {
-      //     console.log(room.name, " is a group room");
-      //     room.name = room.name; // Set the room name to the group chat name
-      //   } else {
-      //     console.log("Room is not a group room");
-      //     room.name = room.participants.find(
-      //       (participant) => participant.username !== username
-      //     ).username; // Set the room name to the other participant's username
-      //   }
-      //   console.log("Room name:", room.name);
-      //   return room;
-      // });
-
       const user = await Users.findOne({ username: username });
       const rooms = await getRoomsWithNames(user); // Get the rooms with the other participant's username as the room name
 
@@ -397,47 +370,6 @@ io.on("connection", (socket) => {
     const user_socket_id = socket_ids[user.username]; // Get the user's socket ID from the dictionary
     const recipient_socket_id = socket_ids[recipient.username]; // Get the recipient's socket ID from the dictionary
 
-    // console.log("User socket ID:", user_socket_id);
-
-    // Fetch the updated room lists for both users
-    // const user_updatedRooms = await Users.findById(user._id).populate({
-    //   path: "rooms",
-    //   populate: { path: "participants", select: "username" },
-    // });
-    // const recipient_updatedRooms = await Users.findById(recipient._id).populate(
-    //   {
-    //     path: "rooms",
-    //     populate: { path: "participants", select: "username" },
-    //   }
-    // );
-
-    // // Update the room names for both users to display the other participant's username
-    // const updatedUserRooms = user_updatedRooms?.rooms.map((room) => {
-    //   if (room.is_group) {
-    //     console.log(room.name, " is a group room");
-    //     room.name = room.name; // Set the room name to the group chat name
-    //   } else {
-    //     console.log("Room is not a group room");
-    //     room.name = room.participants.find(
-    //       (participant) => participant.username !== user.username
-    //     ).username; // Set the room name to the other participant's username
-    //   }
-    //   console.log("Room name:", room.name);
-    //   return room;
-    // });
-    // const updatedRecipientRooms = recipient_updatedRooms?.rooms.map((room) => {
-    //   if (room.is_group) {
-    //     console.log(room.name, " is a group room");
-    //     room.name = room.name; // Set the room name to the group chat name
-    //   } else {
-    //     console.log("Room is not a group room");
-    //     room.name = room.participants.find(
-    //       (participant) => participant.username !== recipient.username
-    //     ).username; // Set the room name to the other participant's username
-    //   }
-    //   console.log("Room name:", room.name);
-    //   return room;
-    // });
     const updatedUserRooms = await getRoomsWithNames(user_db);
     const updatedRecipientRooms = await getRoomsWithNames(recipient_db);
 
@@ -462,45 +394,56 @@ io.on("connection", (socket) => {
   socket.on("create_room_gc", async (users, groupChatName) => {
     console.log("Creating group room with users:", users, groupChatName);
 
-    let participants = []; // Initialize an empty array to store the participants
-    const roomName = groupChatName; // Set the room name to the group chat name
-
-    for (const user of users) {
-      const user_db = await Users.findById(user._id); // Find the user in the database
-      if (user) {
-        participants.push(user_db); // Add the user to the participants array if they exist
-      } else {
-        console.log("User not found:", user);
-      }
+    if (users.length < 2) {
+      console.log("Not enough participants to create group room");
+      return;
     }
 
-    const room = await create_room_gc(participants, roomName); // Create a group room with the participants in the database
+    try {
+      let participants = []; // Initialize an empty array to store the participants
+      const roomName = groupChatName; // Set the room name to the group chat name
 
-    console.log("Room created in db:", room);
-
-    for (const participant of participants) {
-      const participant_socket_id = socket_ids[participant.username]; // Get the participant's socket ID from the dictionary
-
-      // Only do this if the participant is online
-      if (participant_socket_id) {
-        const participant_updated_rooms = await Users.findById(
-          participant._id
-        ).select("rooms"); // Fetch the updated room list for the participant
-
-        console.log(
-          "Sending updated rooms to:",
-          participant.username,
-          participant_socket_id
-        );
-
-        io.to(participant_socket_id).emit(
-          "receive_rooms",
-          participant_updated_rooms.rooms
-        ); // Emit the updated room list to the participant
+      for (const user of users) {
+        const user_db = await Users.findById(user._id); // Find the user in the database
+        if (user) {
+          participants.push(user_db); // Add the user to the participants array if they exist
+        } else {
+          console.log("User not found:", user);
+        }
       }
-    }
 
-    socket.join(room._id); // Join the group room
+      const room = await create_room_gc(participants, roomName); // Create a group room with the participants in the database
+
+      console.log("Room created in db:", room);
+
+      for (const participant of participants) {
+        const participant_socket_id = socket_ids[participant.username]; // Get the participant's socket ID from the dictionary
+
+        // Only do this if the participant is online
+        if (participant_socket_id) {
+          const participant_updated_rooms = await getRoomsWithNames(
+            participant
+          );
+
+          console.log("Updated rooms", participant_updated_rooms);
+
+          console.log(
+            "Sending updated rooms to:",
+            participant.username,
+            participant_socket_id
+          );
+
+          io.to(participant_socket_id).emit(
+            "receive_rooms",
+            participant_updated_rooms
+          ); // Emit the updated room list to the participant
+        }
+      }
+
+      socket.join(room._id); // Join the group room
+    } catch (error) {
+      console.log("Error creating group room:", error);
+    }
   });
 
   socket.on("fetch_user", async (user_id, room_id) => {
@@ -567,7 +510,7 @@ io.on("connection", (socket) => {
 
         // Ensure the user exists
         if (user) {
-          await user.updateOne({ $pull: { rooms: { id: room_id } } }); // Remove the room from the user's room list
+          await user.updateOne({ $pull: { rooms: room_id } }); // Remove the room from the user's room list
         }
       }
 
@@ -681,44 +624,100 @@ io.on("connection", (socket) => {
 
   // Add a user to a group room
   socket.on("add_user_to_room", async (room_id, user_id) => {
-    const user = await Users.findById(user_id); // Find the user in the Users collection
-    const room = await Rooms.findById(room_id); // Find the room in the Rooms collection
+    try {
+      const user = await Users.findById(user_id); // Find the user in the Users collection
+      const room = await Rooms.findById(room_id).populate([
+        { path: "participants", model: "User", select: "_id username" },
+      ]); // Find the room in the Rooms collection
 
-    if (!user || !room) {
-      console.log("User or room not found:", user, room);
-      return;
+      if (!user || !room) {
+        console.log("User or room not found:", user, room);
+        return;
+      }
+
+      console.log("Adding user to room:", user, user_id, room);
+
+      // Add the user to the room's participants
+      await room.updateOne({ $push: { participants: user_id } });
+
+      // Add the room to the user's room list
+      await user.updateOne({
+        rooms: room._id,
+      });
+      console.log("User added to room:", user.username, room.name);
+
+      const updated_participants_room = await Rooms.findById(room_id)
+        .select("participants")
+        .populate("participants");
+      // console.log("Updated participants:", updated_participants_room);
+
+      const updated_participants = updated_participants_room.participants; // Get the updated participants of the room
+
+      io.to(room_id).emit("receive_room_participants", updated_participants); // Emit the updated participants to all participants
+
+      // Emit the updated room list to the user
+      const user_updated_rooms = await getRoomsWithNames(user);
+      console.log("Updated rooms for:", user_updated_rooms);
+      if (socket_ids[user.username]) {
+        io.to(socket_ids[user.username]).emit(
+          "receive_rooms",
+          user_updated_rooms
+        );
+      }
+    } catch (e) {
+      console.error("Error adding user to room:", e);
     }
-
-    console.log("Adding user to room:", user, room);
-
-    // Add the user to the room's participants
-    await room.updateOne({ $push: { participants: user_id } });
-
-    // Add the room to the user's room list
-    await user.updateOne({
-      $push: { rooms: { id: room_id, name: room.name, is_group: true } },
-    });
   });
 
   // Remove a user from a group room
   socket.on("remove_user_from_room", async (room_id, user_id) => {
-    const user = await Users.findById(user_id); // Find the user in the Users collection
-    const room = await Rooms.findById(room_id); // Find the room in the Rooms collection
+    try {
+      const user = await Users.findById(user_id); // Find the user in the Users collection
+      const room = await Rooms.findById(room_id).populate([
+        { path: "participants", model: "User", select: "_id username" },
+      ]); // Find the room in the Rooms collection
 
-    if (!user || !room) {
-      console.log("User or room not found:", user, room);
-      return;
+      if (!user || !room) {
+        console.log("User or room not found:", user, room);
+        return;
+      }
+
+      console.log("Removing user from room:", user, room);
+
+      // Remove the user from the room's participants
+      await room.updateOne({ $pull: { participants: user_id } });
+
+      // Remove the room from the user's room list
+      await user.updateOne({
+        $pull: { rooms: room_id },
+      });
+
+      // Emit the updated room list to all participants
+      const participants = room.participants; // Get the participants of the room
+      for (const participant of participants) {
+        const participant_socket_id = socket_ids[participant.username]; // Get the participant's socket ID from the dictionary
+
+        // Only do this if the participant is online
+        if (participant_socket_id) {
+          const participant_updated_rooms = await getRoomsWithNames(
+            participant
+          );
+
+          console.log(
+            "Sending updated rooms to:",
+            participant.username,
+            participant_socket_id
+          );
+
+          io.to(participant_socket_id).emit(
+            "receive_rooms",
+            participant_updated_rooms
+          ); // Emit the updated room list to the participant
+        }
+      }
+    } catch (e) {
+      console.error("Error removing user from room:", e);
     }
-
-    console.log("Removing user from room:", user, room);
-
-    // Remove the user from the room's participants
-    await room.updateOne({ $pull: { participants: user_id } });
-
-    // Remove the room from the user's room list
-    await user.updateOne({
-      $pull: { rooms: { id: room_id } },
-    });
   });
 
   socket.on("disconnect", () => {

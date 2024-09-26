@@ -52,6 +52,8 @@ function CreateRoom({
       setMenuHeight(31);
     } else {
       setMenuHeight(25); // Default menu height
+      setShowCreateRoomBTN(false);
+      setGroupChatName("");
     }
   }, [selectedUsers, groupChat]);
 
@@ -255,6 +257,7 @@ function CreateRoom({
         <button
           className="bg-purple-500 hover:bg-purple-600 px-2 py-2 rounded-md text-md text-gray-50"
           onClick={createRoom_gc}
+          disabled={!showCreateRoomBTN || !groupChat}
         >
           Create room
         </button>

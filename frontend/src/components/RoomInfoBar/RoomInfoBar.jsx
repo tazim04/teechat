@@ -7,6 +7,7 @@ import { set } from "mongoose";
 import { Tooltip } from "react-tooltip";
 import ProfilePopout from "../ProfilePopout";
 import { format, isToday } from "date-fns";
+import AddToRoomMenu from "./AddToRoomMenu";
 
 function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo, participants }) {
   const { onlineUsers } = useContext(onlineUsersContext);
@@ -73,6 +74,8 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo, participants }) {
         <div className="flex justify-center">
           <h2 className="text-lg text-center font-bold">{room.name}</h2>
         </div>
+
+        {/* Participants List */}
         <div className="ml-1 flex flex-col w-full">
           {room.is_group ? (
             <div className="mt-10">
@@ -121,6 +124,7 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo, participants }) {
                 </div>
               ))}
 
+              {/* Add to room stuff */}
               <div className="flex justify-center">
                 <div
                   className="inline-flex mt-4 cursor-pointer transition-transform duration-200"
@@ -140,6 +144,15 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo, participants }) {
                   `}
                   />
                 </div>
+              </div>
+              <div className="mt-5">
+                {showAddParticipant && (
+                  <AddToRoomMenu
+                    room={room}
+                    participants={participants}
+                    setShowAddParticipant={setShowAddParticipant}
+                  />
+                )}
               </div>
             </div>
           ) : (
@@ -195,11 +208,11 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo, participants }) {
                           <p className="font-semibold text-[1rem] text-gray-800 py-1">
                             My Interests
                           </p>
-                          <div>
+                          <div className="w-full max-w-96 flex flex-wrap justify-center">
                             {participant.interests.map((interest, index) => (
                               <span
                                 key={index}
-                                className="bg-gray-300 rounded-full px-2 py-1 me-1 text-gray-700 text-[0.8rem]"
+                                className="bg-gray-300 rounded-full px-2 py-1 m-1 text-gray-700 text-[0.8rem]"
                               >
                                 {interest}
                               </span>

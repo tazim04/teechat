@@ -1,8 +1,11 @@
 import React from "react";
 import AvatarIcon from "./AvatarIcon";
 import { format, isToday } from "date-fns";
+import { userContext } from "../context/UserContext";
 
 function ProfilePopout({ participant, setActiveProfile, isOnline }) {
+  const { user } = React.useContext(userContext);
+
   const formatBirthday = (birthday) => {
     const date = new Date(birthday);
 
@@ -16,9 +19,23 @@ function ProfilePopout({ participant, setActiveProfile, isOnline }) {
         href="https://cdn.materialdesignicons.com/6.5.95/css/materialdesignicons.min.css"
       ></link>
 
-      <div className="absolute right-[108%] top-0 mr-1 p-4 w-[20rem] py-7 bg-gray-100 opacity-90 hover:opacity-100 transition-opacity ease-in-out duration-200 shadow-md border rounded-lg">
+      <div className="absolute right-[108%] top-0 mr-1 w-[20rem] pt-7 pb-4 bg-gray-100 opacity-90 hover:opacity-100 transition-opacity ease-in-out duration-200 shadow-md border rounded-lg">
         <div className="flex flex-col items-center">
+          {participant.username !== user.username && (
+            <div className="absolute right-2 top-2">
+              <img
+                // ref={contextMenuIconRef}
+                src="./room_context_menu.svg"
+                className="w-5 trasntion-all ease-in-out hover:invert-[40%] m-2 cursor-pointer"
+                // onClick={handleContextMenu}
+                alt=""
+              />
+            </div>
+          )}
+
           <div className="relative h-14 w-14 mb-1">
+            {/* {participant.username !== user.username && ( */}
+            {/* )} */}
             <AvatarIcon name={participant.username} showStatus={false} />
             <div className="absolute left-[2.5rem] bottom-[0.1rem]">
               {isOnline ? (
@@ -61,14 +78,14 @@ function ProfilePopout({ participant, setActiveProfile, isOnline }) {
         </div>
         <div className="grid grid-rows-2 p-1 text-center">
           <div className="row">
-            <p className="font-semibold text-[0.9rem] text-gray-800">
+            <p className="font-semibold text-[0.9rem] text-gray-800 py-1">
               My Interests
             </p>
-            <div className="w-[15rem] overflow-x-auto whitespace-nowrap">
+            <div className="w-full flex flex-wrap justify-center">
               {participant.interests.map((interest, index) => (
                 <span
                   key={index}
-                  className="bg-gray-300 rounded-full px-2 py-1 me-1 text-gray-700 text-[0.7rem]"
+                  className="bg-gray-300 rounded-full px-2 py-1 m-1 text-gray-700 text-[0.7rem]"
                 >
                   {interest}
                 </span>
