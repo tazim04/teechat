@@ -3,15 +3,8 @@ import { useContext, useState } from "react";
 import { usePalette } from "../context/PaletteContext";
 import AvatarIcon from "./AvatarIcon";
 
-function ChatBar({ room, showRoomInfo, setShowRoomInfo }) {
-  const { onlineUsers } = useContext(onlineUsersContext); // Get the online users from the context
+function ChatBar({ room, showRoomInfo, setShowRoomInfo, isOnline }) {
   const { palette } = usePalette(); // Destructure palette from usePalette
-
-  const checkOnline = (contact) => {
-    // Check if the contact is online
-    const user = onlineUsers.find((user) => user === contact.name); // Find the contact in the online users list
-    return user ? true : false;
-  };
 
   const roomInfoClick = () => {
     // Function to handle the room info click
@@ -31,12 +24,12 @@ function ChatBar({ room, showRoomInfo, setShowRoomInfo }) {
           <h4>{room.name}</h4>
           {!room.is_group && (
             <span className="flex items-center text-sm font-medium text-gray-900">
-              {checkOnline(room) ? (
+              {isOnline ? (
                 <span className="flex w-2.5 h-2.5 bg-green-500 rounded-full me-1.5 flex-shrink-0"></span>
               ) : (
                 <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full me-1.5 flex-shrink-0"></span>
               )}
-              {checkOnline(room) ? "Online" : "Offline"}
+              {isOnline ? "Online" : "Offline"}
             </span>
           )}
         </div>

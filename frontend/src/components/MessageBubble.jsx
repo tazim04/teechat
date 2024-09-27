@@ -66,7 +66,7 @@ function MessageBubble({
     // If the message is not from the current user
     <div className={`flex justify-start ${showAvatar ? "mt-4" : ""}`}>
       {showAvatar ? (
-        <div className="h-10 w-10 me-3">
+        <div className="h-10 w-10 me-3" style={{ zIndex: -1 }}>
           <AvatarIcon
             name={msg.sender.username}
             showStatus={false}

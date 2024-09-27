@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, useContext } from "react";
 import "./stylesheets/Chat.css";
 import { usePalette } from "../context/PaletteContext";
 import { userContext } from "../context/UserContext";
+import { onlineUsersContext } from "../context/OnlineUsersContext";
 import RoomInfoBar from "../components/RoomInfoBar/RoomInfoBar";
 
 function Chat({ currentRoom, messages, setMessages }) {
@@ -17,8 +18,10 @@ function Chat({ currentRoom, messages, setMessages }) {
   const [emptyMessageAnimation, setEmptyMessageAnimation] = useState(false); // State for the empty message animation
   const [showRoomInfo, setShowRoomInfo] = useState(true); // State for the room info bar
   const [participants, setParticipants] = useState([]); // State for the participants for RoomInfoBar
+  const [isOnline, setIsOnline] = useState(false);
 
   const { palette } = usePalette(); // Destructure palette from usePalette
+  const { onlineUsers } = useContext(onlineUsersContext); // Get the online users from the context
   const { user } = useContext(userContext); // Get the user info from the context
   const username = user.username; // Get the username from the context
 
@@ -116,6 +119,30 @@ function Chat({ currentRoom, messages, setMessages }) {
     };
   }, [socket, currentRoom, user, messages]);
 
+  // useEffect for checking if the other user in the room is online
+  useEffect(() => {
+    const getOtherParticipantId = (room) => {
+      const participants = room.participants;
+      const otherParticipant = participants.find(
+        (participant) => participant._id !== user._id
+      );
+      console.log("Other participant:", otherParticipant);
+      return otherParticipant._id;
+    };
+
+    const checkOnline = (participant_id) => {
+      return onlineUsers.includes(participant_id);
+    };
+
+    if (currentRoom && currentRoom.participants && user) {
+      const otherParticipantId = getOtherParticipantId(currentRoom);
+      if (otherParticipantId) {
+        const isOtherParticipantOnline = checkOnline(otherParticipantId);
+        setIsOnline(isOtherParticipantOnline);
+      }
+    }
+  });
+
   const onType = (e) => {
     let message = e.target.value;
     setMessage(message); // Update the message state
@@ -173,6 +200,7 @@ function Chat({ currentRoom, messages, setMessages }) {
             room={currentRoom}
             showRoomInfo={showRoomInfo}
             setShowRoomInfo={setShowRoomInfo}
+            isOnline={isOnline} // pass if online using the corresponding functions
           />
           <div className="flex-1 overflow-y-auto p-4">
             {/* Check if there are messages for the selected recipient */}
@@ -271,6 +299,7 @@ function Chat({ currentRoom, messages, setMessages }) {
           showRoomInfo={showRoomInfo}
           setShowRoomInfo={setShowRoomInfo}
           participants={participants}
+          isOnline={isOnline}
         />
       )}
     </div>

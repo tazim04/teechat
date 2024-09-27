@@ -1,31 +1,28 @@
 import { useState, useContext, useEffect } from "react";
 import AvatarIcon from "../AvatarIcon";
-import { onlineUsersContext } from "../../context/OnlineUsersContext";
 import { useSocket } from "../../context/SocketContext";
 import { userContext } from "../../context/UserContext";
+import { onlineUsersContext } from "../../context/OnlineUsersContext";
 import { set } from "mongoose";
 import { Tooltip } from "react-tooltip";
-import ProfilePopout from "../ProfilePopout";
+import ProfilePopout from "./ProfilePopout";
 import { format, isToday } from "date-fns";
 import AddToRoomMenu from "./AddToRoomMenu";
 
-function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo, participants }) {
-  const { onlineUsers } = useContext(onlineUsersContext);
+function RoomInfoBar({
+  room,
+  showRoomInfo,
+  setShowRoomInfo,
+  participants,
+  isOnline, // only for one on one rooms
+}) {
   const socket = useSocket();
   const { user } = useContext(userContext); // Get the user info from the context
+  const { onlineUsers } = useContext(onlineUsersContext);
 
-  // const [participants, setParticipants] = useState([]);
   const [addParticipantHover, setAddParticipantHover] = useState(false);
   const [showAddParticipant, setShowAddParticipant] = useState(false);
   const [activeProfile, setActiveProfile] = useState(null);
-
-  const checkOnline = (participant_username) => {
-    const isOnline = onlineUsers.includes(participant_username);
-
-    console.log("Is online: ", isOnline);
-
-    return isOnline;
-  };
 
   const formatBirthday = (birthday) => {
     const date = new Date(birthday);
@@ -49,6 +46,10 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo, participants }) {
     setShowAddParticipant(!showAddParticipant); // Toggle the showAddParticipant state
   };
 
+  const checkOnline = (participant_id) => {
+    return onlineUsers.includes(participant_id);
+  };
+
   return (
     <div className="relative w-[18rem] bg-gray-100 border-2 border-l-gray-200 h-full shadow-lg transition-transform duration-300">
       <button
@@ -63,7 +64,7 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo, participants }) {
           <AvatarIcon name={room.name} showStatus={false} />
           {!room.is_group && (
             <div className="relative left-[3rem] bottom-[0.9rem]">
-              {checkOnline(room.name) ? (
+              {isOnline ? (
                 <span className="flex w-3 h-3 bg-green-400 rounded-full flex-shrink-0"></span>
               ) : (
                 <span className="flex w-3 h-3 bg-gray-400 rounded-full flex-shrink-0"></span>
@@ -90,7 +91,7 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo, participants }) {
                       participant.username === user.username
                         ? "bg-gray-200 bg-opacity-50"
                         : ""
-                    } transition-all ease-in-out duration-100 hover:bg-gray-300`}
+                    } transition-all ease-in-out duration-100 hover:bg-gray-300 $`}
                     data-tooltip-id="profile"
                     data-tooltip-html={`
                   <div class='flex flex-col items-center'>
@@ -102,7 +103,7 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo, participants }) {
                       <AvatarIcon
                         name={participant.username}
                         showStatus={true}
-                        isOnline={checkOnline(participant.username)}
+                        isOnline={checkOnline(participant._id)}
                       />
                     </div>
                     <p className="text-[1.1rem] font-medium my-auto text-gray-700 select-none">
@@ -117,8 +118,9 @@ function RoomInfoBar({ room, showRoomInfo, setShowRoomInfo, participants }) {
                   {activeProfile === participant._id && (
                     <ProfilePopout
                       participant={participant}
+                      room={room}
                       setActiveProfile={setActiveProfile}
-                      isOnline={checkOnline(participant.username)}
+                      isOnline={isOnline}
                     />
                   )}
                 </div>

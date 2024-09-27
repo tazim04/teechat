@@ -1,10 +1,48 @@
-import React from "react";
-import AvatarIcon from "./AvatarIcon";
+import { React, useRef, useContext, useState, useEffect } from "react";
+import AvatarIcon from "../AvatarIcon";
 import { format, isToday } from "date-fns";
-import { userContext } from "../context/UserContext";
+import { userContext } from "../../context/UserContext";
+import RemoveParticipantContextMenu from "./RemoveParticipantContextMenu";
+import RemoveParticipantConfirmationModal from "./RemoveParticipantConfirmationModal";
 
-function ProfilePopout({ participant, setActiveProfile, isOnline }) {
-  const { user } = React.useContext(userContext);
+function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
+  const { user } = useContext(userContext);
+  const contextMenuRef = useRef(null);
+  const contextMenuIconRef = useRef(null);
+  const [showContextMenu, setShowContextMenu] = useState(""); // state to show context menu for removing a participant, will open the confirmation modal first
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false); // state to show modal for removing a participant
+
+  // Handle closing context menu which clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        contextMenuRef.current &&
+        !contextMenuRef.current.contains(e.target) &&
+        contextMenuIconRef.current &&
+        !contextMenuIconRef.current.contains(e.target)
+      ) {
+        setShowContextMenu(""); // Close the context menu if click is outside of it
+      }
+    };
+    // Add event listener to the document to listen for clicks
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Clean up the event listener when the component is unmounted
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleContextMenu = (e) => {
+    e.stopPropagation();
+
+    if (showContextMenu === participant._id) {
+      setShowContextMenu(""); // Close the context menu if it's already open
+    } else {
+      console.log("participant: ", participant);
+      setShowContextMenu(participant._id); // Show the context menu for the clicked participant (participant id)
+    }
+  };
 
   const formatBirthday = (birthday) => {
     const date = new Date(birthday);
@@ -24,10 +62,10 @@ function ProfilePopout({ participant, setActiveProfile, isOnline }) {
           {participant.username !== user.username && (
             <div className="absolute right-2 top-2">
               <img
-                // ref={contextMenuIconRef}
+                ref={contextMenuIconRef}
                 src="./room_context_menu.svg"
                 className="w-5 trasntion-all ease-in-out hover:invert-[40%] m-2 cursor-pointer"
-                // onClick={handleContextMenu}
+                onClick={handleContextMenu}
                 alt=""
               />
             </div>
@@ -102,6 +140,24 @@ function ProfilePopout({ participant, setActiveProfile, isOnline }) {
           </div>
         </div>
       </div>
+      {showContextMenu === participant._id && (
+        <div
+          ref={contextMenuRef}
+          className="absolute bottom-[4rem] right-[17.5rem]"
+        >
+          <RemoveParticipantContextMenu
+            participant={participant}
+            setShowConfirmationModal={setShowConfirmationModal}
+          />
+        </div>
+      )}
+      <RemoveParticipantConfirmationModal
+        participant={participant}
+        room={room}
+        setShowContextMenu={setShowContextMenu}
+        showConfirmationModal={showConfirmationModal}
+        setShowConfirmationModal={setShowConfirmationModal}
+      />
     </>
   );
 }

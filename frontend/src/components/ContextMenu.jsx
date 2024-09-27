@@ -12,11 +12,11 @@ function ContextMenu({ setShowContextMenu }) {
   };
 
   return (
-    <div className="w-32 text-[1rem] text-center text-gray-800 bg-gray-200 opacity-80 rounded-md shadow-md">
+    <div className="w-32 text-[1rem] text-center bg-gray-200 hover:bg-red-500 text-gray-800 hover:text-gray-50 opacity-80 rounded-md shadow-md">
       <ul>
         <li>
           <div
-            className="cursor-pointer hover:bg-gray-300 rounded-md"
+            className="cursor-pointer rounded-md"
             onClick={openConfirmationModal}
           >
             Delete Room

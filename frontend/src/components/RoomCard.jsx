@@ -35,7 +35,7 @@ function RoomCard({
     }
   };
 
-  // Handle closing of context menu when clicking outside
+  // Handle closing context menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (

@@ -197,7 +197,7 @@ io.on("connection", (socket) => {
     console.log("User joined server:", user);
 
     // Add the user to the socket_ids dictionary
-    socket_ids[user.username] = socket.id;
+    socket_ids[user._id] = socket.id;
     io.emit("receive_online_users", Object.keys(socket_ids)); // Emit the updated list of online users
 
     // console.log("Current online users:", socket_ids); // Log the list of online users
@@ -367,8 +367,8 @@ io.on("connection", (socket) => {
 
     await create_room(user_db, recipient_db); // Create a room with the user and recipient in the database and save it to each user
 
-    const user_socket_id = socket_ids[user.username]; // Get the user's socket ID from the dictionary
-    const recipient_socket_id = socket_ids[recipient.username]; // Get the recipient's socket ID from the dictionary
+    const user_socket_id = socket_ids[user._id]; // Get the user's socket ID from the dictionary
+    const recipient_socket_id = socket_ids[recipient._id]; // Get the recipient's socket ID from the dictionary
 
     const updatedUserRooms = await getRoomsWithNames(user_db);
     const updatedRecipientRooms = await getRoomsWithNames(recipient_db);
@@ -417,7 +417,7 @@ io.on("connection", (socket) => {
       console.log("Room created in db:", room);
 
       for (const participant of participants) {
-        const participant_socket_id = socket_ids[participant.username]; // Get the participant's socket ID from the dictionary
+        const participant_socket_id = socket_ids[participant._id]; // Get the participant's socket ID from the dictionary
 
         // Only do this if the participant is online
         if (participant_socket_id) {
@@ -547,7 +547,7 @@ io.on("connection", (socket) => {
             }
           );
 
-          io.to(socket_ids[participant.username]).emit(
+          io.to(socket_ids[participant._id]).emit(
             "receive_rooms",
             updatedParticipantRooms
           );
@@ -572,7 +572,7 @@ io.on("connection", (socket) => {
       recipient = await Rooms.findById(room_id);
     } else {
       recipient = await Users.findOne({ username: to });
-      recipient_socket_id = socket_ids[to]; // Get the recipient's socket ID from the dictionary
+      recipient_socket_id = socket_ids[recipient._id]; // Get the recipient's socket ID from the dictionary
     }
 
     console.log("Message received:", content, "from", sender);
@@ -642,7 +642,7 @@ io.on("connection", (socket) => {
 
       // Add the room to the user's room list
       await user.updateOne({
-        rooms: room._id,
+        $addToSet: { rooms: room._id },
       });
       console.log("User added to room:", user.username, room.name);
 
@@ -658,11 +658,8 @@ io.on("connection", (socket) => {
       // Emit the updated room list to the user
       const user_updated_rooms = await getRoomsWithNames(user);
       console.log("Updated rooms for:", user_updated_rooms);
-      if (socket_ids[user.username]) {
-        io.to(socket_ids[user.username]).emit(
-          "receive_rooms",
-          user_updated_rooms
-        );
+      if (socket_ids[user._id]) {
+        io.to(socket_ids[user._id]).emit("receive_rooms", user_updated_rooms);
       }
     } catch (e) {
       console.error("Error adding user to room:", e);
@@ -692,28 +689,18 @@ io.on("connection", (socket) => {
         $pull: { rooms: room_id },
       });
 
-      // Emit the updated room list to all participants
-      const participants = room.participants; // Get the participants of the room
-      for (const participant of participants) {
-        const participant_socket_id = socket_ids[participant.username]; // Get the participant's socket ID from the dictionary
+      const updated_participants_room = await Rooms.findById(room_id)
+        .select("participants")
+        .populate("participants");
+      const updated_participants = updated_participants_room.participants; // Get the updated participants of the room
 
-        // Only do this if the participant is online
-        if (participant_socket_id) {
-          const participant_updated_rooms = await getRoomsWithNames(
-            participant
-          );
+      io.to(room_id).emit("receive_room_participants", updated_participants); // Emit the updated participants to all participants
 
-          console.log(
-            "Sending updated rooms to:",
-            participant.username,
-            participant_socket_id
-          );
-
-          io.to(participant_socket_id).emit(
-            "receive_rooms",
-            participant_updated_rooms
-          ); // Emit the updated room list to the participant
-        }
+      // Emit the updated room list to the user
+      const user_updated_rooms = await getRoomsWithNames(user);
+      console.log("Updated rooms for:", user_updated_rooms);
+      if (socket_ids[user._id]) {
+        io.to(socket_ids[user._id]).emit("receive_rooms", user_updated_rooms);
       }
     } catch (e) {
       console.error("Error removing user from room:", e);
@@ -721,13 +708,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    const username = Object.keys(socket_ids).find(
+    const user_id = Object.keys(socket_ids).find(
       (key) => socket_ids[key] === socket.id
     );
 
-    if (username) {
-      console.log("User disconnected:", username);
-      delete socket_ids[username]; // Remove the user from the dictionary
+    if (user_id) {
+      console.log("User disconnected:", user_id);
+      delete socket_ids[user_id]; // Remove the user from the dictionary
       console.log("Current online users:", socket_ids);
     }
 

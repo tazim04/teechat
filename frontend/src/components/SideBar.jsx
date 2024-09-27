@@ -98,10 +98,19 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
     console.log("Online users: ", onlineUsers);
 
     // Check if the room's name is included in the onlineUsers array
-    const isOnline = onlineUsers.includes(room.name);
+    const isOnline = onlineUsers.includes(getOtherParticipantId(room));
 
     console.log(`Is ${room.name} online: `, isOnline);
     return isOnline;
+  };
+
+  const getOtherParticipantId = (room) => {
+    const participants = room.participants;
+    const otherParticipant = participants.find(
+      (participant) => participant._id !== user._id
+    );
+    console.log("Other participant:", otherParticipant);
+    return otherParticipant._id;
   };
 
   return (
