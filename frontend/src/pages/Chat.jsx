@@ -56,28 +56,30 @@ function Chat({ currentRoom, messages, setMessages }) {
   // Listen for events when the component mounts
   useEffect(() => {
     if (socket && socket.connected) {
-      // Listen for received messages -  NEED TO IMPLEMENT GROUP CHAT FUNCTIONALITY
+      // Listen for received messages
       socket.on("recieve_message", (messageData) => {
-        console.log("Message received:", messageData); // Log the received message
-        let content = messageData.content;
-        let sender = messageData.sender;
-        let timestamp = messageData.timestamp;
+        if (messageData.room_id === currentRoom._id) {
+          console.log("Message received:", messageData); // Log the received message
+          let content = messageData.content;
+          let sender = messageData.sender;
+          let timestamp = messageData.timestamp;
 
-        let messageContent = {
-          sender: sender,
-          content: content,
-          timestamp: timestamp,
-        };
-
-        setMessages((prevMessages) => {
-          return {
-            ...prevMessages,
-            [currentRoom._id]: [
-              ...(prevMessages[currentRoom._id] || []),
-              messageContent,
-            ], // Update the messages state with this dm
+          let messageContent = {
+            sender: sender,
+            content: content,
+            timestamp: timestamp,
           };
-        });
+
+          setMessages((prevMessages) => {
+            return {
+              ...prevMessages,
+              [currentRoom._id]: [
+                ...(prevMessages[currentRoom._id] || []),
+                messageContent,
+              ], // Update the messages state with this dm
+            };
+          });
+        }
       });
 
       // Listen for previous messages

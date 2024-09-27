@@ -48,18 +48,33 @@ async function add_message_in_db(roomID, message) {
 }
 
 async function get_previous_messages(roomID) {
-  console.log("get_previous_messages:", roomID);
+  // console.log("get_previous_messages:", roomID);
 
   // Find the room and populate the sender field with the user data, specifically the username
-  const room = await Rooms.findById(roomID).populate({
-    path: "messages.sender",
-    model: "User",
-    select: "username", // Select only the username and ID
-  });
+  const room = await Rooms.findById(roomID)
+    .populate({
+      path: "messages.sender",
+      model: "User",
+      select: "username", // Select only the username and ID
+    })
+    .lean();
   let prev_messages = room.messages;
   // console.log("Previous messages:", prev_messages);
   return prev_messages;
 }
+
+const fetch_last_message = async (room) => {
+  const lastMessage = room.messages[room.messages.length - 1];
+
+  const sender = await Users.findById(lastMessage.sender); // get the senders information based on the stored _id
+
+  lastMessage.sender = sender; // update with full info
+
+  return {
+    room_id: room._id, // include room._id
+    ...lastMessage,
+  };
+};
 
 async function find_room_in_db(sender, recipient) {
   let sender_rooms = sender.rooms;
@@ -75,27 +90,32 @@ async function find_room_in_db(sender, recipient) {
 }
 
 async function getRoomsWithNames(user) {
-  console.log("getRoomsWithNames:", user);
+  // console.log("getRoomsWithNames:", user);
   if (!user) {
     console.log("User not found:", user);
     return []; // Return an empty array if the user is not found
   }
-  const user_populatedRooms = await Users.findById(user._id).populate({
-    path: "rooms",
-    populate: "participants",
-  });
+  const user_populatedRooms = await Users.findById(user._id)
+    .populate({
+      path: "rooms",
+      populate: "participants",
+    })
+    .exec();
+
+  // sort rooms by last updated
+  user_populatedRooms.rooms.sort((a, b) => b.updatedAt - a.updatedAt);
 
   const rooms = user_populatedRooms?.rooms.map((room) => {
     if (room.is_group) {
-      console.log(room.name, "is a group room");
+      // console.log(room.name, "is a group room");
       room.name = room.name; // Set the room name to the group chat name
     } else {
-      console.log("Room is not a group room");
+      // console.log("Room is not a group room");
       room.name = room.participants.find(
         (participant) => participant.username !== user.username
       ).username; // Set the room name to the other participant's username
     }
-    console.log("Room name:", room.name);
+    // console.log("Room name:", room.name);
     return room;
   });
   return rooms;
@@ -283,13 +303,13 @@ io.on("connection", (socket) => {
   );
 
   socket.on("fetch_rooms", async (username) => {
-    console.log("Fetching rooms for:", username);
+    // console.log("Fetching rooms for:", username);
 
     try {
       const user = await Users.findOne({ username: username });
       const rooms = await getRoomsWithNames(user); // Get the rooms with the other participant's username as the room name
 
-      console.log("Rooms:", rooms);
+      // console.log("Rooms:", rooms);
       socket.emit("receive_rooms", rooms);
     } catch (error) {
       console.log("There was an error fetching rooms:", error);
@@ -303,12 +323,12 @@ io.on("connection", (socket) => {
     users.forEach((user) => {
       allUsers.push({ _id: user._id, username: user.username });
     });
-    console.log("All users:", allUsers);
+    // console.log("All users:", allUsers);
     io.emit("receive_all_users", allUsers);
   });
 
   socket.on("get_previous_messages", async (room) => {
-    console.log("Fetching previous messages for room:", room);
+    // console.log("Fetching previous messages for room:", room);
 
     try {
       const roomID = room._id;
@@ -323,13 +343,13 @@ io.on("connection", (socket) => {
 
       // Check if the messages are in the cache
       if (messages_cache[roomID]) {
-        console.log("Messages found in cache.");
+        // console.log("Messages found in cache.");
         io.to(socket.id).emit(
           "recieve_previous_messages",
           messages_cache[roomID]
         );
       } else {
-        console.log("Messages not in cache, fetching from DB.");
+        // console.log("Messages not in cache, fetching from DB.");
         let prevMessages = await get_previous_messages(roomID); // Fetch the previous messages from the database
         messages_cache[roomID] = prevMessages;
         io.to(socket.id).emit("recieve_previous_messages", prevMessages);
@@ -340,8 +360,26 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("fetch_last_message", async (room_id) => {
+    try {
+      const room = await Rooms.findById(room_id).select("messages").lean();
+
+      if (room && room.messages && room.messages.length > 0) {
+        const last_message = await fetch_last_message(room);
+
+        socket.emit("recieve_last_message", last_message);
+      } else {
+        // no messages
+        socket.emit("recieve_last_message", null);
+      }
+    } catch (e) {
+      console.log("error fetching last message", e);
+      return;
+    }
+  });
+
   socket.on("fetch_online_users", () => {
-    console.log("Fetching online users");
+    // console.log("Fetching online users");
     io.emit("receive_online_users", Object.keys(socket_ids)); // Emit the list of online users
   });
 
@@ -377,11 +415,11 @@ io.on("connection", (socket) => {
     io.to(user_socket_id).emit("receive_rooms", updatedUserRooms);
     io.to(recipient_socket_id).emit("receive_rooms", updatedRecipientRooms);
 
-    console.log(`Updated rooms for ${user.username}:`, updatedUserRooms);
-    console.log(
-      `Updated rooms for ${recipient.username}:`,
-      updatedRecipientRooms
-    );
+    // console.log(`Updated rooms for ${user.username}:`, updatedUserRooms);
+    // console.log(
+    //   `Updated rooms for ${recipient.username}:`,
+    //   updatedRecipientRooms
+    // );
 
     // Emit a message to the recipient to notify them of the new room
     io.to(recipient_socket_id).emit(
@@ -414,7 +452,7 @@ io.on("connection", (socket) => {
 
       const room = await create_room_gc(participants, roomName); // Create a group room with the participants in the database
 
-      console.log("Room created in db:", room);
+      // console.log("Room created in db:", room);
 
       for (const participant of participants) {
         const participant_socket_id = socket_ids[participant._id]; // Get the participant's socket ID from the dictionary
@@ -425,13 +463,13 @@ io.on("connection", (socket) => {
             participant
           );
 
-          console.log("Updated rooms", participant_updated_rooms);
+          // console.log("Updated rooms", participant_updated_rooms);
 
-          console.log(
-            "Sending updated rooms to:",
-            participant.username,
-            participant_socket_id
-          );
+          // console.log(
+          //   "Sending updated rooms to:",
+          //   participant.username,
+          //   participant_socket_id
+          // );
 
           io.to(participant_socket_id).emit(
             "receive_rooms",
@@ -454,8 +492,6 @@ io.on("connection", (socket) => {
         return;
       }
 
-      console.log("Fetching user:", user);
-
       const room = await Rooms.findById(room_id).populate({
         path: "participants",
         model: "User",
@@ -466,7 +502,6 @@ io.on("connection", (socket) => {
         (participant) => participant._id != user_id // Find the other participant in the room
       );
 
-      console.log("Other user:", other_user);
       socket.emit("receive_user", other_user); // Emit the other user to the client
     } catch (error) {
       console.log("Error fetching user:", error);
@@ -474,7 +509,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("fetch_room_participants", async (room_id) => {
-    console.log("Fetching participants for room:", room_id);
     const room = await Rooms.findById(room_id).populate({
       path: "participants",
       model: "User",
@@ -482,7 +516,6 @@ io.on("connection", (socket) => {
     });
 
     const participants = room.participants; // Get the participants of the room
-    console.log("Participants:", participants);
 
     socket.emit("receive_room_participants", participants); // Emit the participants to the client
   });
@@ -500,8 +533,6 @@ io.on("connection", (socket) => {
       }
 
       const participants = room.participants; // Get the participants of the room (all ids)
-
-      console.log("Participants:", participants);
 
       // Remove the room from the participants' room lists
       for (const participant of participants) {
@@ -589,6 +620,11 @@ io.on("connection", (socket) => {
       timestamp: new Date(),
     };
 
+    // Initialize cache for the room if it doesn't exist
+    if (!messages_cache[room_id]) {
+      messages_cache[room_id] = [];
+    }
+
     await add_message_in_db(room_id, messageData); // Add the message to the database
 
     console.log("messageData:", messageData);
@@ -607,18 +643,54 @@ io.on("connection", (socket) => {
       sender: { _id: sender._id, username: sender.username },
       content,
       timestamp: new Date(),
+      room_id: room_id,
     };
 
     // Emit the message, if dm send to socket_id, if group send to room_id
     if (is_group) {
       console.log("Sending message to room:", room_id);
       socket.to(room_id).emit("recieve_message", message_to_send);
+      const roomWithParticipants = await Rooms.findById(room_id).populate(
+        "participants"
+      );
+      const participants = roomWithParticipants.participants;
+      for (const participant of participants) {
+        if (socket_ids[participant._id]) {
+          const participantsRooms_sorted = await getRoomsWithNames(participant);
+          io.to(socket_ids[participant._id]).emit(
+            "receive_rooms",
+            participantsRooms_sorted
+          );
+
+          const room = await Rooms.findById(room_id).select("messages").lean();
+          const last_message = await fetch_last_message(room);
+          io.to(socket_ids[participant._id]).emit(
+            "recieve_last_message",
+            last_message
+          );
+        }
+      }
     } else {
+      const room = await Rooms.findById(room_id).select("messages").lean();
       if (recipient_socket_id) {
         io.to(recipient_socket_id).emit("recieve_message", message_to_send);
+
+        const last_message = await fetch_last_message(room);
+        io.to(recipient_socket_id).emit("recieve_last_message", last_message);
+
+        // updated order of rooms to show last updated
+        const sortedRooms_recipient = await getRoomsWithNames(recipient);
+        io.to(recipient_socket_id).emit("receive_rooms", sortedRooms_recipient);
       } else {
         console.log(`${to} is offline, message not sent but saved in DB`);
       }
+
+      // show sender updated order of rooms
+      const sortedRooms_sender = await getRoomsWithNames(sender);
+      socket.emit("receive_rooms", sortedRooms_sender);
+
+      const last_message = await fetch_last_message(room);
+      socket.emit("recieve_last_message", last_message);
     }
   });
 

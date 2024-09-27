@@ -102,9 +102,16 @@ function RoomInfoBar({
                     <div className="w-10 h-10 me-5">
                       <AvatarIcon
                         name={participant.username}
-                        showStatus={true}
+                        showStatus={false}
                         isOnline={checkOnline(participant._id)}
                       />
+                      <div className="relative left-[2rem] bottom-[0.9rem]">
+                        {isOnline ? (
+                          <span className="flex w-2.5 h-2.5 bg-green-400 rounded-full flex-shrink-0"></span>
+                        ) : (
+                          <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full flex-shrink-0"></span>
+                        )}
+                      </div>
                     </div>
                     <p className="text-[1.1rem] font-medium my-auto text-gray-700 select-none">
                       {participant.username}
