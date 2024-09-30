@@ -92,7 +92,7 @@ function RoomCard({
     if (isToday(date)) {
       return format(date, "hh:mm a"); // Format the timestamp to human-readable time
     } else {
-      return format(date, "MMM d, yyyy - hh:mm a"); // Include the date if the message is not from today
+      return format(date, "MMM d, yyyy"); // Include the date if the message is not from today
     }
   };
 
@@ -111,20 +111,28 @@ function RoomCard({
             isOnline={checkOnline(room)}
           />
         </div>
-        <div className="absolute left-24 top-0">{room.name}</div>
-        <span className="text-[0.8rem] text-gray-200 absolute top-[0.2rem] right-16">
-          {lastMessages[room._id] &&
-            getTimeStamp(lastMessages[room._id].timestamp)}
+        <span className="absolute left-[5.4rem] top-0 w-[7rem] overflow-x-hidden whitespace-nowrap text-ellipsis">
+          {room.name}
         </span>
-        {lastMessages[room._id] && (
-          <span className="absolute bottom-2 left-24 text-[1rem] text-gray-200 w-40 overflow-x-hidden">
-            {lastMessages[room._id].sender.username}:&nbsp;
-            {lastMessages[room._id].content}
+
+        {lastMessages[room._id]?.content ? (
+          <div>
+            <span className="text-[0.8rem] text-gray-200 absolute top-[0.2rem] right-11">
+              {getTimeStamp(lastMessages[room._id].timestamp)}
+            </span>
+            <span className="absolute bottom-2 left-[5.4rem] text-[1rem] text-gray-200 w-48 overflow-hidden text-ellipsis whitespace-nowrap">
+              {lastMessages[room._id].sender.username}:&nbsp;
+              {lastMessages[room._id].content}
+            </span>
+          </div>
+        ) : (
+          <span className="absolute bottom-2 left-[5.4rem] text-[1rem] text-gray-200 w-48 overflow-hidden text-ellipsis whitespace-nowrap">
+            {"No messages yet!"}
           </span>
         )}
       </div>
 
-      <div className="absolute right-5 top-1/2 transform -translate-y-1/2">
+      <div className="absolute right-1 top-1/2 transform -translate-y-1/2">
         <img
           ref={contextMenuIconRef}
           src="./room_context_menu.svg"
@@ -134,7 +142,7 @@ function RoomCard({
         />
       </div>
       {showContextMenu === room._id && (
-        <div ref={contextMenuRef} className="absolute -right-24 top-8">
+        <div ref={contextMenuRef} className="absolute right-0 top-11">
           <ContextMenu setShowContextMenu={setShowContextMenu} />
         </div>
       )}

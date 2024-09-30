@@ -63,19 +63,6 @@ async function get_previous_messages(roomID) {
   return prev_messages;
 }
 
-const fetch_last_message = async (room) => {
-  const lastMessage = room.messages[room.messages.length - 1];
-
-  const sender = await Users.findById(lastMessage.sender); // get the senders information based on the stored _id
-
-  lastMessage.sender = sender; // update with full info
-
-  return {
-    room_id: room._id, // include room._id
-    ...lastMessage,
-  };
-};
-
 async function find_room_in_db(sender, recipient) {
   let sender_rooms = sender.rooms;
 
@@ -336,8 +323,8 @@ io.on("connection", (socket) => {
       console.log("Room ID:", roomID);
 
       // Join the room if it's a group room and the socket is not already in the room
-      if (room.is_group && !socket.rooms.has(room.id)) {
-        console.log("Joining group room:", room.id);
+      if (room.is_group && !socket.rooms.has(room._id)) {
+        console.log("Joining group room:", room._id);
         socket.join(roomID); // Join the group room
       }
 
@@ -370,13 +357,29 @@ io.on("connection", (socket) => {
         socket.emit("recieve_last_message", last_message);
       } else {
         // no messages
-        socket.emit("recieve_last_message", null);
+        socket.emit("recieve_last_message", {
+          room_id: room._id,
+          lastMessage: null,
+        });
       }
     } catch (e) {
       console.log("error fetching last message", e);
       return;
     }
   });
+
+  const fetch_last_message = async (room) => {
+    const lastMessage = room.messages[room.messages.length - 1];
+
+    const sender = await Users.findById(lastMessage.sender); // get the senders information based on the stored _id
+
+    lastMessage.sender = sender; // update with full info
+
+    return {
+      room_id: room._id, // include room._id
+      ...lastMessage,
+    };
+  };
 
   socket.on("fetch_online_users", () => {
     // console.log("Fetching online users");
@@ -385,47 +388,44 @@ io.on("connection", (socket) => {
 
   // Create a room with a user, user & recipient {_id, username}
   socket.on("create_room", async (user, recipient) => {
-    console.log("Creating room with:", user.username, recipient.username);
+    try {
+      console.log("Creating room with:", user.username, recipient.username);
 
-    const user_db = await Users.findOne({ _id: user._id }).populate({
-      path: "rooms",
-      populate: { path: "participants", select: "username" },
-    }); // Find the user in the database and populate the 'rooms' field
+      const user_db = await Users.findOne({ _id: user._id }).populate({
+        path: "rooms",
+        populate: { path: "participants", select: "username" },
+      }); // Find the user in the database and populate the 'rooms' field
 
-    const recipient_db = await Users.findOne({ _id: recipient._id }).populate({
-      path: "rooms",
-      populate: { path: "participants", select: "username" },
-    }); // Find the recipient in the database and populate the 'rooms' field
+      const recipient_db = await Users.findOne({ _id: recipient._id }).populate(
+        {
+          path: "rooms",
+          populate: { path: "participants", select: "username" },
+        }
+      ); // Find the recipient in the database and populate the 'rooms' field
 
-    // Check if the user and recipient exist, shouldn't happen
-    if (!user_db || !recipient_db) {
-      console.log("User not found:", user, recipient);
-      return;
+      // Check if the user and recipient exist, shouldn't happen
+      if (!user_db || !recipient_db) {
+        console.log("User not found:", user, recipient);
+        return;
+      }
+
+      await create_room(user_db, recipient_db); // Create a room with the user and recipient in the database and save it to each user
+
+      const user_socket_id = socket_ids[user._id]; // Get the user's socket ID from the dictionary
+      const recipient_socket_id = socket_ids[recipient._id]; // Get the recipient's socket ID from the dictionary
+
+      const updatedUserRooms = await getRoomsWithNames(user_db);
+      const updatedRecipientRooms = await getRoomsWithNames(recipient_db);
+
+      // Emit the updated room lists to both users
+      io.to(user_socket_id).emit("receive_rooms", updatedUserRooms);
+      io.to(recipient_socket_id).emit("receive_rooms", updatedRecipientRooms);
+
+      socket.emit("room_created", true, recipient.username);
+    } catch (e) {
+      console.log("Error creating room", e);
+      socket.emit("room_created", false, recipient.username);
     }
-
-    await create_room(user_db, recipient_db); // Create a room with the user and recipient in the database and save it to each user
-
-    const user_socket_id = socket_ids[user._id]; // Get the user's socket ID from the dictionary
-    const recipient_socket_id = socket_ids[recipient._id]; // Get the recipient's socket ID from the dictionary
-
-    const updatedUserRooms = await getRoomsWithNames(user_db);
-    const updatedRecipientRooms = await getRoomsWithNames(recipient_db);
-
-    // Emit the updated room lists to both users
-    io.to(user_socket_id).emit("receive_rooms", updatedUserRooms);
-    io.to(recipient_socket_id).emit("receive_rooms", updatedRecipientRooms);
-
-    // console.log(`Updated rooms for ${user.username}:`, updatedUserRooms);
-    // console.log(
-    //   `Updated rooms for ${recipient.username}:`,
-    //   updatedRecipientRooms
-    // );
-
-    // Emit a message to the recipient to notify them of the new room
-    io.to(recipient_socket_id).emit(
-      "recieve_message",
-      `${user} has created a room with you!`
-    );
   });
 
   // Create a group room with multiple users
@@ -463,14 +463,6 @@ io.on("connection", (socket) => {
             participant
           );
 
-          // console.log("Updated rooms", participant_updated_rooms);
-
-          // console.log(
-          //   "Sending updated rooms to:",
-          //   participant.username,
-          //   participant_socket_id
-          // );
-
           io.to(participant_socket_id).emit(
             "receive_rooms",
             participant_updated_rooms
@@ -479,6 +471,7 @@ io.on("connection", (socket) => {
       }
 
       socket.join(room._id); // Join the group room
+      socket.emit("group_room_created", true, groupChatName);
     } catch (error) {
       console.log("Error creating group room:", error);
     }
@@ -560,34 +553,32 @@ io.on("connection", (socket) => {
             populate: { path: "participants", select: "username" },
           });
 
-          // Update the room names for both users to display the other participant's username
-          const updatedParticipantRooms = participant_updatedRooms?.rooms.map(
-            (room) => {
-              if (room.is_group) {
-                console.log(room.name, " is a group room");
-                room.name = room.name; // Set the room name to the group chat name
-              } else {
-                console.log("Room is not a group room");
-                room.name = room.participants.find(
-                  (other_participant) =>
-                    other_participant.username !== participant.username
-                ).username; // Set the room name to the other participant's username
-              }
-              console.log("Room name:", room.name);
-              return room;
-            }
-          );
+          const updatedParticipantRooms = await getRoomsWithNames(participant);
 
           io.to(socket_ids[participant._id]).emit(
             "receive_rooms",
             updatedParticipantRooms
           );
+          socket.emit("recieve_rooms", updatedParticipantRooms); // for good measure
         }
       }
+
+      socket.emit("room_deleted", true);
 
       // Emit a message to the participants to notify them of the deletion (not implemented yet)
     } catch (err) {
       console.error("Error deleting room:", err);
+
+      const room = await Rooms.findById(room_id);
+
+      if (room.is_group) {
+        socket.emit("group_room_deleted", false, room.name);
+      } else {
+        const recipient = room.participants.find(
+          (participant) => participant._id.toString() !== user_id
+        );
+        socket.emit("room_deleted", false, recipient.username);
+      }
     }
   });
 
@@ -776,6 +767,27 @@ io.on("connection", (socket) => {
       }
     } catch (e) {
       console.error("Error removing user from room:", e);
+    }
+  });
+
+  socket.on("change_room_name", async (newName, room_id) => {
+    try {
+      const room = await Rooms.findById(room_id);
+      if (!room) {
+        console.log("Couldn't change room name, room not found.");
+        return;
+      }
+      console.log("Changing", room.name, "to", newName);
+
+      room.name = newName; // update name
+      await room.save();
+      socket.emit("recieve_updated_room", room);
+    } catch (e) {
+      console.log(
+        "There was an error trying to change the name of the room to",
+        newName
+      );
+      return;
     }
   });
 

@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import AvatarIcon from "../AvatarIcon";
 import { useSocket } from "../../context/SocketContext";
 import { userContext } from "../../context/UserContext";
@@ -8,6 +8,7 @@ import { Tooltip } from "react-tooltip";
 import ProfilePopout from "./ProfilePopout";
 import { format, isToday } from "date-fns";
 import AddToRoomMenu from "./AddToRoomMenu";
+import toast, { Toaster } from "react-hot-toast";
 
 function RoomInfoBar({
   room,
@@ -23,6 +24,21 @@ function RoomInfoBar({
   const [addParticipantHover, setAddParticipantHover] = useState(false);
   const [showAddParticipant, setShowAddParticipant] = useState(false);
   const [activeProfile, setActiveProfile] = useState(null);
+  const [showChangeName, setShowChangename] = useState(false);
+  const [newName, setNewName] = useState(room.name); // set as original name initially
+
+  const changeNameInputRef = useRef(null);
+
+  useEffect(() => {
+    if (showChangeName && changeNameInputRef.current) {
+      changeNameInputRef.current.focus(); // focus on the change name input when the user clicks change name
+    }
+  }, [showChangeName]);
+
+  const onNewNameType = (e) => {
+    console.log("onNewNameType:", e.target.value);
+    setNewName(e.target.value);
+  };
 
   const formatBirthday = (birthday) => {
     const date = new Date(birthday);
@@ -38,11 +54,11 @@ function RoomInfoBar({
         participant._id === activeProfile ? null : participant._id
       );
     }
-    console.log("Active profile: ", activeProfile);
+    // console.log("Active profile: ", activeProfile);
   };
 
   const addParticipantClick = () => {
-    console.log("Add participant clicked");
+    // console.log("Add participant clicked");
     setShowAddParticipant(!showAddParticipant); // Toggle the showAddParticipant state
   };
 
@@ -50,8 +66,40 @@ function RoomInfoBar({
     return onlineUsers.includes(participant_id);
   };
 
+  const handleChangeNameClick = () => {
+    console.log("Change name!", room.name);
+    setShowChangename(true);
+  };
+
+  const handleChangeNameSubmit = () => {
+    if (newName === room.name) {
+      toast("Room name unchanged!");
+      return;
+    } else if (!newName) {
+      toast("Can't have an empty room name!");
+      return;
+    }
+    {
+      setShowChangename(false);
+      const prevName = room.name;
+      toast(
+        <div>
+          <b>{prevName}</b> changed to: <b>{newName}</b>
+        </div>
+      );
+      console.log("Changing room name to:", newName);
+      socket.emit("change_room_name", newName, room._id);
+    }
+  };
+
+  const cancelChangeName = () => {
+    setShowChangename(false);
+    setNewName(room.name);
+  };
+
   return (
     <div className="relative w-[18rem] bg-gray-100 border-2 border-l-gray-200 h-full shadow-lg transition-transform duration-300">
+      <Toaster />
       <button
         className="fixed top-3 right-3 text-[1.4rem] flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 
       bg-gray-400 bg-opacity-0 hover:bg-opacity-30 active:bg-opacity-100"
@@ -59,6 +107,8 @@ function RoomInfoBar({
       >
         &times;
       </button>
+
+      {/* Avatar Icon */}
       <div className="flex flex-col items-center h-full p-4">
         <div className="ms-3 mt-16 h-20 w-20">
           <AvatarIcon name={room.name} showStatus={false} />
@@ -73,7 +123,48 @@ function RoomInfoBar({
           )}
         </div>
         <div className="flex justify-center">
-          <h2 className="text-lg text-center font-bold">{room.name}</h2>
+          {room.is_group &&
+            (showChangeName ? (
+              <div>
+                <div className="flex flex-row">
+                  <textarea
+                    className="text-lg text-center font-bold w-64 rounded-md placeholder-gray-400 focus:underline bg-gray-100 outline-none resize-none overflow-hidden"
+                    defaultValue={room.name}
+                    placeholder="Ex: Crazy Monkeys"
+                    ref={changeNameInputRef}
+                    onChange={onNewNameType}
+                  />
+                </div>
+                <div className="flex justify-center mt-3 space-x-2">
+                  <button
+                    className="bg-green-500 px-2 py-1 text-white rounded-lg hover:bg-green-400"
+                    onClick={handleChangeNameSubmit}
+                  >
+                    Change Name
+                  </button>
+                  <button
+                    className="bg-red-500 px-2 py-1 text-white rounded-lg hover:bg-red-400"
+                    onClick={cancelChangeName}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-row">
+                <h2 className="text-lg text-center font-bold">{room.name}</h2>
+
+                <span
+                  className="ms-1 flex items-center opacity-100 transition-all duratin-100 ease-in-out hover:opacity-50 cursor-pointer"
+                  onClick={handleChangeNameClick}
+                >
+                  <img src="/rename_room.png" alt="rename" className="w-5" />
+                </span>
+              </div>
+            ))}
+          {!room.is_group && (
+            <h2 className="text-lg text-center font-bold">{room.name}</h2>
+          )}
         </div>
 
         {/* Participants List */}

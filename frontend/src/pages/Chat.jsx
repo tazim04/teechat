@@ -8,7 +8,7 @@ import { userContext } from "../context/UserContext";
 import { onlineUsersContext } from "../context/OnlineUsersContext";
 import RoomInfoBar from "../components/RoomInfoBar/RoomInfoBar";
 
-function Chat({ currentRoom, messages, setMessages }) {
+function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
   const socket = useSocket(); // Use custom hook to get the socket object from the context
   const [message, setMessage] = useState(""); // State for the message
   const [users, setUsers] = useState([]); // State for the users

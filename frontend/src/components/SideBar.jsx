@@ -42,6 +42,15 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
         setRooms(rooms); // Update the rooms state
       });
 
+      socket.on("recieve_updated_room", (room) => {
+        setRooms((prevRooms) =>
+          prevRooms.map((prevRoom) =>
+            prevRoom._id === room._id ? room : prevRoom
+          )
+        );
+        setCurrentRoom(room);
+      });
+
       socket.on("receive_online_users", (users) => {
         setOnlineUsers(users); // Update the online users state
       });
@@ -114,7 +123,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
   };
 
   return (
-    <div className="flex flex-row h-screen">
+    <div className="flex flex-row h-screen overflow-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-gray-300 scrollbar-track-transparent">
       <div
         className={`flex transition-color ease-in-out duration-300 ${palette.sideBar}`}
         style={{ width: "20rem" }}
