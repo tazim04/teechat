@@ -4,11 +4,9 @@ import { useForm } from "react-hook-form";
 import Input from "../components/Input";
 import { useSocket } from "../context/SocketContext";
 import { userContext } from "../context/UserContext";
+import Cookies from "js-cookie";
 
 function SignIn({ setPassword, setShowSignIn }) {
-  const [userNameContent, setUsernameContent] = useState(""); // State for the content in username input field
-  const [passwordContent, setPasswordContent] = useState(""); // State for the content in password input field
-
   const { setUser } = useContext(userContext); // Get setUser from the context
 
   const navigate = useNavigate();
@@ -23,10 +21,26 @@ function SignIn({ setPassword, setShowSignIn }) {
   useEffect(() => {
     // Set up the sign-in response listener once
     if (!socket) return;
-    socket.on("sign_in_response", (response, user) => {
-      if (response) {
+    socket.on("sign_in_response", (response) => {
+      if (response.success) {
         // console.log("Sign in successful", user);
-        setUser(user);
+        setUser(response.user);
+
+        const token = response.token; // get the jwt token
+
+        // Store the JWT in a cookie
+        Cookies.set("token", token, {
+          expires: 7, // Token expires in 7 days
+          secure: true, // Use secure cookies (HTTPS)
+          sameSite: "Strict", // Prevent CSRF attacks
+        });
+
+        // Emit the token for future authenticated communications
+        socket.auth = { token };
+        socket.connect(); // Reconnect socket with the token
+
+        console.log("Token in cookies:", Cookies.get("token"));
+
         navigate("/main");
       } else {
         // console.log("Sign in failed");

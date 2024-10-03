@@ -3,10 +3,15 @@ import express from "express";
 import { createServer } from "node:http";
 import cors from "cors";
 import mongoose, { set } from "mongoose";
+import jwt from "jsonwebtoken";
+import http from "http";
 import Rooms from "./models/rooms.js";
 import Users from "./models/users.js";
 import { create } from "node:domain";
 import Room from "./models/rooms.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 const server = createServer(app);
@@ -14,9 +19,19 @@ const server = createServer(app);
 const uri =
   "mongodb+srv://tazim720:ZisGFg0rXcoq3rAS@messaging-app-cluster.jq4v6uf.mongodb.net/messaging-app?retryWrites=true&w=majority&appName=messaging-app-cluster";
 
+const JWT_SECRET = process.env.JWT_SECRET; // get jwt secret from .env
+
 const clientOptions = {
   serverApi: { version: "1", strict: true, deprecationErrors: true },
 };
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
 
 async function runMongoDB() {
   try {
@@ -31,6 +46,29 @@ async function runMongoDB() {
   }
 }
 runMongoDB().catch(console.dir);
+
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+
+  if (token) {
+    // If a token is present, verify it
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return next(
+          new Error("Authentication error: invalid or expired token")
+        );
+      }
+      socket.user = decoded; // Attach user info to the socket object after successful verification
+      next();
+    });
+  } else {
+    // Allow connection without a token for initial logins
+    console.log(
+      "No token provided. Allowing connection for login/registration."
+    );
+    next(); // Proceed without blocking the connection
+  }
+});
 
 // Dictionaries for storing socket IDs and messages
 let socket_ids = {}; // Dictionary to store username as key and socket_id as value
@@ -79,7 +117,7 @@ async function find_room_in_db(sender, recipient) {
 async function getRoomsWithNames(user) {
   // console.log("getRoomsWithNames:", user);
   if (!user) {
-    console.log("User not found:", user);
+    console.log("getRoomsWithNames: User not found:", user);
     return []; // Return an empty array if the user is not found
   }
   const user_populatedRooms = await Users.findById(user._id)
@@ -170,25 +208,49 @@ async function create_room_gc(participants, roomName) {
   return room;
 }
 
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-});
-
 io.on("connection", (socket) => {
   socket.on("sign_in", async (username, password) => {
-    const user = await Users.findOne({ username: username });
+    try {
+      const user = await Users.findOne({ username: username });
 
-    if (user && user.password === password) {
-      // console.log("User signed in:", username);
-      const { password, ...userWithoutPassword } = user.toObject(); // Remove the password from the user object before sending it to the client
-      socket.emit("sign_in_response", true, userWithoutPassword);
-    } else {
-      // console.log("User not found or password incorrect:", username);
-      socket.emit("sign_in_response", false);
+      if (user && user.password === password) {
+        // console.log("User signed in:", username);
+        const { password, ...userWithoutPassword } = user.toObject(); // Remove the password from the user object before sending it to the client
+
+        // generate JWT token here
+        const token = jwt.sign({ data: userWithoutPassword }, JWT_SECRET, {
+          expiresIn: "1h", // token expires in 1h
+        });
+
+        socket.emit("sign_in_response", {
+          success: true,
+          user: userWithoutPassword,
+          token,
+        });
+      } else {
+        // console.log("User not found or password incorrect:", username);
+        socket.emit("sign_in_response", false);
+      }
+    } catch (e) {
+      console.log("There was an error with trying to sign in!", e);
+    }
+  });
+
+  socket.on("auth_token", (token) => {
+    console.log("Authenticating the token found in cookies!");
+    try {
+      const user = jwt.verify(token, JWT_SECRET);
+      console.log("user found with token:", user.data.username);
+      socket.emit("auth_response", {
+        success: true,
+        user: user,
+      });
+    } catch (e) {
+      console.log("Token is invalid");
+      // token is invalid
+      socket.emit("auth_response", {
+        success: false,
+      });
     }
   });
 
@@ -197,7 +259,7 @@ io.on("connection", (socket) => {
     const userDB = await Users.findOne({ username: user.username }); // Get user from database
 
     if (!userDB) {
-      console.log("User not found:", user);
+      console.log("join_server: User not found:", user);
       return;
     }
 
@@ -405,7 +467,7 @@ io.on("connection", (socket) => {
 
       // Check if the user and recipient exist, shouldn't happen
       if (!user_db || !recipient_db) {
-        console.log("User not found:", user, recipient);
+        console.log("create_room: User not found:", user, recipient);
         return;
       }
 
@@ -446,7 +508,7 @@ io.on("connection", (socket) => {
         if (user) {
           participants.push(user_db); // Add the user to the participants array if they exist
         } else {
-          console.log("User not found:", user);
+          console.log("Ucreate_room_gc: ser not found:", user);
         }
       }
 
@@ -481,7 +543,7 @@ io.on("connection", (socket) => {
     try {
       const user = await Users.findById(user_id);
       if (!user) {
-        console.log("User not found:", user_id);
+        console.log("fetch_user: User not found:", user_id);
         return;
       }
 
@@ -811,7 +873,7 @@ io.on("connection", (socket) => {
     const user = await Users.findOne({ username: username });
 
     if (!user) {
-      console.log("User not found:", username);
+      console.log("set_palette: User not found:", username);
       return;
     }
 

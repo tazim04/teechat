@@ -2,6 +2,7 @@ import Chat from "./Chat";
 import SideBar from "../components/SideBar";
 import { useEffect, useState, createContext, useContext } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import Cookies from "js-cookie";
 
 import { usePalette } from "../context/PaletteContext";
 import { useSocket } from "../context/SocketContext";
@@ -27,6 +28,7 @@ function MainPage() {
   // Listen for events when the component mounts
   useEffect(() => {
     if (socket && socket.connected) {
+      toast.remove();
       socket.emit("join_server", user); // Emit a "join_server" event
       console.log("user: ", user);
       if (user._id) {

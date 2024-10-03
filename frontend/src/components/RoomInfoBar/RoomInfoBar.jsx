@@ -185,7 +185,7 @@ function RoomInfoBar({
                     } transition-all ease-in-out duration-100 hover:bg-gray-300 $`}
                     data-tooltip-id="profile"
                     data-tooltip-html={`
-                  <div class='flex flex-col items-center'>
+                  <div className='flex flex-col items-center'>
                   <p>Username: ${participant.username}</p>
                   </div>
                     `}

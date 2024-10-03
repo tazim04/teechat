@@ -69,7 +69,7 @@ function CreateRoom({
     if (groupChat && selectedUsers.length > 1) {
       setMenuHeight(31);
     } else {
-      setMenuHeight(25); // Default menu height
+      setMenuHeight(27); // Default menu height
       setShowCreateRoomBTN(false);
       setGroupChatName("");
     }
@@ -179,6 +179,8 @@ function CreateRoom({
       console.log(`Creating room ${groupChatName} with users: `, selectedUsers);
       socket.emit("create_room_gc", selectedUsers, groupChatName); // Emit "create_room_gc" event
 
+      toast.loading("Creating room...");
+
       setShowMenu(false); // Close modal
     }
   };
@@ -187,7 +189,7 @@ function CreateRoom({
     <>
       <Toaster />
       <div
-        className={`text-gray-200 ${palette.menu} w-full h-[19rem] mx-auto shadow-lg `}
+        className={`text-gray-200 ${palette.menu} w-full h-[21rem] mx-auto shadow-lg `}
       >
         <div className="flex justify-center p-5 relative">
           <h5 className="font-bold inline" style={{ fontSize: "1rem" }}>
@@ -199,7 +201,7 @@ function CreateRoom({
               {groupChat ? "multiple people" : "someone"}
               {/* Dropdown container */}
               {isDropdownOpen && (
-                <ul className="absolute left-1/2 transform -translate-x-1/2 bg-gray-100 bg-opacity-15 rounded-lg z-[1] w-36 p-1 shadow mt-1">
+                <ul className="absolute left-1/2 transform -translate-x-1/2 bg-gray-100 bg-opacity-80 rounded-lg z-[1] w-36 p-1 shadow mt-1">
                   <li
                     className={`${
                       palette.createRoomHover
@@ -238,7 +240,7 @@ function CreateRoom({
             onChange={handleSearchChange}
           />
         </div>
-        <div className="px-auto text-base h-[12.5rem] pb-1 overflow-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-gray-300 scrollbar-track-transparent">
+        <div className="px-auto text-base h-[14.5rem] pb-1 overflow-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-gray-300 scrollbar-track-transparent">
           {usersToShow.length > 0 ? (
             usersToShow
               .filter((user) => user.username !== username) // Filter out the current user
@@ -301,7 +303,7 @@ function CreateRoom({
         {/* Group Chat name and finalization */}
         <div
           className={`absolute top-[-11rem] w-full flex justify-center transition-all ease-in-out duration-300 ${
-            menuHeight > 25 ? "opacity-100" : "opacity-0 pointer-events-none"
+            menuHeight > 27 ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
           style={{
             transform: `translateY(${menuHeight}rem) ${

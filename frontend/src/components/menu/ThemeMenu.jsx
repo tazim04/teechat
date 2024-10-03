@@ -17,7 +17,7 @@ function ThemeMenu() {
   };
 
   return (
-    <div className="text-gray-200 w-full h-80 mx-auto rounded-xl shadow-2xl">
+    <div className="text-gray-200 w-full h-[21rem] mx-auto rounded-xl shadow-2xl">
       <div className="flex justify-center p-5">
         <h5 className="font-bold" style={{ fontSize: "1rem" }}>
           Change the theme.

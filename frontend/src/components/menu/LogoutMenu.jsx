@@ -1,16 +1,18 @@
 import { useContext } from "react";
 import { userContext } from "../../context/UserContext";
+import Cookies from "js-cookie";
 
 function LogoutMenu() {
   const { user } = useContext(userContext); // Get the user from the context
 
   // For now, until jwt is implemented, we will redirect to the home page
   const handleLogout = () => {
+    Cookies.remove("token"); // clear the token cookie
     window.location.href = "/"; // Redirect to the home page
   };
 
   return (
-    <div className="text-gray-200 w-full h-80 mx-auto rounded-xl shadow-2xl">
+    <div className="text-gray-200 w-full h-[21rem] mx-auto rounded-xl shadow-2xl">
       <div className="flex justify-center p-5">
         <h5 className="font-bold " style={{ fontSize: "1rem" }}>
           See you soon, {user.username}.

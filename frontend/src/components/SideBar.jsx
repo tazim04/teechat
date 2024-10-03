@@ -38,7 +38,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
     if (socket) {
       // Listen for the updated user list
       socket.on("receive_rooms", (rooms) => {
-        console.log("Received rooms: ", rooms);
+        // console.log("Received rooms: ", rooms);
         setRooms(rooms); // Update the rooms state
       });
 
@@ -91,25 +91,25 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
     if (currentRoom && currentRoom._id === selected_room._id) {
       return; // If the selected chat is the same as the current chat, return
     }
-    console.log("Opening chat: ", selected_room); // Log the selected chat
+    // console.log("Opening chat: ", selected_room); // Log the selected chat
     setCurrentRoom(selected_room); // Set the room to the selected chat
     socket.emit("get_previous_messages", selected_room); // Emit a "get_previous_messages" event
 
-    console.log(
-      "Set room to: " + selected_room.id,
-      selected_room.name,
-      "is_group: " + selected_room.is_group
-    ); // Log the selected chat
+    // console.log(
+    //   "Set room to: " + selected_room.id,
+    //   selected_room.name,
+    //   "is_group: " + selected_room.is_group
+    // ); // Log the selected chat
   };
 
   const checkOnline = (room) => {
-    console.log("Checking online: ", room);
-    console.log("Online users: ", onlineUsers);
+    // console.log("Checking online: ", room);
+    // console.log("Online users: ", onlineUsers);
 
     // Check if the room's name is included in the onlineUsers array
     const isOnline = onlineUsers.includes(getOtherParticipantId(room));
 
-    console.log(`Is ${room.name} online: `, isOnline);
+    // console.log(`Is ${room.name} online: `, isOnline);
     return isOnline;
   };
 
@@ -118,7 +118,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
     const otherParticipant = participants.find(
       (participant) => participant._id !== user._id
     );
-    console.log("Other participant:", otherParticipant);
+    // console.log("Other participant:", otherParticipant);
     return otherParticipant._id;
   };
 

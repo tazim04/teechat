@@ -81,7 +81,7 @@ export const PaletteProvider = ({ children }) => {
 
   useEffect(() => {
     if (socket && socket.connected && username) {
-      console.log("Fetching palette for user: ", user);
+      // console.log("Fetching palette for user: ", user);
 
       socket.on("users_palette", (usersPalette) => {
         setPalette(palettes[usersPalette]); // Set the palette based on server response

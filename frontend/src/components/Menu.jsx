@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import CreateRoom from "./menu/CreateRoom";
 import ThemeMenu from "./menu/ThemeMenu";
 import LogoutMenu from "./menu/LogoutMenu";
+import Profile from "./menu/Profile";
 
 // context imports
 import { useSocket } from "../context/SocketContext";
@@ -9,8 +10,8 @@ import { usePalette } from "../context/PaletteContext";
 import { userContext } from "../context/UserContext";
 
 function Menu({ showMenu, setShowMenu, rooms, openChat }) {
-  const [currentMenu, setCurrentMenu] = useState("createRoom");
-  const [menuHeight, setMenuHeight] = useState(25);
+  const [currentMenu, setCurrentMenu] = useState("profile");
+  const [menuHeight, setMenuHeight] = useState(27);
   const [zIndexVisible_gcName, setZIndexVisible_gcName] = useState(false);
 
   const socket = useSocket(); // Use custom hook to get the socket object from the context
@@ -23,9 +24,42 @@ function Menu({ showMenu, setShowMenu, rooms, openChat }) {
     setCurrentMenu(menu);
   };
 
+  const profile_active = () => {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="white"
+        width="48"
+        height="48"
+      >
+        <circle cx="12" cy="12" r="12" fill="white" />
+        <circle cx="12" cy="10" r="4" fill="none" />
+        <path d="M12 14c-4 0-7 2-7 4v2h14v-2c0-2-3-4-7-4z" fill="none" />
+      </svg>
+    );
+  };
+  const profile_inactive = () => {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="white"
+        stroke-width="2"
+        width="48"
+        height="48"
+      >
+        <circle cx="12" cy="12" r="10" fill="none" stroke="white" />
+        <circle cx="12" cy="10" r="4" fill="none" />
+        <path d="M12 14c-4 0-7 2-7 4v2h14v-2c0-2-3-4-7-4z" fill="none" />
+      </svg>
+    );
+  };
+
   // useEffect to set the z-index of the menu to 10 when the menu is expanded for create room
   useEffect(() => {
-    if (menuHeight > 25) {
+    if (menuHeight > 27) {
       const timer = setTimeout(() => {
         setZIndexVisible_gcName(true);
       }, 300); // 300ms delay
@@ -66,17 +100,30 @@ function Menu({ showMenu, setShowMenu, rooms, openChat }) {
             setMenuHeight={setMenuHeight}
           />
         )}
+        {currentMenu === "profile" && <Profile />}
         {currentMenu === "theme" && <ThemeMenu />}
         {currentMenu === "logout" && <LogoutMenu />}
       </div>
 
       {/* Bottom bar */}
       <div
-        className={`bottomBar ${palette.menuNav} rounded-b-xl absolute bottom-0 w-full h-11 transition-color ease-in-out duration-300 grid grid-cols-3`}
+        className={`bottomBar ${palette.menuNav} rounded-b-xl absolute bottom-0 w-full h-11 transition-color ease-in-out duration-300 grid grid-cols-4`}
         style={{ zIndex: 9999 }}
       >
         <div
           className={`flex items-center justify-center rounded-bl-xl ${palette.menuNavHover}`}
+          onClick={() => openMenu("profile")}
+        >
+          <img
+            src={`${
+              currentMenu === "profile" ? "profile_selected.png" : "profile.png"
+            }`}
+            alt="Profile"
+            className="w-7 invert"
+          />
+        </div>
+        <div
+          className={`flex items-center justify-center ${palette.menuNavHover}`}
           onClick={() => openMenu("createRoom")}
         >
           <img
