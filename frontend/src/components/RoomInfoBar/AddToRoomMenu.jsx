@@ -46,7 +46,7 @@ function AddToRoomMenu({ room, participants, setShowAddParticipant }) {
 
   return (
     <div
-      className={`text-gray-200 w-full h-[19rem] shadow-md p-4 rounded-md ${palette.menu}`}
+      className={`text-gray-200 w-60 h-[19rem] shadow-md p-4 rounded-md ${palette.menu} absolute top-0 right-5 z-50 opacity-80 transition-opacity ease-in-out duration-300 hover:opacity-[0.95]`}
     >
       <h3 className="text-[1rem] font-semibold mb-3 text-center">
         Add Users to Room
@@ -85,9 +85,10 @@ function AddToRoomMenu({ room, participants, setShowAddParticipant }) {
             </li>
           ))
         ) : (
-          <div className="text-center my-14 mx-10">
+          <div className="text-center my-10 mx-8">
             <p className="font-semibold text-[1rem]">
-              There are no users with a matching name! :(
+              There are no users with a matching username! <br />
+              :(
             </p>
           </div>
         )}

@@ -30,7 +30,7 @@ function RoomCard({
   useEffect(() => {
     if (socket) {
       socket.on("recieve_last_message", (messageData) => {
-        // console.log("lastMessage: ", messageData);
+        console.log("lastMessage: ", messageData);
 
         const roomId = messageData.room_id;
         const { room_id, ...exclude_room_id } = messageData;
@@ -57,7 +57,7 @@ function RoomCard({
       setShowContextMenu(""); // Close the context menu if it's already open
       setSelectedRoomContext(""); // Reset the selected room for the context menu
     } else {
-      // console.log("room: ", room);
+      console.log("room: ", room);
       setShowContextMenu(room._id); // Show the context menu for the clicked room (room id)
       setSelectedRoomContext(room); // Set the selected room for the context menu
     }

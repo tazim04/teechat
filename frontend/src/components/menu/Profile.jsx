@@ -13,13 +13,13 @@ function Profile() {
   };
 
   return (
-    <div>
+    <div className="overflow-auto overflow-x-hidden h-[21rem] scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-gray-300 scrollbar-track-transparent">
       <link
         rel="stylesheet"
         href="https://cdn.materialdesignicons.com/6.5.95/css/materialdesignicons.min.css"
       ></link>
 
-      <div className="mr-1 w-[20rem] pt-2 pb-4 text-gray-50">
+      <div className="mr-1 w-[20rem] pt-2 pb-4 text-gray-50 px-2">
         <div className="flex flex-col items-center">
           <div className="relative h-12 w-12 mb-1">
             <AvatarIcon name={user.username} showStatus={false} />
@@ -28,7 +28,7 @@ function Profile() {
           <p className="text-[0.8rem]">{user.email}</p>
 
           {/* Social Media Links */}
-          <div className="flex flex-row my-2">
+          <div className="flex flex-row my-2 space-x-3">
             {user.socials?.instagram && (
               <a
                 href={user.socials.instagram}
@@ -70,14 +70,14 @@ function Profile() {
                 ))}
             </div>
           </div>
-          <div className="row mt-4">
+          <div className="row pt-5">
             <p className="font-semibold text-[0.9rem]">My Birthday</p>
             <p className="text-[0.8rem]">
               {user.birthday && formatBirthday(user.birthday)}
             </p>
           </div>
         </div>
-        <div className="absolute top-1 right-3 text-gray-100 text-sm cursor-pointer hover:underline">
+        <div className="flex justify-center mt-5 text-gray-100 text-sm cursor-pointer opacity-100 underline hover:opacity-60">
           <p>edit profile</p>
         </div>
       </div>

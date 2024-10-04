@@ -4,6 +4,7 @@ import Input from "../components/Input";
 import { useSocket } from "../context/SocketContext";
 import { Link, useNavigate } from "react-router-dom";
 import { userContext } from "../context/UserContext";
+import Cookies from "js-cookie";
 
 function SetUpProfile({
   setShowCreateAccount,
@@ -60,29 +61,44 @@ function SetUpProfile({
   useEffect(() => {
     const handleAccountCreated = (response) => {
       // Handle account creation response
-      if (
-        response !== null &&
-        response !== "existing email" &&
-        response !== "existing username"
-      ) {
+      if (response.success) {
         console.log("Account created successfully", response);
 
-        setUser({
-          _id: response._id,
-          username: response.username,
-          email: response.email,
-          birthday: response.birthday,
-          interests: response.interests,
-          socials: response.socials,
+        setUser(response.user);
+
+        const token = response.token;
+
+        Cookies.set("token", token, {
+          expires: 7,
+          secure: true,
+          sameSite: "Strict",
         });
+
+        socket.auth = { token };
+        socket.connect();
+
         navigate("/main");
-      } else if (response === "existing email") {
-        alert("Email already exists");
-      } else if (response === "existing username") {
-        alert("Username already exists");
       } else {
-        alert("Account creation failed");
+        switch (response.reason) {
+          case "email":
+            alert("Email already being used!");
+            break;
+          case "username":
+            alert("Username already exist!");
+            break;
+          default:
+            alert("Account creation failed for some reason, sorry! :(");
+            break;
+        }
       }
+
+      // else if (response === "existing email") {
+      //   alert("Email already exists");
+      // } else if (response === "existing username") {
+      //   alert("Username already exists");
+      // } else {
+      //   alert("Account creation failed");
+      // }
     };
 
     if (socket && socket.connected) {

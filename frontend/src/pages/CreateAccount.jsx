@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { Form } from "react-router-dom";
 import Input from "../components/Input";
-import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
 import { userContext } from "../context/UserContext";
 
@@ -14,7 +13,6 @@ const CreateAccount = ({
   setCreateAccountData,
   handleBackClick,
 }) => {
-  const navigate = useNavigate();
   const socket = useSocket();
   const {
     register,
@@ -24,23 +22,38 @@ const CreateAccount = ({
 
   const onSubmit = handleSubmit((data) => {
     console.log("Data:", data);
-    if (data.password === data.confirmPassword) {
-      setCreateAccountData({
-        email: data.email,
-        username: data.username,
-        password: data.password,
-      }); // Store account data in state
-      setPassword(data.password); // Set the password state
-      setShowCreateAccount(false); // Hide create account form
-    } else {
-      alert("Passwords do not match");
+    if (socket) {
+      // check if email and username are being used already in db
+      socket.emit("check_existing_user", data);
+
+      socket.once("user_check_result", async (result) => {
+        if (result.emailExists) {
+          alert("Email is already being used!");
+          return;
+        } else if (result.usernameExists) {
+          alert("Username already exists!");
+          return;
+        } else {
+          if (data.password === data.confirmPassword) {
+            setCreateAccountData({
+              email: data.email,
+              username: data.username,
+              password: data.password,
+            }); // Store account data in state
+            setPassword(data.password); // Set the password state
+            setShowCreateAccount(false); // Hide create account form
+          } else {
+            alert("Passwords do not match");
+          }
+        }
+      });
     }
+    return () => {
+      if (socket) {
+        socket.off("user_check_result");
+      }
+    };
   });
-
-  // const clickSignIn = () => {
-  //   setShowCreateAccount(false);
-  // };
-
   return (
     <div className="">
       <button

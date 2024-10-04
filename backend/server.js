@@ -208,6 +208,11 @@ async function create_room_gc(participants, roomName) {
   return room;
 }
 
+const generate_jwt = (userInfo) => {
+  const token = jwt.sign({ data: userInfo }, JWT_SECRET, { expiresIn: "24h" });
+  return token;
+};
+
 io.on("connection", (socket) => {
   socket.on("sign_in", async (username, password) => {
     try {
@@ -218,9 +223,7 @@ io.on("connection", (socket) => {
         const { password, ...userWithoutPassword } = user.toObject(); // Remove the password from the user object before sending it to the client
 
         // generate JWT token here
-        const token = jwt.sign({ data: userWithoutPassword }, JWT_SECRET, {
-          expiresIn: "1h", // token expires in 1h
-        });
+        const token = generate_jwt(userWithoutPassword);
 
         socket.emit("sign_in_response", {
           success: true,
@@ -307,13 +310,18 @@ io.on("connection", (socket) => {
 
       // Check if the email or username already exists
       if (existing_email) {
-        const response = "existing email";
-        // console.log("Email already exists");
+        const response = {
+          success: false,
+          reason: "email",
+        };
         socket.emit("account_created", response);
         return;
       }
       if (existing_username) {
-        const response = "existing username";
+        const response = {
+          success: false,
+          reason: "username",
+        };
         // console.log("Username already exists");
         socket.emit("account_created", response);
         return;
@@ -330,14 +338,14 @@ io.on("connection", (socket) => {
         socials,
       });
 
+      const { password: pass, ...userWithoutPassword } = user.toObject(); // Remove the password from the user object before sending it to the client
+      const token = generate_jwt(userWithoutPassword);
+
       // sinced rooms is empty, no need to send it to the client on account creation
       const response = {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        birthday: user.birthday,
-        interests: user.interests,
-        socials: user.socials,
+        success: true,
+        user: userWithoutPassword,
+        token,
       };
       try {
         await user.save(); // Save the user to the database
@@ -350,6 +358,23 @@ io.on("connection", (socket) => {
       }
     }
   );
+
+  socket.on("check_existing_user", async (data) => {
+    console.log("Checking ", data);
+    const existing_email = await Users.findOne({ email: data.email });
+    const existing_username = await Users.findOne({ username: data.username });
+
+    console.log("existing email:", existing_email, !!existing_email);
+    console.log("existing username:", existing_username, !!existing_username);
+
+    const response = {
+      emailExists: !!existing_email,
+      usernameExists: !!existing_username,
+    };
+
+    // Emit the response back to the client
+    socket.emit("user_check_result", response);
+  });
 
   socket.on("fetch_rooms", async (username) => {
     // console.log("Fetching rooms for:", username);

@@ -29,6 +29,7 @@ function RemoveParticipantConfirmationModal({
   const removeParticipant = () => {
     socket.emit("remove_user_from_room", room._id, participant._id); // Emit a "delete_room" event
     setShowConfirmationModal(false); // Close the modal
+    setShowContextMenu(""); // reset showContextMenu state
   };
 
   return (

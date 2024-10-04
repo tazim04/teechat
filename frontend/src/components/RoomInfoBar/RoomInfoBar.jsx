@@ -171,9 +171,43 @@ function RoomInfoBar({
         <div className="ml-1 flex flex-col w-full">
           {room.is_group ? (
             <div className="mt-10">
-              <p className="font-medium text-[1rem] mb-3">
-                Roommates - {participants.length}
-              </p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-medium text-[1rem]">
+                  Roommates - {participants.length}
+                </p>
+                <div className="flex items-center align-middle">
+                  {/* Add to room stuff */}
+                  <div>
+                    <div
+                      className="cursor-pointer transition-transform duration-200 ms-28"
+                      onClick={addParticipantClick}
+                      onMouseEnter={() => setAddParticipantHover(true)}
+                      onMouseLeave={() => setAddParticipantHover(false)}
+                      data-tooltip-id="add-participant"
+                      data-tooltip-content="Add a participant to the room"
+                    >
+                      <img
+                        src="/add_icon.png"
+                        alt="add"
+                        className={`w-5 transition-transform duration-300 
+                      invert hover:invert-[50%] ${
+                        showAddParticipant ? "rotate-45" : "rotate-0"
+                      }
+                  `}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-5 relative">
+                    {showAddParticipant && (
+                      <AddToRoomMenu
+                        room={room}
+                        participants={participants}
+                        setShowAddParticipant={setShowAddParticipant}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
               {participants.map((participant, index) => (
                 <div key={index} className="relative">
                   <div
@@ -223,37 +257,6 @@ function RoomInfoBar({
                   )}
                 </div>
               ))}
-
-              {/* Add to room stuff */}
-              <div className="flex justify-center">
-                <div
-                  className="inline-flex mt-4 cursor-pointer transition-transform duration-200"
-                  onClick={addParticipantClick}
-                  onMouseEnter={() => setAddParticipantHover(true)}
-                  onMouseLeave={() => setAddParticipantHover(false)}
-                  data-tooltip-id="add-participant"
-                  data-tooltip-content="Add a participant to the room"
-                >
-                  <img
-                    src="/add_icon.png"
-                    alt="add"
-                    className={`w-7 transition-transform duration-300 
-                      invert hover:invert-[50%] ${
-                        showAddParticipant ? "rotate-45" : "rotate-0"
-                      }
-                  `}
-                  />
-                </div>
-              </div>
-              <div className="mt-5">
-                {showAddParticipant && (
-                  <AddToRoomMenu
-                    room={room}
-                    participants={participants}
-                    setShowAddParticipant={setShowAddParticipant}
-                  />
-                )}
-              </div>
             </div>
           ) : (
             <div className="mt-4">
@@ -346,7 +349,7 @@ function RoomInfoBar({
             borderRadius: "0.3rem",
             zIndex: "9999",
           }}
-          place="bottom"
+          place="left"
         />
       )}
     </div>
