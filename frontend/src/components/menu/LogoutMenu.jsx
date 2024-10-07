@@ -7,7 +7,9 @@ function LogoutMenu() {
 
   // For now, until jwt is implemented, we will redirect to the home page
   const handleLogout = () => {
-    Cookies.remove("token"); // clear the token cookie
+    // clear cookies
+    Cookies.remove("accessToken");
+    Cookies.remove("refreshToken");
     window.location.href = "/"; // Redirect to the home page
   };
 

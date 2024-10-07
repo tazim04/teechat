@@ -26,20 +26,24 @@ function SignIn({ setPassword, setShowSignIn }) {
         // console.log("Sign in successful", user);
         setUser(response.user);
 
-        const token = response.token; // get the jwt token
+        const accessToken = response.accessToken;
+        const refreshToken = response.refreshToken;
 
-        // Store the JWT in a cookie
-        Cookies.set("token", token, {
+        Cookies.set("accessToken", accessToken, {
+          expires: 15 / 1440, // Expires in 15 minutes
+          secure: true,
+          sameSite: "Strict",
+        });
+
+        Cookies.set("refreshToken", refreshToken, {
           expires: 7, // Token expires in 7 days
           secure: true, // Use secure cookies (HTTPS)
           sameSite: "Strict", // Prevent CSRF attacks
         });
 
         // Emit the token for future authenticated communications
-        socket.auth = { token };
+        socket.auth = { accessToken };
         socket.connect(); // Reconnect socket with the token
-
-        console.log("Token in cookies:", Cookies.get("token"));
 
         navigate("/main");
       } else {
@@ -92,7 +96,7 @@ function SignIn({ setPassword, setShowSignIn }) {
           <div>
             <div className="flex items-center justify-between">
               <label
-                for="password"
+                htmlFor="password"
                 className="block text-md font-bold leading-6 text-gray-900"
               >
                 Password

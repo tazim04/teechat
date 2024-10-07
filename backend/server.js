@@ -8,7 +8,6 @@ import http from "http";
 import Rooms from "./models/rooms.js";
 import Users from "./models/users.js";
 import { create } from "node:domain";
-import Room from "./models/rooms.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -16,8 +15,7 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 
-const uri =
-  "mongodb+srv://tazim720:ZisGFg0rXcoq3rAS@messaging-app-cluster.jq4v6uf.mongodb.net/messaging-app?retryWrites=true&w=majority&appName=messaging-app-cluster";
+const uri = process.env.MONGODB_URI; // get uri from .env
 
 const JWT_SECRET = process.env.JWT_SECRET; // get jwt secret from .env
 
@@ -48,25 +46,29 @@ async function runMongoDB() {
 runMongoDB().catch(console.dir);
 
 io.use((socket, next) => {
-  const token = socket.handshake.auth.token;
+  const accessToken = socket.handshake.auth.accessToken;
+  const authorizedPage = socket.handshake.auth.authorizedPage;
 
-  if (token) {
-    // If a token is present, verify it
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  // if the page is authorized, let it connect (login or signup)
+  if (authorizedPage) {
+    console.log("This page is allowed to pass.");
+    return next();
+  }
+
+  if (accessToken) {
+    jwt.verify(accessToken, process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
-        return next(
-          new Error("Authentication error: invalid or expired token")
-        );
+        if (err.name === "TokenExpiredError") {
+          socket.emit("token_expired"); // Notify the client to refresh the token
+          return next(new Error("Authentication error: token expired"));
+        }
+        return next(new Error("Authentication error: invalid token"));
       }
-      socket.user = decoded; // Attach user info to the socket object after successful verification
+      socket.user = decoded;
       next();
     });
   } else {
-    // Allow connection without a token for initial logins
-    console.log(
-      "No token provided. Allowing connection for login/registration."
-    );
-    next(); // Proceed without blocking the connection
+    return next(new Error("Authentication error: access token is required")); // Reject connection without token
   }
 });
 
@@ -208,9 +210,12 @@ async function create_room_gc(participants, roomName) {
   return room;
 }
 
-const generate_jwt = (userInfo) => {
-  const token = jwt.sign({ data: userInfo }, JWT_SECRET, { expiresIn: "24h" });
-  return token;
+// JWT Token generation
+const generateAccessToken = (user) => {
+  return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "15m" }); // 15 minutes
+};
+const generateRefreshToken = (user) => {
+  return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "7d" }); // 7 days
 };
 
 io.on("connection", (socket) => {
@@ -218,20 +223,31 @@ io.on("connection", (socket) => {
     try {
       const user = await Users.findOne({ username: username });
 
-      if (user && user.password === password) {
+      if (!user) {
+        console.log("sign_in: user not found", username);
+        return socket.emit("sign_in_response", {
+          success: false,
+        });
+      }
+
+      const doesPasswordMatch = await user.comparePassword(password);
+
+      if (doesPasswordMatch) {
         // console.log("User signed in:", username);
         const { password, ...userWithoutPassword } = user.toObject(); // Remove the password from the user object before sending it to the client
 
         // generate JWT token here
-        const token = generate_jwt(userWithoutPassword);
+        const accessToken = generateAccessToken(userWithoutPassword);
+        const refreshToken = generateRefreshToken(userWithoutPassword);
 
         socket.emit("sign_in_response", {
           success: true,
           user: userWithoutPassword,
-          token,
+          accessToken,
+          refreshToken,
         });
       } else {
-        // console.log("User not found or password incorrect:", username);
+        console.log("User not found or password incorrect:", username);
         socket.emit("sign_in_response", false);
       }
     } catch (e) {
@@ -239,22 +255,25 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("auth_token", (token) => {
-    console.log("Authenticating the token found in cookies!");
-    try {
-      const user = jwt.verify(token, JWT_SECRET);
-      console.log("user found with token:", user.data.username);
-      socket.emit("auth_response", {
-        success: true,
-        user: user,
-      });
-    } catch (e) {
-      console.log("Token is invalid");
-      // token is invalid
-      socket.emit("auth_response", {
-        success: false,
-      });
+  socket.on("refresh_access_token", async (refreshToken, callback) => {
+    if (!refreshToken) {
+      return callback({ error: "Refresh token required" });
     }
+
+    jwt.verify(refreshToken, process.env.JWT_SECRET, (err, user) => {
+      if (err) {
+        return callback({ error: "Invalid refresh token" });
+      }
+
+      console.log("user from token: ", user);
+
+      const { exp, iat, ...userWithoutExp } = user; // remove the JWT specific fields, new ones will be generated
+
+      // Generate a new access token
+      const newAccessToken = generateAccessToken(userWithoutExp);
+
+      callback({ accessToken: newAccessToken }); // Send new token back to the client
+    });
   });
 
   socket.on("join_server", async (user) => {
@@ -339,17 +358,20 @@ io.on("connection", (socket) => {
       });
 
       const { password: pass, ...userWithoutPassword } = user.toObject(); // Remove the password from the user object before sending it to the client
-      const token = generate_jwt(userWithoutPassword);
+      const accessToken = generateAccessToken(userWithoutPassword);
+      const refreshToken = generateRefreshToken(userWithoutPassword);
 
       // sinced rooms is empty, no need to send it to the client on account creation
       const response = {
         success: true,
         user: userWithoutPassword,
-        token,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
       };
       try {
         await user.save(); // Save the user to the database
         console.log("Account created for:", username);
+        console.log("response:", response);
         socket.emit("account_created", response);
         // socket.emit("users_palette", "default");
       } catch (error) {

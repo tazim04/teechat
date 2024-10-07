@@ -66,15 +66,22 @@ function SetUpProfile({
 
         setUser(response.user);
 
-        const token = response.token;
+        const accessToken = response.accessToken;
+        const refreshToken = response.refreshToken;
 
-        Cookies.set("token", token, {
-          expires: 7,
+        Cookies.set("accessToken", accessToken, {
+          expires: 15 / 1440, // Expires in 15 minutes
           secure: true,
           sameSite: "Strict",
         });
 
-        socket.auth = { token };
+        Cookies.set("refreshToken", refreshToken, {
+          expires: 7, // Token expires in 7 days
+          secure: true, // Use secure cookies (HTTPS)
+          sameSite: "Strict", // Prevent CSRF attacks
+        });
+
+        socket.auth = { accessToken };
         socket.connect();
 
         navigate("/main");
@@ -91,14 +98,6 @@ function SetUpProfile({
             break;
         }
       }
-
-      // else if (response === "existing email") {
-      //   alert("Email already exists");
-      // } else if (response === "existing username") {
-      //   alert("Username already exists");
-      // } else {
-      //   alert("Account creation failed");
-      // }
     };
 
     if (socket && socket.connected) {

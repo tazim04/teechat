@@ -32,25 +32,25 @@ function Profile() {
             {user.socials?.instagram && (
               <a
                 href={user.socials.instagram}
-                class="flex rounded-full bg-orange-100 bg-opacity-100 hover:bg-opacity-80 transition-all duration-200 ease-in-out h-10 w-10"
+                className="flex rounded-full bg-orange-100 bg-opacity-100 hover:bg-opacity-80 transition-all duration-200 ease-in-out h-10 w-10"
               >
-                <i class="mdi mdi-instagram text-orange-300 mx-auto mt-2"></i>
+                <i className="mdi mdi-instagram text-orange-300 mx-auto mt-2"></i>
               </a>
             )}
             {user.socials?.facebook && (
               <a
                 href={user.socials.facebook}
-                class="flex rounded-full bg-blue-100 bg-opacity-100 hover:bg-opacity-80 transition-all duration-200 ease-in-out h-10 w-10"
+                className="flex rounded-full bg-blue-100 bg-opacity-100 hover:bg-opacity-80 transition-all duration-200 ease-in-out h-10 w-10"
               >
-                <i class="mdi mdi-facebook text-blue-300 mx-auto mt-2"></i>
+                <i className="mdi mdi-facebook text-blue-300 mx-auto mt-2"></i>
               </a>
             )}
             {user.socials?.linkedin && (
               <a
                 href={user.socials.linkedin}
-                class="flex rounded-full bg-indigo-100 bg-opacity-100 hover:bg-opacity-80 transition-all duration-200 ease-in-out h-10 w-10"
+                className="flex rounded-full bg-indigo-100 bg-opacity-100 hover:bg-opacity-80 transition-all duration-200 ease-in-out h-10 w-10"
               >
-                <i class="mdi mdi-linkedin text-indigo-300 mx-auto mt-2"></i>
+                <i className="mdi mdi-linkedin text-indigo-300 mx-auto mt-2"></i>
               </a>
             )}
           </div>
