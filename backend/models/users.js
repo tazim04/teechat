@@ -27,6 +27,7 @@ const userSchema = new mongoose.Schema({
   }, // Social media fields
 });
 
+// runs on every save in the db, for hashing passwords
 userSchema.pre("save", async function (next) {
   const user = this;
 

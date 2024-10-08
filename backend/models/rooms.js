@@ -16,6 +16,12 @@ const roomSchema = new mongoose.Schema(
         sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // References User object
         content: String,
         timestamp: { type: Date, default: Date.now },
+        readBy: [
+          {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+          },
+        ],
       },
     ],
   },

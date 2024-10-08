@@ -155,6 +155,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
               borderRadius: "1rem",
               zIndex: "9999",
             }}
+            place="right"
             isOpen={showToolTip}
           />
 
