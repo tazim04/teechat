@@ -36,7 +36,7 @@ function MessageBubble({
   };
 
   return isCurrentUser ? (
-    <div className="flex justify-end">
+    <div className="flex justify-end relative">
       <div className="flex items-start gap-2">
         <div
           className="flex flex-row items-end"

@@ -7,7 +7,6 @@ import { useSocket } from "../../context/SocketContext";
 import { allUsersContext } from "../../context/AllUsersContext";
 import { userContext } from "../../context/UserContext";
 import { usePalette } from "../../context/PaletteContext";
-import { set } from "mongoose";
 
 function CreateRoom({
   rooms,
@@ -67,7 +66,7 @@ function CreateRoom({
 
   useEffect(() => {
     if (groupChat && selectedUsers.length > 1) {
-      setMenuHeight(31);
+      setMenuHeight(33);
     } else {
       setMenuHeight(27); // Default menu height
       setShowCreateRoomBTN(false);
@@ -116,6 +115,11 @@ function CreateRoom({
 
     socket.on("room_created", handleRoomCreated);
     socket.on("group_room_created", handleGroupRoomCreated);
+
+    return () => {
+      socket.off("room_created", handleRoomCreated);
+      socket.off("group_room_created", handleGroupRoomCreated);
+    };
   }, [socket, handleRoomCreated, handleGroupRoomCreated]);
 
   const toggleDropdown = () => {
@@ -244,10 +248,10 @@ function CreateRoom({
           {usersToShow.length > 0 ? (
             usersToShow
               .filter((user) => user.username !== username) // Filter out the current user
-              .map((user, index) => (
-                <div key={index}>
+              .map((user) => (
+                <div key={user._id}>
                   <div
-                    className={`flex rounded-md py-2 px-5 mx-auto items-center transition ease-in-out cursor-pointer ${palette.createRoomHover}
+                    className={`flex rounded-md py-2 px-5 mx-auto items-center transition ease-in-out cursor-pointer relative whitespace-nowrap text-ellipsis ${palette.createRoomHover}
                   `}
                     style={{ width: "95%" }}
                     onClick={() => {
@@ -263,30 +267,32 @@ function CreateRoom({
                         isOnline={false}
                       />
                     </div>
-                    {user.username}
-                    {groupChat ? (
+
+                    {/* Username */}
+                    <div
+                      className="flex-1 text-[1.1rem] truncate"
+                      title={user.username} // Show full username on hover
+                    >
+                      {user.username}
+                    </div>
+
+                    {/* Conditional Rendering */}
+                    {!groupChat && hoveredUser === user._id && (
+                      <span className="ml-auto pointer-events-none text-sm backdrop-blur-lg rounded-lg ps-1 transition-opacity duration-300">
+                        Create Room
+                        {selectedCreateRoom === user && (
+                          <div className="text-sm">Creating Room...</div>
+                        )}
+                      </span>
+                    )}
+                    {groupChat && (
                       <span
                         className={`ml-auto p-2 rounded-full bg-gray-100 transition-all duration-100 ${
-                          selectedUsers.includes(user)
+                          selectedUsers.some(({ _id }) => _id === user._id)
                             ? "bg-opacity-100"
                             : "bg-opacity-30"
                         } `}
                       ></span>
-                    ) : (
-                      hoveredUser === user._id &&
-                      (rooms &&
-                      rooms.find((room) => room.name === user.username) ? (
-                        <div className="text-md ml-auto">Existing Chat</div>
-                      ) : (
-                        <div className="text-md ml-auto">
-                          Create Room
-                          {selectedCreateRoom === user && (
-                            <div className="text-md ml-auto">
-                              Creating Room...
-                            </div>
-                          )}
-                        </div>
-                      ))
                     )}
                   </div>
                 </div>
@@ -332,13 +338,15 @@ function CreateRoom({
               : "opacity-0"
           }`}
         >
-          <button
-            className="bg-purple-500 hover:bg-purple-600 px-2 py-2 rounded-md text-md text-gray-50"
-            onClick={createRoom_gc}
-            disabled={!showCreateRoomBTN || !groupChat}
-          >
-            Create room
-          </button>
+          {showCreateRoomBTN && (
+            <button
+              className="bg-purple-500 hover:bg-purple-600 px-2 py-2 rounded-md text-md text-gray-50"
+              onClick={createRoom_gc}
+              disabled={!showCreateRoomBTN || !groupChat}
+            >
+              Create room
+            </button>
+          )}
         </div>
       </div>
     </>

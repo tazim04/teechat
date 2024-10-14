@@ -42,12 +42,12 @@ export const SocketProvider = ({ children }) => {
     return new Promise((resolve) => {
       socket.emit("refresh_access_token", refreshToken, (response) => {
         if (response.error) {
-          // console.error("Error refreshing token:", response.error);
+          console.error("Error refreshing token:", response.error);
           Cookies.remove("accessToken");
           Cookies.remove("refreshToken");
           navigate("/login"); // Redirect to login if refresh fails
         } else {
-          // console.log("New access token:", response.accessToken);
+          console.log("New access token:", response.accessToken);
           // Update the access token in cookies and resolve the new token
           Cookies.set("accessToken", response.accessToken, {
             expires: 15 / 1440, // Token expires in 15 minutes
@@ -110,7 +110,7 @@ export const SocketProvider = ({ children }) => {
       let accessToken = Cookies.get("accessToken");
       // console.log("Checking expiration of accesssToken!");
       if (accessToken && isTokenExpiringSoon(accessToken)) {
-        // console.warn("Expiring soon, getting new token!");
+        console.warn("Expiring soon, getting new token!");
         const newAccessToken = await refreshAccessToken(newSocket);
         if (newAccessToken) {
           // Re-authenticate socket with new access token

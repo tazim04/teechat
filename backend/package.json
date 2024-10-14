@@ -4,6 +4,7 @@
   "type": "module",
   "main": "server.js",
   "dependencies": {
+    "@faker-js/faker": "^9.0.3",
     "backend": "file:",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",

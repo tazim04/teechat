@@ -1,7 +1,7 @@
 import { useSocket } from "../context/SocketContext";
 import ChatBar from "../components/ChatBar";
 import MessageBubble from "../components/MessageBubble";
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useState, useRef, useContext, createRef } from "react";
 import "./stylesheets/Chat.css";
 import { usePalette } from "../context/PaletteContext";
 import { userContext } from "../context/UserContext";
@@ -60,22 +60,13 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
       socket.on("recieve_message", (messageData) => {
         if (messageData.room_id === currentRoom._id) {
           console.log("Message received:", messageData); // Log the received message
-          let content = messageData.content;
-          let sender = messageData.sender;
-          let timestamp = messageData.timestamp;
-
-          let messageContent = {
-            sender: sender,
-            content: content,
-            timestamp: timestamp,
-          };
 
           setMessages((prevMessages) => {
             return {
               ...prevMessages,
               [currentRoom._id]: [
                 ...(prevMessages[currentRoom._id] || []),
-                messageContent,
+                messageData,
               ], // Update the messages state with this dm
             };
           });
@@ -90,6 +81,28 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
             [currentRoom._id]: [...previousMessages], // Update the messages state for this dm
           };
         });
+      });
+
+      // listen for message read
+      socket.on("message_read_update", (message, room_id) => {
+        console.log("message that user sent was read:", message);
+        // update message with updated readBy
+        setMessages((prevMessages) => {
+          return {
+            ...prevMessages,
+            [room_id]: prevMessages[room_id].map((msg) => {
+              if (msg._id === message._id) {
+                // Update the readBy field for the specific message
+                return {
+                  ...msg,
+                  readBy: [...msg.readBy, message.readBy], // Append the user_id
+                };
+              }
+              return msg;
+            }),
+          };
+        });
+        console.log("Updated messages:", messages);
       });
 
       // Fetch the participants for the room for RoomInfoBar
@@ -115,6 +128,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
       if (socket) {
         socket.off("recieve_message");
         socket.off("recieve_previous_messages");
+        socket.off("message_read_update");
         socket.off("receive_room_participants");
         socket.off("receive_user");
       }
@@ -128,7 +142,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
       const otherParticipant = participants.find(
         (participant) => participant._id !== user._id
       );
-      console.log("Other participant:", otherParticipant);
+      // console.log("Other participant:", otherParticipant);
       return otherParticipant._id;
     };
 
@@ -161,7 +175,8 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
 
     const sender = { _id: user._id, username: user.username }; // Get the sender info
 
-    let messageContent = {
+    let tempMessage = {
+      justSent: true,
       content: message,
       sender: sender,
       timestamp: Date.now(),
@@ -171,7 +186,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
         ...prevMessages,
         [currentRoom._id]: [
           ...(prevMessages[currentRoom._id] || []),
-          messageContent,
+          tempMessage,
         ], // Update the messages state for this dm
       };
     });
@@ -182,8 +197,19 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
       currentRoom._id,
       currentRoom.name,
       user._id,
-      currentRoom.is_group
-    ); // Emit a message, FOR NOW ROOM IS JUST A USER
+      currentRoom.is_group,
+      (dbMessage) => {
+        console.log("Callback from server:", dbMessage);
+        setMessages((prevMessages) => {
+          return {
+            ...prevMessages,
+            [currentRoom._id]: prevMessages[currentRoom._id].map(
+              (msg) => (msg.justSent ? dbMessage : msg) // Replace justSent message with the dbMessage
+            ),
+          };
+        });
+      }
+    );
     setMessage(""); // Clear the message input
 
     setSendAnimation(true); // Set the send animation to true
@@ -191,6 +217,76 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
       setSendAnimation(false); // Reset the send animation
     }, 2000);
   };
+
+  const [messageRefs, setMessageRefs] = useState([]); // hold refs for all the messages in the room
+
+  // create refs for each message
+  useEffect(() => {
+    if (currentRoom) {
+      if (messageRefs.length !== messages[currentRoom._id]?.length) {
+        setMessageRefs((prevRefs) =>
+          Array(messages[currentRoom._id]?.length)
+            .fill()
+            .map((_, i) => prevRefs[i] || createRef())
+        );
+      }
+    }
+  }, [messages, setMessages, currentRoom]);
+
+  // UseEffect to handle visibility tracking outside the map
+  useEffect(() => {
+    const observers = new Map(); // map to store observers by message index
+
+    const readMessage = (msg_id) => {
+      if (msg_id) {
+        console.log(`${msg_id} was read!`);
+        socket.emit("message_read", msg_id, currentRoom._id, user._id);
+      }
+    };
+
+    // attatch observers to message elements
+    messageRefs.forEach((ref, index) => {
+      if (currentRoom) {
+        const message = messages[currentRoom._id]?.[index];
+
+        if (
+          ref.current &&
+          message &&
+          !observers.has(index) &&
+          !message.readBy?.includes(user._id)
+        ) {
+          const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+              // mark as read only if it's from another user and hasn't been read
+              if (message.readBy) {
+                if (
+                  message.sender._id !== user._id &&
+                  !message.readBy.includes(user._id)
+                ) {
+                  console.log(`Reading message: ${message.content}`);
+                  readMessage(message._id);
+                }
+                observer.unobserve(ref.current); // stop observing after read
+              }
+            }
+          });
+
+          observer.observe(ref.current); // start observing this message
+          observers.set(index, observer); // store observer in the map
+        }
+      }
+    });
+
+    // clean up
+    return () => {
+      observers.forEach((observer, index) => {
+        if (messageRefs[index]?.current) {
+          observer.unobserve(messageRefs[index].current);
+        }
+      });
+      observers.clear();
+    };
+  }, [messageRefs, messages, setMessages, currentRoom, user._id, socket]);
 
   return (
     <div className="flex flex-row flex-1">
@@ -228,8 +324,15 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
                   timeDifference > 60000 || // Show the avatar if the time difference is more than 1 minute
                   prevSender?.username !== msg.sender.username; // Show the avatar if the previous sender is different
 
+                const isLastMsg =
+                  index === messages[currentRoom._id].length - 1;
+
                 return (
-                  <div key={index}>
+                  <div
+                    key={index}
+                    ref={messageRefs[index]}
+                    className="relative"
+                  >
                     <MessageBubble
                       msg={msg}
                       isCurrentUser={isCurrentUser}
@@ -238,6 +341,13 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
                       timeDifference={timeDifference}
                       index={index}
                     />
+                    {isLastMsg &&
+                      msg?.readBy?.length > 0 &&
+                      isCurrentUser && ( // Only show "Read" for the last message if it has been read
+                        <span className="absolute right-[0.71rem] text-[0.75rem]">
+                          Read
+                        </span>
+                      )}
                   </div>
                 );
               })

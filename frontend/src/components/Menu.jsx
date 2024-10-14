@@ -24,39 +24,6 @@ function Menu({ showMenu, setShowMenu, rooms, openChat }) {
     setCurrentMenu(menu);
   };
 
-  const profile_active = () => {
-    return (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="white"
-        width="48"
-        height="48"
-      >
-        <circle cx="12" cy="12" r="12" fill="white" />
-        <circle cx="12" cy="10" r="4" fill="none" />
-        <path d="M12 14c-4 0-7 2-7 4v2h14v-2c0-2-3-4-7-4z" fill="none" />
-      </svg>
-    );
-  };
-  const profile_inactive = () => {
-    return (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="white"
-        stroke-width="2"
-        width="48"
-        height="48"
-      >
-        <circle cx="12" cy="12" r="10" fill="none" stroke="white" />
-        <circle cx="12" cy="10" r="4" fill="none" />
-        <path d="M12 14c-4 0-7 2-7 4v2h14v-2c0-2-3-4-7-4z" fill="none" />
-      </svg>
-    );
-  };
-
   // useEffect to set the z-index of the menu to 10 when the menu is expanded for create room
   useEffect(() => {
     if (menuHeight > 27) {

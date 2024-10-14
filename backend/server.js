@@ -9,6 +9,7 @@ import Rooms from "./models/rooms.js";
 import Users from "./models/users.js";
 import { create } from "node:domain";
 import dotenv from "dotenv";
+import Room from "./models/rooms.js";
 
 dotenv.config();
 
@@ -85,6 +86,11 @@ async function add_message_in_db(roomID, message) {
     timestamp: message.timestamp,
   };
   await room.updateOne({ $push: { messages: messageData } });
+
+  const updatedRoom = await Rooms.findById(roomID).select("messages -_id");
+
+  const updatedMessage = updatedRoom.messages[updatedRoom.messages.length - 1];
+  return updatedMessage;
 }
 
 async function get_previous_messages(roomID) {
@@ -692,7 +698,7 @@ io.on("connection", (socket) => {
   });
 
   // Send a direct message to a user, from => user.id, to => room name, room_id is the id in Room collection
-  socket.on("dm", async (content, room_id, to, from, is_group) => {
+  socket.on("dm", async (content, room_id, to, from, is_group, callback) => {
     // Find the sender in the Users collection
     const sender = await Users.findById(from);
     let recipient = "";
@@ -725,12 +731,15 @@ io.on("connection", (socket) => {
       messages_cache[room_id] = [];
     }
 
-    await add_message_in_db(room_id, messageData); // Add the message to the database
+    // Add the message to the database, get the message thats updated with the db info (_id, readBy array)
+    const updatedMessage = await add_message_in_db(room_id, messageData);
 
     console.log("messageData:", messageData);
 
     // Store the message in cache with format for the frontend
     const messageData_cache = {
+      _id: updatedMessage._id,
+      readBy: updatedMessage.readBy,
       sender: { _id: sender._id, username: sender.username },
       content,
       timestamp: new Date(),
@@ -740,11 +749,15 @@ io.on("connection", (socket) => {
     messages_cache[room_id].push(messageData_cache); // Add the message to the cache
 
     const message_to_send = {
+      _id: updatedMessage._id,
+      readBy: updatedMessage.readBy,
       sender: { _id: sender._id, username: sender.username },
       content,
       timestamp: new Date(),
       room_id: room_id,
     };
+
+    console.log("Message to send:", message_to_send);
 
     // Emit the message, if dm send to socket_id, if group send to room_id
     if (is_group) {
@@ -781,6 +794,7 @@ io.on("connection", (socket) => {
         // updated order of rooms to show last updated
         const sortedRooms_recipient = await getRoomsWithNames(recipient);
         io.to(recipient_socket_id).emit("receive_rooms", sortedRooms_recipient);
+        callback(message_to_send);
       } else {
         console.log(`${to} is offline, message not sent but saved in DB`);
       }
@@ -791,6 +805,67 @@ io.on("connection", (socket) => {
 
       const last_message = await fetch_last_message(room);
       socket.emit("recieve_last_message", last_message);
+    }
+  });
+
+  socket.on("message_read", async (msg_id, room_id, user_id) => {
+    if (!msg_id) {
+      console.log("msg_id is undefined");
+      return;
+    }
+
+    try {
+      const room = await Rooms.findById(room_id).select("messages");
+
+      if (!room) {
+        console.log("Room doesnt exist??");
+        return;
+      }
+
+      // ensure the user exists
+      const user = await Users.findById(user_id);
+      if (!user) {
+        console.log("User doesnt exist???", user);
+        return;
+      }
+
+      // find the specific message
+      const message = room.messages.find(
+        (msg) => msg._id.toString() === msg_id
+      );
+
+      console.log("Message read!", message.content);
+
+      if (message.readBy.includes(user_id)) {
+        console.log(`${user.username} already read this message`);
+        return;
+      }
+      console.log(
+        `Setting message read by ${user.username} for message ${message}`
+      );
+
+      message.readBy.push(user_id);
+
+      const sender = await Users.findById(message.sender);
+
+      // update message in cache
+      if (messages_cache[room_id]) {
+        const cachedMessage = messages_cache[room_id].find(
+          (msg) => msg._id.toString() === msg_id
+        );
+        if (cachedMessage) {
+          cachedMessage.readBy.push(user_id); // Update the readBy field in the cache
+        }
+      }
+
+      await room.save(); // save changes to db
+
+      const sender_socket_id = socket_ids[sender._id];
+
+      io.to(sender_socket_id).emit("message_read_update", message, room_id);
+      socket.emit("message_read_update", message, room_id);
+    } catch (e) {
+      console.log("Error trying to set message as read", e);
     }
   });
 

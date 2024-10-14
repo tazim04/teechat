@@ -283,25 +283,25 @@ function RoomInfoBar({
                         {participant.socials?.instagram && (
                           <a
                             href={participant.socials.instagram}
-                            class="flex rounded-full hover:bg-orange-50 h-10 w-10"
+                            className="flex rounded-full hover:bg-orange-50 h-10 w-10"
                           >
-                            <i class="mdi mdi-instagram text-orange-400 mx-auto mt-2"></i>
+                            <i className="mdi mdi-instagram text-orange-400 mx-auto mt-2"></i>
                           </a>
                         )}
                         {participant.socials?.facebook && (
                           <a
                             href={participant.socials.facebook}
-                            class="flex rounded-full hover:bg-blue-50 h-10 w-10"
+                            className="flex rounded-full hover:bg-blue-50 h-10 w-10"
                           >
-                            <i class="mdi mdi-facebook text-blue-400 mx-auto mt-2"></i>
+                            <i className="mdi mdi-facebook text-blue-400 mx-auto mt-2"></i>
                           </a>
                         )}
                         {participant.socials?.linkedin && (
                           <a
                             href={participant.socials.linkedin}
-                            class="flex rounded-full hover:bg-indigo-50 h-10 w-10"
+                            className="flex rounded-full hover:bg-indigo-50 h-10 w-10"
                           >
-                            <i class="mdi mdi-linkedin text-indigo-400 mx-auto mt-2"></i>
+                            <i className="mdi mdi-linkedin text-indigo-400 mx-auto mt-2"></i>
                           </a>
                         )}
                       </div>

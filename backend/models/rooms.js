@@ -13,6 +13,7 @@ const roomSchema = new mongoose.Schema(
     ],
     messages: [
       {
+        _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
         sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // References User object
         content: String,
         timestamp: { type: Date, default: Date.now },
