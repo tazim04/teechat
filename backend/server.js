@@ -863,6 +863,7 @@ io.on("connection", (socket) => {
       const sender_socket_id = socket_ids[sender._id];
 
       io.to(sender_socket_id).emit("message_read_update", message, room_id);
+
       socket.emit("message_read_update", message, room_id);
     } catch (e) {
       console.log("Error trying to set message as read", e);
