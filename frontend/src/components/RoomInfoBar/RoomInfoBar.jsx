@@ -124,7 +124,7 @@ function RoomInfoBar({
         </div>
         <div className="flex justify-center">
           {room.is_group &&
-            (showChangeName ? (
+            (showChangeName ? ( // change room name menu
               <div>
                 <div className="flex flex-row">
                   <textarea
@@ -152,7 +152,9 @@ function RoomInfoBar({
               </div>
             ) : (
               <div className="flex flex-row">
-                <h2 className="text-lg text-center font-bold">{room.name}</h2>
+                <h2 className="text-lg text-center font-bold truncate w-60">
+                  {room.name}
+                </h2>
 
                 <span
                   className="ms-1 flex items-center opacity-100 transition-all duratin-100 ease-in-out hover:opacity-50 cursor-pointer"
@@ -163,7 +165,9 @@ function RoomInfoBar({
               </div>
             ))}
           {!room.is_group && (
-            <h2 className="text-lg text-center font-bold">{room.name}</h2>
+            <h2 className="text-lg text-center font-bold truncate w-60">
+              {room.name}
+            </h2>
           )}
         </div>
 
@@ -209,7 +213,7 @@ function RoomInfoBar({
                 </div>
               </div>
               {participants.map((participant, index) => (
-                <div key={index} className="relative">
+                <div key={index} className="relative my-1">
                   <div
                     onClick={() => toggleProfileClick(participant)}
                     className={`flex flex-row p-2 rounded-lg cursor-pointer ${
@@ -218,27 +222,30 @@ function RoomInfoBar({
                         : ""
                     } transition-all ease-in-out duration-100 hover:bg-gray-300 $`}
                     data-tooltip-id="profile"
-                    data-tooltip-html={`
-                  <div className='flex flex-col items-center'>
-                  <p>Username: ${participant.username}</p>
-                  </div>
-                    `}
+                    //   data-tooltip-html={`
+                    // <div className='flex flex-col items-center'>
+                    // <p>Username: ${participant.username}</p>
+                    // </div>
+                    //   `}
                   >
-                    <div className="w-10 h-10 me-5">
-                      <AvatarIcon
-                        name={participant.username}
-                        showStatus={false}
-                        isOnline={checkOnline(participant._id)}
-                      />
-                      <div className="relative left-[2rem] bottom-[0.9rem]">
-                        {isOnline ? (
+                    <div className="flex align-middle">
+                      <div className="w-10 h-10">
+                        <AvatarIcon
+                          name={participant.username}
+                          showStatus={false}
+                          isOnline={checkOnline(participant._id)}
+                        />
+                      </div>
+
+                      <div className="relative right-[0.6rem] top-7">
+                        {checkOnline(participant._id) ? (
                           <span className="flex w-2.5 h-2.5 bg-green-400 rounded-full flex-shrink-0"></span>
                         ) : (
                           <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full flex-shrink-0"></span>
                         )}
                       </div>
                     </div>
-                    <p className="text-[1.1rem] font-medium my-auto text-gray-700 select-none">
+                    <p className="text-[1.1rem] ms-3 font-medium my-auto text-gray-700 select-none truncate max-w-full">
                       {participant.username}
                       {/* {console.log("Participant: ", participant, "User: ", user)} */}
                       <span className="text-[0.8rem] ml-20 text-gray-600">

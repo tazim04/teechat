@@ -136,16 +136,22 @@ function CreateRoom({
   };
 
   const addToGroup = (selected_user) => {
-    if (selectedUsers.includes(selected_user)) {
-      // console.log("Remove from group: ", selected_user);
-      setSelectedUsers(
-        selectedUsers.filter((selectedUser) => selectedUser !== selected_user)
-      ); // Remove the user from the selected users array
-    } else {
-      // console.log("Add to group: ", selected_user);
-      setSelectedUsers([...selectedUsers, selected_user]); // Add the user to the selected users array
-      // console.log("Selected users: ", selectedUsers);
-    }
+    // if (selectedUsers.includes(selected_user)) {
+    //   // console.log("Remove from group: ", selected_user);
+    //   setSelectedUsers(
+    //     selectedUsers.filter((selectedUser) => selectedUser !== selected_user)
+    //   ); // Remove the user from the selected users array
+    // } else {
+    console.log("Add to group: ", selected_user);
+    setSelectedUsers([...selectedUsers, selected_user]); // Add the user to the selected users array
+    console.log("Selected users: ", selectedUsers);
+    // }
+  };
+
+  const removeFromGroup = (selected_user) => {
+    setSelectedUsers(
+      selectedUsers.filter((selectedUser) => selectedUser !== selected_user)
+    ); // Remove the user from the selected users array
   };
 
   // Create a room with a user, {_id, username}
@@ -192,6 +198,51 @@ function CreateRoom({
   return (
     <>
       <Toaster />
+
+      {/* Display users that are selected for group room */}
+      {selectedUsers.filter((user) => user.username != username).length > 0 &&
+        groupChat && (
+          <div
+            className={`absolute left-80 ms-1 p-4 ${palette.menu} rounded-md text-gray-100 min-w-60 w-auto max-w-96 whitespace-nowrap flex flex-col items-center`}
+          >
+            <div className="mb-1 w-full flex items-center text-ellipsis">
+              <h4 className="text-[1rem] font-semibold truncate">
+                Roommates in{" "}
+                <span className="underline ml-1 " title={groupChatName}>
+                  {groupChatName.trim() ? groupChatName : "\u00A0\u00A0\u00A0"}
+                </span>
+              </h4>
+            </div>
+            <div className="bg-gray-200 bg-opacity-20 rounded-lg w-full">
+              {/* Show list of selected users */}
+              {selectedUsers
+                .filter((user) => user.username != username)
+                .map((user) => (
+                  <div
+                    key={user._id}
+                    className="flex items-center justify-between align-middle px-3 py-1"
+                  >
+                    <span
+                      className="truncate flex-1 mr-2"
+                      title={user.username}
+                    >
+                      {user.username}
+                    </span>
+                    <div
+                      className="hover:opacity-50 transition-opacity ease-in-out p-1 cursor-pointer"
+                      onClick={() => removeFromGroup(user)}
+                    >
+                      <img
+                        src="/close.png" // Replace with the correct path or URL
+                        alt="Remove"
+                        className="w-3 invert "
+                      />
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
       <div
         className={`text-gray-200 ${palette.menu} w-full h-[21rem] mx-auto shadow-lg `}
       >
@@ -255,7 +306,13 @@ function CreateRoom({
                   `}
                     style={{ width: "95%" }}
                     onClick={() => {
-                      groupChat ? addToGroup(user) : createRoom(user);
+                      if (groupChat) {
+                        selectedUsers.some((u) => u._id === user._id) // the user is already in the group of selected uers, remove from group
+                          ? removeFromGroup(user)
+                          : addToGroup(user);
+                      } else {
+                        createRoom(user);
+                      }
                     }}
                     onMouseEnter={() => setHoveredUser(user._id)}
                     onMouseLeave={() => setHoveredUser(null)}
@@ -271,14 +328,14 @@ function CreateRoom({
                     {/* Username */}
                     <div
                       className="flex-1 text-[1.1rem] truncate"
-                      title={user.username} // Show full username on hover
+                      title={user.username}
                     >
                       {user.username}
                     </div>
 
                     {/* Conditional Rendering */}
                     {!groupChat && hoveredUser === user._id && (
-                      <span className="ml-auto pointer-events-none text-sm backdrop-blur-lg rounded-lg ps-1 transition-opacity duration-300">
+                      <span className="ml-auto pointer-events-none text-sm ps-1 transition-opacity duration-300">
                         Create Room
                         {selectedCreateRoom === user && (
                           <div className="text-sm">Creating Room...</div>

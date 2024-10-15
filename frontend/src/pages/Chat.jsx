@@ -86,6 +86,9 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
       // listen for message read
       socket.on("message_read_update", (message, room_id) => {
         console.log("message that user sent was read:", message);
+        if (!messages[room_id]) {
+          return;
+        }
         // update message with updated readBy
         setMessages((prevMessages) => {
           return {

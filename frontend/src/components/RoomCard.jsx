@@ -6,6 +6,7 @@ import { useState, useRef, useEffect, useContext } from "react";
 import { isDeleteOpenContext } from "./SideBar"; // Import the context object for the delete confirmation modal
 import { useSocket } from "../context/SocketContext";
 import { usePalette } from "../context/PaletteContext";
+import { userContext } from "../context/UserContext";
 import { format, isToday } from "date-fns";
 
 function RoomCard({
@@ -21,9 +22,11 @@ function RoomCard({
   const contextMenuRef = useRef(null);
   const contextMenuIconRef = useRef(null);
   const socket = useSocket();
+  const { user } = useContext(userContext);
 
   const [lastMessages, setLastMessages] = useState({});
   const [showContextMenu, setShowContextMenu] = useState("");
+  const [showNewMessage, setShowNewMessage] = useState({});
 
   const { isDeleteOpen } = useContext(isDeleteOpenContext); // Get the isDeleteOpen state from the context
 
@@ -32,12 +35,54 @@ function RoomCard({
       socket.on("recieve_last_message", (messageData) => {
         console.log("lastMessage: ", messageData);
 
-        const roomId = messageData.room_id;
-        const { room_id, ...exclude_room_id } = messageData;
+        const roomId = messageData?.room_id; // Ensure you get the room_id safely using optional chaining
 
+        if (!messageData || !roomId) {
+          console.warn("Message data or room ID is missing");
+          return;
+        }
+
+        // Ensure `readBy` is always present (even if it's an empty array)
+        const updatedMessageData = {
+          ...messageData,
+          readBy: messageData.readBy || [], // Ensure `readBy` is always an array
+        };
+
+        // Update the lastMessages state with the new message data
         setLastMessages((prevMessages) => ({
           ...prevMessages,
-          [roomId]: messageData,
+          [roomId]: updatedMessageData,
+        }));
+
+        console.log("updatedMessageData:", updatedMessageData);
+
+        const isCurrentRoom = roomId === currentRoom?._id;
+        console.log("current room?", currentRoom?._id, roomId);
+
+        // dont do anything if it is the current room
+        if (isCurrentRoom) {
+          console.log("message is for the currently open room.");
+          setShowNewMessage((prevMessages) => ({
+            ...prevMessages,
+            [roomId]: false, // add it to the reference of that room in the showNewMessage state
+          }));
+          return;
+        }
+
+        // // boolean for if the message is new and unread
+        const unread =
+          !updatedMessageData.readBy.includes(user._id) &&
+          updatedMessageData.sender._id !== user._id;
+
+        // console.log("unread:", unread);
+        console.log(
+          "Message is for current room:",
+          roomId !== currentRoom?._id
+        );
+
+        setShowNewMessage((prevMessages) => ({
+          ...prevMessages,
+          [roomId]: unread, // add it to the reference of that room in the showNewMessage state
         }));
       });
 
@@ -47,6 +92,7 @@ function RoomCard({
 
     return () => {
       socket.off("recieve_last_message");
+      socket.off("message_read_update");
     };
   }, [socket, room._id]);
 
@@ -97,11 +143,28 @@ function RoomCard({
   };
 
   return (
-    <div className="flex row relative mb-5" id={room.name}>
+    <div className="flex row relative mb-3" id={room.name}>
+      {/* {showNewMessage[room._id] && room.messages.length > 0 && (
+        <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full flex-shrink-0"></span>
+      )} */}
       <div
-        className={`flex rounded-md py-2 px-5 mx-auto items-center transition ease-in-out cursor-pointer hover:bg-opacity-40 hover:bg-gray-300`}
+        className={`flex ${
+          (showNewMessage[room._id] ||
+            (currentRoom && currentRoom._id === room._id)) &&
+          "font-bold"
+        } ${
+          currentRoom &&
+          currentRoom._id === room._id &&
+          "bg-gray-300 bg-opacity-20"
+        } rounded-md py-2 px-3 mx-auto items-center transition ease-in-out cursor-pointer hover:bg-opacity-40 hover:bg-gray-300`}
         style={{ width: "95%" }}
-        onClick={() => openChat(room)}
+        onClick={() => {
+          openChat(room);
+          setShowNewMessage((prevMessages) => ({
+            ...prevMessages,
+            [room._id]: false,
+          }));
+        }}
         id={room._id}
       >
         <div className="w-12 h-12 ">
@@ -111,7 +174,11 @@ function RoomCard({
             isOnline={checkOnline(room)}
           />
         </div>
-        <span className="absolute left-[5.4rem] top-0 w-[7rem] overflow-x-hidden whitespace-nowrap text-ellipsis">
+        <span
+          className={`absolute left-[5rem] top-0 truncate ${
+            lastMessages[room._id]?.content ? "w-[8rem] " : "w-[12rem]" // increase width when timestamp isnt shown for less truncate
+          }`}
+        >
           {room.name}
         </span>
 
@@ -120,13 +187,13 @@ function RoomCard({
             <span className="text-[0.8rem] text-gray-200 absolute top-[0.2rem] right-11">
               {getTimeStamp(lastMessages[room._id].timestamp)}
             </span>
-            <span className="absolute bottom-2 left-[5.4rem] text-[1rem] text-gray-200 w-48 overflow-hidden text-ellipsis whitespace-nowrap">
+            <span className="absolute bottom-2 left-[5rem] text-[1rem] text-gray-200 w-48 truncate">
               {lastMessages[room._id].sender.username}:&nbsp;
               {lastMessages[room._id].content}
             </span>
           </div>
         ) : (
-          <span className="absolute bottom-2 left-[5.4rem] text-[1rem] text-gray-200 w-48 overflow-hidden text-ellipsis whitespace-nowrap">
+          <span className="absolute bottom-2 left-[5.4rem] text-[1rem] text-gray-200 w-48 truncate">
             {"No messages yet!"}
           </span>
         )}

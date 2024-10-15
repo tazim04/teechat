@@ -46,7 +46,7 @@ function AddToRoomMenu({ room, participants, setShowAddParticipant }) {
 
   return (
     <div
-      className={`text-gray-200 w-60 h-[19rem] shadow-md p-4 rounded-md ${palette.menu} absolute top-0 right-5 z-50 opacity-80 transition-opacity ease-in-out duration-300 hover:opacity-[0.95]`}
+      className={`text-gray-200 w-64 h-[19rem] shadow-md p-4 rounded-md ${palette.menu} absolute top-1 right-0 z-50 opacity-95 transition-opacity ease-in-out duration-300 hover:opacity-100`}
     >
       <h3 className="text-[1rem] font-semibold mb-3 text-center">
         Add Users to Room
@@ -64,31 +64,32 @@ function AddToRoomMenu({ room, participants, setShowAddParticipant }) {
           usersToShow.map((userItem) => (
             <li
               key={userItem._id}
-              className={`relative user-item flex items-center cursor-pointer transition ease-in-out p-2 rounded-md ${palette.createRoomHover}`}
+              className={`relative user-item flex items-center cursor-pointer transition ease-in-out px-1 py-2 rounded-md ${palette.createRoomHover}`}
               onClick={() => addToRoom(userItem)}
               onMouseEnter={() => setHoveredUser(userItem._id)}
               onMouseLeave={() => setHoveredUser(null)}
             >
-              <div className="w-10 h-10 me-2">
+              <div className="w-10 h-10">
                 <AvatarIcon
                   name={userItem.username}
                   showStatus={false}
                   isOnline={false}
                 />
               </div>
-              {userItem.username}
-              {hoveredUser === userItem._id && (
-                <span className="text-sm absolute right-4 my-auto">
-                  Add to room?
-                </span>
-              )}
+              <div className="ms-2 truncate max-w-full">
+                {userItem.username}
+                {/* {hoveredUser === userItem._id && (
+                  <span className="text-sm absolute right-4 my-auto">
+                    Add to room?
+                  </span>
+                )} */}
+              </div>
             </li>
           ))
         ) : (
-          <div className="text-center my-10 mx-8">
+          <div className="text-center my-10 mx-4">
             <p className="font-semibold text-[1rem]">
-              There are no users with a matching username! <br />
-              :(
+              No users to add with that username!
             </p>
           </div>
         )}

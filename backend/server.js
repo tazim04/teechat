@@ -789,6 +789,7 @@ io.on("connection", (socket) => {
         io.to(recipient_socket_id).emit("recieve_message", message_to_send);
 
         const last_message = await fetch_last_message(room);
+        console.log("Last message:", last_message);
         io.to(recipient_socket_id).emit("recieve_last_message", last_message);
 
         // updated order of rooms to show last updated
@@ -846,6 +847,8 @@ io.on("connection", (socket) => {
 
       message.readBy.push(user_id);
 
+      console.log("Message with updated readBY:", message);
+
       const sender = await Users.findById(message.sender);
 
       // update message in cache
@@ -863,8 +866,11 @@ io.on("connection", (socket) => {
       const sender_socket_id = socket_ids[sender._id];
 
       io.to(sender_socket_id).emit("message_read_update", message, room_id);
-
       socket.emit("message_read_update", message, room_id);
+
+      // update last message for client to check if a new message has been read in the side bar
+      // io.to(sender_socket_id).emit("recieve_last_message", message);
+      // socket.emit("recieve_last_message", message);
     } catch (e) {
       console.log("Error trying to set message as read", e);
     }
