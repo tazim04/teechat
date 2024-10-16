@@ -318,7 +318,7 @@ function RoomInfoBar({
                           <p className="font-semibold text-[1rem] text-gray-800 py-1">
                             My Interests
                           </p>
-                          <div className="w-full max-w-96 flex flex-wrap justify-center max-h-[8.3rem] overflow-y-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                          <div className="w-full max-w-96 flex flex-wrap justify-center max-h-[8.5rem] overflow-y-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-gray-300 scrollbar-track-transparent">
                             {participant.interests.map((interest, index) => (
                               <span
                                 key={index}
