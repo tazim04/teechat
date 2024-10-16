@@ -188,7 +188,7 @@ function Input({ type, register, errors, defaultValue, setValue, watch }) {
                 {...register("linkedin", {
                   pattern: {
                     value:
-                      /^(https?:\/\/)?(www\.)?linkedin\.com\/[A-Za-z0-9._%+-]+\/?$/,
+                      /^(https?:\/\/)?(www\.)?linkedin\.com\/(in|company|pub|jobs)\/[A-Za-z0-9._%+-]+\/?$/,
                     message: "Invalid Linkedin link",
                   },
                 })}
