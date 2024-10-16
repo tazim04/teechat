@@ -22,6 +22,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
   const [showToolTip, setShowToolTip] = useState(false); // State for the tooltip
   const [isDeleteOpen, setIsDeleteOpen] = useState(false); // State for the delete confirmation modal
   const [selectedRoomContext, setSelectedRoomContext] = useState(""); // State for the selected room for the context menu
+  const [search, setSearch] = useState("");
 
   // states from context
   const socket = useSocket(); // Use custom hook to get the socket object from the context
@@ -87,6 +88,15 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
     }
   }, [rooms]);
 
+  // useEffect(() => {
+  //   const filteredRooms = rooms.filter((user) =>
+  //     user.username.toLowerCase().includes(search.toLowerCase())
+  //   );
+  //   console.log("filteredUsers:", filteredUsers);
+
+  //   setUsersToShow(filteredUsers);
+  // }, [search]);
+
   const openChat = (selected_room) => {
     if (currentRoom && currentRoom._id === selected_room._id) {
       return; // If the selected chat is the same as the current chat, return
@@ -122,16 +132,25 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
     return otherParticipant._id;
   };
 
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value); // update search state
+    console.log("Search:", e.target.value);
+  };
+
   return (
-    <div className="flex flex-row h-screen overflow-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-gray-300 scrollbar-track-transparent">
+    <div className="flex flex-col min-h-screen overflow-hidden">
       <div
         className={`flex transition-color ease-in-out duration-300 ${palette.sideBar}`}
         style={{ width: "20rem" }}
       >
-        <div className="side-bar-body w-full">
-          <div className="flex items-center justify-between ps-5 h-20 mb-5">
+        <div className="side-bar-body w-full h-full">
+          {" "}
+          {/* Add h-full here */}
+          <div className="flex items-center justify-between ps-5 h-20 mb-2">
+            {/* "Rooms" header */}
             <h1 className="title text-lg font-bold">Rooms</h1>
             <div className="flex ml-auto pe-3">
+              {/* Hamburger main menu */}
               <div
                 className="transition-color duration-75 ease-in-out hover:bg-opacity-40 hover:bg-gray-300 rounded-xl"
                 data-tooltip-id="first-room"
@@ -147,7 +166,6 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
               </div>
             </div>
           </div>
-
           <Tooltip
             id="first-room"
             style={{
@@ -158,25 +176,38 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
             place="right"
             isOpen={showToolTip}
           />
-
-          <div className="col text-base">
+          {/* Search bar */}
+          <div className="flex justify-center px-5 mb-2 text-gray-950 font-semibold">
+            <input
+              type="text"
+              placeholder="Search"
+              className="text-[0.9rem] rounded-md px-3 py-1 w-full outline-none"
+              onChange={handleSearchChange}
+            />
+          </div>
+          {/* Rooms list */}
+          <div className="col text-base overflow-y-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-gray-300 scrollbar-track-transparent h-[calc(100vh-6.2rem)] pb-20">
             <isDeleteOpenContext.Provider
               value={{ isDeleteOpen, setIsDeleteOpen }}
             >
               {rooms.length > 0 ? (
-                rooms.map((room, index) => (
-                  <div key={index}>
-                    <RoomCard
-                      room={room}
-                      openChat={openChat}
-                      checkOnline={checkOnline}
-                      selectedRoomContext={selectedRoomContext}
-                      setSelectedRoomContext={setSelectedRoomContext}
-                      currentRoom={currentRoom}
-                      setCurrentRoom={setCurrentRoom}
-                    />
-                  </div>
-                ))
+                rooms
+                  .filter((room) =>
+                    room.name.toLowerCase().includes(search.toLowerCase())
+                  )
+                  .map((room, index) => (
+                    <div key={index}>
+                      <RoomCard
+                        room={room}
+                        openChat={openChat}
+                        checkOnline={checkOnline}
+                        selectedRoomContext={selectedRoomContext}
+                        setSelectedRoomContext={setSelectedRoomContext}
+                        currentRoom={currentRoom}
+                        setCurrentRoom={setCurrentRoom}
+                      />
+                    </div>
+                  ))
               ) : (
                 <div className="flex justify-center align-middle items-center">
                   <h5 className="font-bold text-gray-200">No rooms :(</h5>

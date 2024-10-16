@@ -72,7 +72,7 @@ function RoomCard({
         // // boolean for if the message is new and unread
         const unread =
           !updatedMessageData.readBy.includes(user._id) &&
-          updatedMessageData.sender._id !== user._id;
+          updatedMessageData.sender?._id !== user._id;
 
         // console.log("unread:", unread);
         console.log(
@@ -149,10 +149,6 @@ function RoomCard({
       )} */}
       <div
         className={`flex ${
-          (showNewMessage[room._id] ||
-            (currentRoom && currentRoom._id === room._id)) &&
-          "font-bold"
-        } ${
           currentRoom &&
           currentRoom._id === room._id &&
           "bg-gray-300 bg-opacity-20"
@@ -175,25 +171,42 @@ function RoomCard({
           />
         </div>
         <span
-          className={`absolute left-[5rem] top-0 truncate ${
+          className={`absolute left-[5rem] top-0 truncate text-[1rem] text-gray-100 ${
             lastMessages[room._id]?.content ? "w-[8rem] " : "w-[12rem]" // increase width when timestamp isnt shown for less truncate
-          }`}
+          } ${
+            (showNewMessage[room._id] ||
+              (currentRoom && currentRoom._id === room._id)) &&
+            "font-bold text-white"
+          } `}
         >
           {room.name}
         </span>
 
         {lastMessages[room._id]?.content ? (
-          <div>
-            <span className="text-[0.8rem] text-gray-200 absolute top-[0.2rem] right-11">
+          <div className="relative w-48 p-2">
+            {/* <!-- Timestamp aligned to the top right --> */}
+            <span className="text-[0.8rem] text-gray-200 absolute -top-[0.55rem] -right-4">
               {getTimeStamp(lastMessages[room._id].timestamp)}
             </span>
-            <span className="absolute bottom-2 left-[5rem] text-[1rem] text-gray-200 w-48 truncate">
-              {lastMessages[room._id].sender.username}:&nbsp;
-              {lastMessages[room._id].content}
-            </span>
+
+            {/* <!-- Flexbox layout for message content --> */}
+            <div className="flex items-start mt-3 ms-[0.32rem] leading-tight space-x-2">
+              <span className="text-[0.8rem] text-gray-200 font-medium">
+                {lastMessages[room._id].sender.username}:
+              </span>
+              <span
+                className={`text-[0.8rem] text-gray-200 truncate w-48 ${
+                  (showNewMessage[room._id] ||
+                    (currentRoom && currentRoom._id === room._id)) &&
+                  "font-semibold"
+                }`}
+              >
+                {lastMessages[room._id].content}
+              </span>
+            </div>
           </div>
         ) : (
-          <span className="absolute bottom-2 left-[5.4rem] text-[1rem] text-gray-200 w-48 truncate">
+          <span className="absolute bottom-3 left-[5.4rem] text-[0.8rem] text-gray-200 w-48 truncate">
             {"No messages yet!"}
           </span>
         )}

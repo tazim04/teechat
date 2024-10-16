@@ -21,9 +21,8 @@ function CreateRoom({
   const [groupChat, setGroupChat] = useState(false); // State for group chat visibility
   const [showCreateRoomBTN, setShowCreateRoomBTN] = useState(false);
   const [groupChatName, setGroupChatName] = useState("");
-  const [search, setSearch] = useState("");
-
   const { allUsers } = useContext(allUsersContext); // Get the all users from the context
+  const [search, setSearch] = useState("");
   const [usersToShow, setUsersToShow] = useState(allUsers); // state for dispaying users based on search filter
 
   const socket = useSocket(); // Use custom hook to get the socket object from the context
@@ -74,53 +73,83 @@ function CreateRoom({
     }
   }, [selectedUsers, groupChat]);
 
-  const handleRoomCreated = useCallback(
-    (wasSuccessful, recipient) => {
-      console.log('Received "room_created" event:', wasSuccessful, recipient);
-      toast.dismiss(); // Clear any toasts
+  // const handleRoomCreated = useCallback(
+  //   (wasSuccessful, recipient) => {
+  //     console.log('Received "room_created" event:', wasSuccessful, recipient);
+  //     toast.dismiss(); // Clear any toasts
+
+  //     if (wasSuccessful) {
+  //       toast.success(`Created room with ${recipient}!`);
+  //     } else {
+  //       toast.error(
+  //         `There was a problem! Couldn't create the room with ${recipient}!`
+  //       );
+  //     }
+  //   },
+  //   [] // No dependencies
+  // );
+
+  // const handleGroupRoomCreated = useCallback(
+  //   (wasSuccessful, groupChatName) => {
+  //     console.log(
+  //       'Received "group_room_created" event:',
+  //       wasSuccessful,
+  //       groupChatName
+  //     );
+  //     toast.dismiss(); // Clear any toasts
+
+  //     if (wasSuccessful) {
+  //       toast.success(`Created group room: ${groupChatName}!`);
+  //     } else {
+  //       toast.error(
+  //         `There was a problem creating the group room: ${groupChatName}!`
+  //       );
+  //     }
+  //   },
+  //   [] // No dependencies
+  // );
+
+  useEffect(() => {
+    if (!socket) {
+      console.log("CreateRoom: Socket is undefined");
+      return;
+    }
+
+    // Existing event listeners
+    socket.on("room_created", (wasSuccessful, recipient) => {
+      // console.log("CreateRoom: room_created reached!");
+      toast.dismiss();
 
       if (wasSuccessful) {
         toast.success(`Created room with ${recipient}!`);
+        setShowMenu(false); // Close the add friend modal
       } else {
         toast.error(
           `There was a problem! Couldn't create the room with ${recipient}!`
         );
       }
-    },
-    [] // No dependencies
-  );
+    });
 
-  const handleGroupRoomCreated = useCallback(
-    (wasSuccessful, groupChatName) => {
-      console.log(
-        'Received "group_room_created" event:',
-        wasSuccessful,
-        groupChatName
-      );
-      toast.dismiss(); // Clear any toasts
+    socket.on("group_room_created", (wasSuccessful, groupChatName) => {
+      // console.log("CreateRoom: group_room_created reached!");
+      toast.dismiss();
 
       if (wasSuccessful) {
         toast.success(`Created group room: ${groupChatName}!`);
+        setShowMenu(false); // Close the add friend modal
       } else {
         toast.error(
           `There was a problem creating the group room: ${groupChatName}!`
         );
       }
-    },
-    [] // No dependencies
-  );
-
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on("room_created", handleRoomCreated);
-    socket.on("group_room_created", handleGroupRoomCreated);
+    });
 
     return () => {
-      socket.off("room_created", handleRoomCreated);
-      socket.off("group_room_created", handleGroupRoomCreated);
+      console.log("CreateRoom: Cleaning up listeners");
+      socket.off("room_created");
+      socket.off("group_room_created");
     };
-  }, [socket, handleRoomCreated, handleGroupRoomCreated]);
+  }, [socket]);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -136,12 +165,6 @@ function CreateRoom({
   };
 
   const addToGroup = (selected_user) => {
-    // if (selectedUsers.includes(selected_user)) {
-    //   // console.log("Remove from group: ", selected_user);
-    //   setSelectedUsers(
-    //     selectedUsers.filter((selectedUser) => selectedUser !== selected_user)
-    //   ); // Remove the user from the selected users array
-    // } else {
     console.log("Add to group: ", selected_user);
     setSelectedUsers([...selectedUsers, selected_user]); // Add the user to the selected users array
     console.log("Selected users: ", selectedUsers);
@@ -171,8 +194,6 @@ function CreateRoom({
       // console.log("Create room with: ", selected_user);
 
       toast.loading("Creating room...");
-
-      setShowMenu(false); // Close the add friend modal
     }
   };
 
@@ -183,15 +204,12 @@ function CreateRoom({
 
     if (existingRoom) {
       console.log("Room already exists with: ", groupChatName);
-      setShowMenu(false); // Close modal
       openChat(existingRoom); // Set the room to the existing chat
     } else {
       console.log(`Creating room ${groupChatName} with users: `, selectedUsers);
       socket.emit("create_room_gc", selectedUsers, groupChatName); // Emit "create_room_gc" event
 
       toast.loading("Creating room...");
-
-      setShowMenu(false); // Close modal
     }
   };
 
@@ -336,9 +354,10 @@ function CreateRoom({
                     {/* Conditional Rendering */}
                     {!groupChat && hoveredUser === user._id && (
                       <span className="ml-auto pointer-events-none text-sm ps-1 transition-opacity duration-300">
-                        Create Room
-                        {selectedCreateRoom === user && (
-                          <div className="text-sm">Creating Room...</div>
+                        {selectedCreateRoom === user ? (
+                          <div className="">Creating Room...</div>
+                        ) : (
+                          <div>Create Room</div>
                         )}
                       </span>
                     )}
