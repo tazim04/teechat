@@ -39,7 +39,6 @@ function App() {
             >
               <allUsersContext.Provider value={{ allUsers, setAllUsers }}>
                 <Routes>
-                  {/* Redirect "/" to "/sign-in" */}
                   <Route
                     path="/"
                     element={<LandingPage setPassword={setPassword} />}
