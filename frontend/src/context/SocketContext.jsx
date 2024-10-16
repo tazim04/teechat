@@ -9,6 +9,8 @@ const SocketContext = createContext(null); // Create a context object
 
 const ENDPOINT = import.meta.env.VITE_ENDPOINT; // Define the endpoint
 
+console.log("ENDPOINT:", ENDPOINT);
+
 // Function to check if the token is about to expire
 const isTokenExpiringSoon = (token) => {
   const decodedToken = jwtDecode(token);
