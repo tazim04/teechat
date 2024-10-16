@@ -26,7 +26,7 @@ const clientOptions = {
 
 const allowedOrigins = [
   "https://teechat.vercel.app",
-  "https://www.teechat.chat/",
+  "https://www.teechat.chat",
   "http://localhost:5173", // For local development
 ];
 
