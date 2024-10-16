@@ -10,27 +10,11 @@ import Users from "./models/users.js";
 import { create } from "node:domain";
 import dotenv from "dotenv";
 import Room from "./models/rooms.js";
-import path from "node:path";
 
 dotenv.config();
 
 const app = express();
 const server = createServer(app);
-
-const _dirname = path.resolve(); // current directory
-const distPath = path.join(_dirname, "../frontend/dist");
-
-// serve static files from dist folder
-app.use(express.static(distPath));
-
-// catch-all route for serving index.html (for React Router support)
-app.get("/*", (req, res) => {
-  res.sendFile(path.join(distPath, "index.html"), (err) => {
-    if (err) {
-      res.status(500).send(err);
-    }
-  });
-});
 
 const uri = process.env.MONGODB_URI; // get uri from .env
 
@@ -40,11 +24,9 @@ const clientOptions = {
   serverApi: { version: "1", strict: true, deprecationErrors: true },
 };
 
-const serverIp = process.env.SERVER_IP;
-
 const io = new Server(server, {
   cors: {
-    origin: `http://${serverIp}/:5173`,
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -1036,6 +1018,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(3000, "0.0.0.0", () => {
-  console.log("Server running and listening on port 3000");
+server.listen(3000, () => {
+  console.log("Listening on port 3000");
 });
