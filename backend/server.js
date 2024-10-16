@@ -24,10 +24,21 @@ const clientOptions = {
   serverApi: { version: "1", strict: true, deprecationErrors: true },
 };
 
+const allowedOrigins = [
+  "https://teechat.vercel.app",
+  "https://www.teechat.chat/",
+  "http://localhost:5173", // For local development
+];
+
 const io = new Server(server, {
   cors: {
-    // origin: "http://localhost:5173",
-    origin: "https://teechat.vercel.app", // for now until deployment with real deployment
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true); // Allow request
+      } else {
+        callback(new Error("Not allowed by CORS")); // Reject request
+      }
+    },
     methods: ["GET", "POST"],
     credentials: true,
   },
