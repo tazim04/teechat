@@ -7,7 +7,7 @@ import { jwtDecode } from "jwt-decode";
 
 const SocketContext = createContext(null); // Create a context object
 
-const ENDPOINT = "http://localhost:3000"; // Define the endpoint
+const ENDPOINT = import.meta.env.VITE_ENDPOINT; // Define the endpoint
 
 // Function to check if the token is about to expire
 const isTokenExpiringSoon = (token) => {
