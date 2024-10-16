@@ -24,19 +24,27 @@ const clientOptions = {
   serverApi: { version: "1", strict: true, deprecationErrors: true },
 };
 
-const allowedOrigins = [
-  "https://teechat.vercel.app",
-  "https://www.teechat.chat",
-  "http://localhost:5173", // For local development
-];
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true); // Allow request
+    } else {
+      callback(new Error("Not allowed by CORS")); // Reject request
+    }
+  },
+  credentials: true, // Allow credentials (cookies, etc.)
+};
 
+app.use(cors(corsOptions));
+
+// CORS configuration for Socket.IO
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true); // Allow request
+        callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS")); // Reject request
+        callback(new Error("Not allowed by CORS"));
       }
     },
     methods: ["GET", "POST"],
