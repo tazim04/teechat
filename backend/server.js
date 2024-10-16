@@ -27,7 +27,7 @@ const clientOptions = {
 const io = new Server(server, {
   cors: {
     // origin: "http://localhost:5173",
-    origin: "https://teechat.vercel.app/", // for now until deployment with real deployment
+    origin: "https://teechat.vercel.app", // for now until deployment with real deployment
     methods: ["GET", "POST"],
     credentials: true,
   },
