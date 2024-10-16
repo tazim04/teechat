@@ -10,11 +10,27 @@ import Users from "./models/users.js";
 import { create } from "node:domain";
 import dotenv from "dotenv";
 import Room from "./models/rooms.js";
+import path from "node:path";
 
 dotenv.config();
 
 const app = express();
 const server = createServer(app);
+
+const _dirname = path.resolve(); // current directory
+const distPath = path.join(_dirname, "../frontend/dist");
+
+// serve static files from dist folder
+app.use(express.static(distPath));
+
+// catch-all route for serving index.html (for React Router support)
+app.get("/*", (req, res) => {
+  res.sendFile(path.join(distPath, "index.html"), (err) => {
+    if (err) {
+      res.status(500).send(err);
+    }
+  });
+});
 
 const uri = process.env.MONGODB_URI; // get uri from .env
 
