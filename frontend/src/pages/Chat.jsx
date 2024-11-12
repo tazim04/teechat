@@ -318,7 +318,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
   }, [messageRefs, messages, setMessages, currentRoom, user._id, socket]);
 
   return (
-    <div className="flex md:flex-row">
+    <div className="flex md:flex-row flex-1">
       {/* <ChatBar room={currentRoom} /> Display the chat bar */}
 
       {currentRoom ? ( // Check if the room (recipient) is selected

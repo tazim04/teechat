@@ -62,7 +62,7 @@ function MainPage() {
   }, [socket, user]);
 
   return (
-    <div className="md:flex h-screen">
+    <div className="md:flex md:h-screen overflow-hidden">
       <div className={`${isMobile && currentRoom && "hidden"}`}>
         <SideBar
           currentRoom={currentRoom}
