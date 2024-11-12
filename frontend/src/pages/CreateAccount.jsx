@@ -55,7 +55,7 @@ const CreateAccount = ({
     };
   });
   return (
-    <div className="py-8">
+    <div className="">
       <button
         className="absolute top-5 left-5 px-2 py-1 bg-gray-100 hover:bg-opacity-40 bg-opacity-70 rounded-lg font-semibold"
         onClick={handleBackClick}
@@ -65,7 +65,7 @@ const CreateAccount = ({
       <div className="sm:mx-auto sm:w-full px-6 sm:max-w-sm">
         <form className=" space-y-3" onSubmit={onSubmit} noValidate>
           <img
-            className="mx-auto md:h-28 h-24 mt-40 w-auto"
+            className="mx-auto md:h-28 h-24 md:mt-8 mt-20 w-auto"
             src="./favicon.png"
             alt="TeeChat"
           />
@@ -110,7 +110,7 @@ const CreateAccount = ({
             </button>
           </div>
           <div>
-            <h5 className="mt-6 text-center md:text-[1rem] text-md leading-3 tracking-tight text-gray-900">
+            <h5 className="mt-6 text-center md:text-[1rem] text-[0.8rem] leading-3 tracking-tight text-gray-900">
               Already have an account? &nbsp;
               <div
                 className="inline-flex hover:cursor-pointer text-purple-600 hover:text-purple-400 font-semibold"

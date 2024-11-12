@@ -135,7 +135,7 @@ function RoomInfoBar({
                     onChange={onNewNameType}
                   />
                 </div>
-                <div className="flex justify-center mt-3 space-x-2">
+                <div className="flex justify-center md:mt-3 space-x-2">
                   <button
                     className="bg-green-500 px-2 py-1 text-white rounded-lg hover:bg-green-400"
                     onClick={handleChangeNameSubmit}
@@ -151,13 +151,13 @@ function RoomInfoBar({
                 </div>
               </div>
             ) : (
-              <div className="flex flex-row">
+              <div className="flex flex-row justify-center">
                 <h2 className="text-lg text-center font-bold truncate w-60">
                   {room.name}
                 </h2>
 
                 <span
-                  className="ms-1 flex items-center opacity-100 transition-all duratin-100 ease-in-out hover:opacity-50 cursor-pointer"
+                  className="relative right-10 flex items-center opacity-100 transition-all duratin-100 ease-in-out hover:opacity-50 cursor-pointer"
                   onClick={handleChangeNameClick}
                 >
                   <img src="/rename_room.png" alt="rename" className="w-5" />
@@ -248,7 +248,7 @@ function RoomInfoBar({
                     <p className="text-[1.1rem] ms-3 font-medium my-auto text-gray-700 select-none truncate max-w-full">
                       {participant.username}
                       {/* {console.log("Participant: ", participant, "User: ", user)} */}
-                      <span className="text-[0.8rem] ml-20 text-gray-600">
+                      <span className="text-[0.8rem] md:ml-20 ml-36 text-gray-600">
                         {participant.username === user.username ? "me" : ""}
                       </span>
                     </p>

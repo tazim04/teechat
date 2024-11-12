@@ -1,10 +1,18 @@
 import { onlineUsersContext } from "../context/OnlineUsersContext";
 import { useContext, useState } from "react";
 import { usePalette } from "../context/PaletteContext";
+import { isMobileContext } from "../context/IsMobileContext";
 import AvatarIcon from "./AvatarIcon";
 
-function ChatBar({ room, showRoomInfo, setShowRoomInfo, isOnline }) {
+function ChatBar({
+  room,
+  showRoomInfo,
+  setShowRoomInfo,
+  isOnline,
+  setCurrentRoom,
+}) {
   const { palette } = usePalette(); // Destructure palette from usePalette
+  const { isMobile } = useContext(isMobileContext);
 
   const roomInfoClick = () => {
     // Function to handle the room info click
@@ -15,10 +23,20 @@ function ChatBar({ room, showRoomInfo, setShowRoomInfo, isOnline }) {
   return (
     <div className={`bg-gray-50 h-20 border-b-2 shadow-sm border-b-gray-200`}>
       <div className="flex relative">
+        {isMobile && (
+          <div
+            className="bg-gray-200 h-10 text-center flex items-center px-3 ms-3 my-auto rounded-md hover:bg-gray-300"
+            onClick={() => {
+              setCurrentRoom(null); // go back to no current room
+            }}
+          >
+            <span>back</span>
+          </div>
+        )}
         <img
           src={`https://ui-avatars.com/api/?name=${room.name}&background=random&color=fff`}
           alt="avatar"
-          className="rounded-full w-auto h-14 my-3 mx-6 shadow-sm"
+          className="rounded-full w-auto h-14 my-3 md:mx-6 mx-4 shadow-sm"
         />
         <div className="my-auto">
           <h4>{room.name}</h4>

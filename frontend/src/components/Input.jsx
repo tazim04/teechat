@@ -209,7 +209,7 @@ function Input({ type, register, errors, defaultValue, setValue, watch }) {
             required
             defaultValue={defaultValue ? defaultValue : ""}
             className={`block w-full rounded-md border-0 ps-2 md:py-2 py-[0.3rem] text-gray-900 shadow-sm 
-         placeholder:text-gray-400 sm:text-sm sm:leading-6 ${
+         placeholder:text-gray-400 text-sm leading-6 ${
            inputType === "date" ? "cursor-pointer py-1 px-5" : ""
          }`}
             {...register(`${type}`, validationRules)}

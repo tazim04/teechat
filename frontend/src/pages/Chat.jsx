@@ -6,15 +6,10 @@ import "./stylesheets/Chat.css";
 import { usePalette } from "../context/PaletteContext";
 import { userContext } from "../context/UserContext";
 import { onlineUsersContext } from "../context/OnlineUsersContext";
+import { isMobileContext } from "../context/IsMobileContext";
 import RoomInfoBar from "../components/RoomInfoBar/RoomInfoBar";
 
-function Chat({
-  currentRoom,
-  setCurrentRoom,
-  messages,
-  setMessages,
-  isMobile,
-}) {
+function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
   const socket = useSocket(); // Use custom hook to get the socket object from the context
   const [message, setMessage] = useState(""); // State for the message
   const [users, setUsers] = useState([]); // State for the users
@@ -29,6 +24,7 @@ function Chat({
   const { palette } = usePalette(); // Destructure palette from usePalette
   const { onlineUsers } = useContext(onlineUsersContext); // Get the online users from the context
   const { user } = useContext(userContext); // Get the user info from the context
+  const { isMobile } = useContext(isMobileContext);
   const username = user.username; // Get the username from the context
 
   const bottomRef = useRef(); // Reference to the bottom of the chat
@@ -317,6 +313,7 @@ function Chat({
             showRoomInfo={showRoomInfo}
             setShowRoomInfo={setShowRoomInfo}
             isOnline={isOnline} // pass if online using the corresponding functions
+            setCurrentRoom={setCurrentRoom}
           />
           <div className="flex-1 overflow-y-auto p-4">
             {/* Check if there are messages for the selected recipient */}
