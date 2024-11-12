@@ -28,8 +28,23 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
   const username = user.username; // Get the username from the context
 
   const bottomRef = useRef(); // Reference to the bottom of the chat
+  const chatRef = useRef();
 
   const [scrollPosition, setScrollPosition] = useState(0);
+
+  // for mobile
+  useEffect(() => {
+    const setDynamicHeight = () => {
+      if (isMobile && chatRef.current) {
+        chatRef.current.style.height = `${window.innerHeight}px`;
+      }
+    };
+
+    setDynamicHeight(); // Set on initial load
+    window.addEventListener("resize", setDynamicHeight);
+
+    return () => window.removeEventListener("resize", setDynamicHeight);
+  }, []);
 
   // Track if the user is at the bottom of the chat using observer for the scroll down button
   useEffect(() => {
@@ -307,7 +322,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
       {/* <ChatBar room={currentRoom} /> Display the chat bar */}
 
       {currentRoom ? ( // Check if the room (recipient) is selected
-        <div className="flex flex-col flex-1 h-screen">
+        <div className="flex flex-col flex-1 md:h-screen" ref={chatRef}>
           <ChatBar
             room={currentRoom}
             showRoomInfo={showRoomInfo}
