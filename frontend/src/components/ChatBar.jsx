@@ -13,7 +13,9 @@ function ChatBar({ room, showRoomInfo, setShowRoomInfo, isOnline }) {
   };
 
   return (
-    <div className={`bg-gray-50 h-20 border-b-2 shadow-sm border-b-gray-200`}>
+    <div
+      className={`bg-gray-50 md:h-20 h-[12dvh] border-b-2 shadow-sm border-b-gray-200`}
+    >
       <div className="flex relative">
         <img
           src={`https://ui-avatars.com/api/?name=${room.name}&background=random&color=fff`}
