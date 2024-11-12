@@ -8,7 +8,13 @@ import { userContext } from "../context/UserContext";
 import { onlineUsersContext } from "../context/OnlineUsersContext";
 import RoomInfoBar from "../components/RoomInfoBar/RoomInfoBar";
 
-function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
+function Chat({
+  currentRoom,
+  setCurrentRoom,
+  messages,
+  setMessages,
+  isMobile,
+}) {
   const socket = useSocket(); // Use custom hook to get the socket object from the context
   const [message, setMessage] = useState(""); // State for the message
   const [users, setUsers] = useState([]); // State for the users
@@ -42,6 +48,15 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
       observer.disconnect();
     };
   });
+
+  // If mobile, show room info is closed on open
+  useEffect(() => {
+    if (isMobile) {
+      setShowRoomInfo(false);
+    } else {
+      setShowRoomInfo(true); // Always open on desktop
+    }
+  }, [isMobile, currentRoom]);
 
   // Scroll to the bottom of the chat when the room is opened or a new message is sent
   useEffect(() => {
@@ -292,7 +307,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
   }, [messageRefs, messages, setMessages, currentRoom, user._id, socket]);
 
   return (
-    <div className="flex flex-row flex-1">
+    <div className="flex md:flex-row flex-1">
       {/* <ChatBar room={currentRoom} /> Display the chat bar */}
 
       {currentRoom ? ( // Check if the room (recipient) is selected

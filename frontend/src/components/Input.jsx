@@ -135,7 +135,7 @@ function Input({ type, register, errors, defaultValue, setValue, watch }) {
                 name="instagram"
                 type="url"
                 placeholder="Instagram"
-                className="block w-full rounded-e-md border-0 ps-2 py-2 text-gray-900 shadow-sm placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-e-md border-0 ps-2 md:py-2 py-[0.3rem] text-gray-900 shadow-sm placeholder:text-gray-400 text-sm leading-6"
                 {...register("instagram", {
                   pattern: {
                     value:
@@ -158,7 +158,7 @@ function Input({ type, register, errors, defaultValue, setValue, watch }) {
                 name="facebook"
                 type="url"
                 placeholder="Facebook"
-                className="block w-full rounded-e-md border-0 ps-2 py-2 text-gray-900 shadow-sm placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-e-md border-0 ps-2 md:py-2 py-[0.3rem] text-gray-900 shadow-sm placeholder:text-gray-400 text-sm leading-6"
                 {...register("facebook", {
                   pattern: {
                     value:
@@ -184,7 +184,7 @@ function Input({ type, register, errors, defaultValue, setValue, watch }) {
                 name="linkedin"
                 type="url"
                 placeholder="LinkedIn"
-                className="block w-full rounded-e-md border-0 ps-2 py-2 text-gray-900 shadow-sm placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-e-md border-0 ps-2 md:py-2 py-[0.3rem] text-gray-900 shadow-sm placeholder:text-gray-400 text-sm leading-6"
                 {...register("linkedin", {
                   pattern: {
                     value:
@@ -208,7 +208,7 @@ function Input({ type, register, errors, defaultValue, setValue, watch }) {
             autoComplete={`${type}`}
             required
             defaultValue={defaultValue ? defaultValue : ""}
-            className={`block w-full rounded-md border-0 ps-2 py-2 text-gray-900 shadow-sm 
+            className={`block w-full rounded-md border-0 ps-2 md:py-2 py-[0.3rem] text-gray-900 shadow-sm 
          placeholder:text-gray-400 sm:text-sm sm:leading-6 ${
            inputType === "date" ? "cursor-pointer py-1 px-5" : ""
          }`}

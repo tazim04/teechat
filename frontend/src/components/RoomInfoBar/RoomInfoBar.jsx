@@ -98,7 +98,7 @@ function RoomInfoBar({
   };
 
   return (
-    <div className="relative w-[18rem] bg-gray-100 border-2 border-l-gray-200 h-full shadow-lg transition-transform duration-300">
+    <div className="relative md:w-[18rem] w-[100vw] bg-gray-100 border-2 border-l-gray-200 h-full shadow-lg transition-transform duration-300">
       <Toaster />
       <button
         className="fixed top-3 right-3 text-[1.4rem] flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 

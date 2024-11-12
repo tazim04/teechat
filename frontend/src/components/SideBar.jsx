@@ -138,10 +138,10 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
   };
 
   return (
-    <div className="flex flex-col min-h-screen overflow-hidden">
+    <div className="flex flex-col min-h-screen overflow-hidden md:w-[20rem] w-[100vw]">
       <div
         className={`flex transition-color ease-in-out duration-300 ${palette.sideBar}`}
-        style={{ width: "20rem" }}
+        // style={{ width: "20rem" }}
       >
         <div className="side-bar-body w-full h-full">
           {" "}

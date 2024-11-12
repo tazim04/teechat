@@ -72,18 +72,18 @@ function SignIn({ setPassword, setShowSignIn }) {
 
   return (
     <div className="">
-      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+      <div className="md:mx-auto md:w-full md:max-w-sm">
         <img
-          className="mx-auto h-28 w-auto"
+          className="mx-auto md:h-28 h-24 w-auto"
           src="./favicon.png"
           alt="TeeChat"
         />
-        <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+        <h2 className="mt-10 text-center md:text-xl text-[1.6rem] font-bold leading-9 tracking-tight text-gray-900">
           Welcome to TeeChat.
         </h2>
       </div>
 
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+      <div className="md:mt-10 mt-8 px-2 sm:mx-auto sm:w-full sm:max-w-sm">
         <form
           className="space-y-6"
           action="#"
@@ -118,7 +118,7 @@ function SignIn({ setPassword, setShowSignIn }) {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="block w-full rounded-md border-0 ps-2 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-300 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 ps-2 md:py-2 py-[0.3rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-300 text-sm leading-6"
                 {...register("password", { required: true })}
               />
             </div>
@@ -130,14 +130,14 @@ function SignIn({ setPassword, setShowSignIn }) {
           <div>
             <button
               type="submit"
-              className="flex w-full justify-center rounded-md bg-purple-600 px-3 py-2 text-md font-semibold leading-6 text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+              className="flex w-full justify-center rounded-md bg-purple-600 px-3 md:py-2 py-[0.3rem] text-md font-semibold leading-6 text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
             >
               Sign in
             </button>
           </div>
         </form>
 
-        <h5 className="mt-6 text-center leading-9 tracking-tight text-gray-900">
+        <h5 className="md:mt-6 mt-5 md:text-[1rem] text-md text-center leading-9 tracking-tight text-gray-900">
           Don't have an account? &nbsp;
           <div
             className="inline-flex hover:cursor-pointer text-purple-500 hover:text-purple-800 font-semibold"

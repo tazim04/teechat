@@ -55,25 +55,25 @@ const CreateAccount = ({
     };
   });
   return (
-    <div className="">
+    <div className="py-8">
       <button
-        className="absolute top-5 left-5 px-3 py-1 bg-gray-100 hover:bg-opacity-40 bg-opacity-70 rounded-lg font-semibold"
+        className="absolute top-5 left-5 px-2 py-1 bg-gray-100 hover:bg-opacity-40 bg-opacity-70 rounded-lg font-semibold"
         onClick={handleBackClick}
       >
         Back
       </button>
-      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+      <div className="sm:mx-auto sm:w-full px-6 sm:max-w-sm">
         <form className=" space-y-3" onSubmit={onSubmit} noValidate>
           <img
-            className="mx-auto h-28 w-auto"
+            className="mx-auto md:h-28 h-24 mt-40 w-auto"
             src="./favicon.png"
             alt="TeeChat"
           />
 
-          <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+          <h2 className="mt-10 text-center md:text-xl text-[1.6rem] font-bold leading-9 tracking-tight text-gray-900">
             Create an account
           </h2>
-          <h5 className="text-center mb-6">
+          <h5 className="text-center text-[0.9rem] mb-6">
             Create an account to start chatting with the world!
           </h5>
           <Input
@@ -104,13 +104,13 @@ const CreateAccount = ({
           <div>
             <button
               type="submit"
-              className="flex w-full justify-center rounded-md bg-purple-600 my-6 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+              className="flex w-full justify-center rounded-md bg-purple-600 my-6 px-3 md:py-2 py-[0.3rem] text-sm font-semibold leading-6 text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
             >
               Next
             </button>
           </div>
           <div>
-            <h5 className="mt-6 text-center leading-3 tracking-tight text-gray-900">
+            <h5 className="mt-6 text-center md:text-[1rem] text-md leading-3 tracking-tight text-gray-900">
               Already have an account? &nbsp;
               <div
                 className="inline-flex hover:cursor-pointer text-purple-600 hover:text-purple-400 font-semibold"
