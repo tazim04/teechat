@@ -325,13 +325,15 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
 
       {currentRoom ? ( // Check if the room (recipient) is selected
         <div className="flex flex-col flex-1 md:h-screen" ref={chatRef}>
-          <ChatBar
-            room={currentRoom}
-            showRoomInfo={showRoomInfo}
-            setShowRoomInfo={setShowRoomInfo}
-            isOnline={isOnline} // pass if online using the corresponding functions
-            setCurrentRoom={setCurrentRoom}
-          />
+          <div className="sticky top-0">
+            <ChatBar
+              room={currentRoom}
+              showRoomInfo={showRoomInfo}
+              setShowRoomInfo={setShowRoomInfo}
+              isOnline={isOnline} // pass if online using the corresponding functions
+              setCurrentRoom={setCurrentRoom}
+            />
+          </div>
           <div className="flex-1 overflow-y-auto p-4">
             {/* Check if there are messages for the selected recipient */}
             {messages[currentRoom._id] ? (
