@@ -46,7 +46,7 @@ function AddToRoomMenu({ room, participants, setShowAddParticipant }) {
 
   return (
     <div
-      className={`text-gray-200 w-64 h-[19rem] shadow-md p-4 rounded-md ${palette.menu} absolute top-1 right-0 z-50 opacity-95 transition-opacity ease-in-out duration-300 hover:opacity-100`}
+      className={`text-gray-200 w-64 h-[19rem] shadow-md p-4 rounded-md ${palette.menu} absolute top-1 right-0 z-50 md:opacity-95 transition-opacity ease-in-out duration-300 hover:opacity-100`}
     >
       <h3 className="text-[1rem] font-semibold mb-3 text-center">
         Add Users to Room

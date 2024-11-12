@@ -6,6 +6,7 @@ import "./stylesheets/Chat.css";
 import { usePalette } from "../context/PaletteContext";
 import { userContext } from "../context/UserContext";
 import { onlineUsersContext } from "../context/OnlineUsersContext";
+import { isMobileContext } from "../context/IsMobileContext";
 import RoomInfoBar from "../components/RoomInfoBar/RoomInfoBar";
 
 function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
@@ -23,6 +24,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
   const { palette } = usePalette(); // Destructure palette from usePalette
   const { onlineUsers } = useContext(onlineUsersContext); // Get the online users from the context
   const { user } = useContext(userContext); // Get the user info from the context
+  const { isMobile } = useContext(isMobileContext);
   const username = user.username; // Get the username from the context
 
   const bottomRef = useRef(); // Reference to the bottom of the chat
@@ -42,6 +44,15 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
       observer.disconnect();
     };
   });
+
+  // If mobile, show room info is closed on open
+  useEffect(() => {
+    if (isMobile) {
+      setShowRoomInfo(false);
+    } else {
+      setShowRoomInfo(true); // Always open on desktop
+    }
+  }, [isMobile, currentRoom]);
 
   // Scroll to the bottom of the chat when the room is opened or a new message is sent
   useEffect(() => {
@@ -292,7 +303,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
   }, [messageRefs, messages, setMessages, currentRoom, user._id, socket]);
 
   return (
-    <div className="flex flex-row flex-1">
+    <div className="flex md:flex-row flex-1">
       {/* <ChatBar room={currentRoom} /> Display the chat bar */}
 
       {currentRoom ? ( // Check if the room (recipient) is selected
@@ -302,6 +313,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
             showRoomInfo={showRoomInfo}
             setShowRoomInfo={setShowRoomInfo}
             isOnline={isOnline} // pass if online using the corresponding functions
+            setCurrentRoom={setCurrentRoom}
           />
           <div className="flex-1 overflow-y-auto p-4">
             {/* Check if there are messages for the selected recipient */}
@@ -409,13 +421,19 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
         </div>
       )}
       {showRoomInfo && currentRoom && (
-        <RoomInfoBar
-          room={currentRoom}
-          showRoomInfo={showRoomInfo}
-          setShowRoomInfo={setShowRoomInfo}
-          participants={participants}
-          isOnline={isOnline}
-        />
+        <div
+          className={`${
+            isMobile ? "absolute top-0 left-0 w-full h-full bg-white z-50" : ""
+          }`}
+        >
+          <RoomInfoBar
+            room={currentRoom}
+            showRoomInfo={showRoomInfo}
+            setShowRoomInfo={setShowRoomInfo}
+            participants={participants}
+            isOnline={isOnline}
+          />
+        </div>
       )}
     </div>
   );

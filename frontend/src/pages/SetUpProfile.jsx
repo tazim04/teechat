@@ -123,15 +123,17 @@ function SetUpProfile({
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         <form className=" space-y-3" onSubmit={onSubmit} noValidate>
           <img
-            className="mx-auto h-28 w-auto"
+            className="mx-auto md:h-28 h-24 md:mt-8 mt-20 w-auto"
             src="./favicon.png"
             alt="TeeChat"
           />
 
-          <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+          <h2 className="mt-10 text-center md:text-xl text-[1.6rem] font-bold leading-9 tracking-tight text-gray-900">
             Create an account
           </h2>
-          <h5 className="text-center mb-6">Let's get to know you better!</h5>
+          <h5 className="text-center mb-6 text-[0.9rem]">
+            Let's get to know you better!
+          </h5>
           <Input
             type="birthday"
             register={register}
@@ -162,7 +164,7 @@ function SetUpProfile({
             </button>
           </div>
           <div>
-            <h5 className="mt-6 text-center leading-3 tracking-tight text-gray-900">
+            <h5 className="mt-6 text-center md:text-[1rem] text-[0.8rem] leading-3 tracking-tight text-gray-900">
               Already have an account? &nbsp;
               <div
                 className="inline-flex hover:cursor-pointer text-purple-600 hover:text-purple-400 font-semibold"
