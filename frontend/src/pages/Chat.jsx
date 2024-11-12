@@ -29,6 +29,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
 
   const bottomRef = useRef(); // Reference to the bottom of the chat
   const chatRef = useRef();
+  const inputRef = useRef(null);
 
   const [scrollPosition, setScrollPosition] = useState(0);
 
@@ -240,6 +241,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
       }
     );
     setMessage(""); // Clear the message input
+    inputRef.current.focus(); // Keep the keyboard open by refocusing the input field, mainly for mobile
 
     setSendAnimation(true); // Set the send animation to true
     setTimeout(() => {
@@ -411,6 +413,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
               value={message}
               onChange={onType}
               onKeyDown={(e) => e.key === "Enter" && send()}
+              ref={inputRef}
             />
             <button
               className={`${palette.send} rounded-xl px-3 h-9 ms-5 my-auto overflow-hidden relative`}
