@@ -424,13 +424,19 @@ function Chat({
         </div>
       )}
       {showRoomInfo && currentRoom && (
-        <RoomInfoBar
-          room={currentRoom}
-          showRoomInfo={showRoomInfo}
-          setShowRoomInfo={setShowRoomInfo}
-          participants={participants}
-          isOnline={isOnline}
-        />
+        <div
+          className={`${
+            isMobile ? "absolute top-0 left-0 w-full h-full bg-white z-50" : ""
+          }`}
+        >
+          <RoomInfoBar
+            room={currentRoom}
+            showRoomInfo={showRoomInfo}
+            setShowRoomInfo={setShowRoomInfo}
+            participants={participants}
+            isOnline={isOnline}
+          />
+        </div>
       )}
     </div>
   );
