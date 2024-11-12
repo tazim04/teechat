@@ -2,15 +2,20 @@ import { React, useRef, useContext, useState, useEffect } from "react";
 import AvatarIcon from "../AvatarIcon";
 import { format, isToday } from "date-fns";
 import { userContext } from "../../context/UserContext";
+import { isMobileContext } from "../../context/IsMobileContext";
 import RemoveParticipantContextMenu from "./RemoveParticipantContextMenu";
 import RemoveParticipantConfirmationModal from "./RemoveParticipantConfirmationModal";
 
 function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
   const { user } = useContext(userContext);
+  const popoutRef = useRef(null);
   const contextMenuRef = useRef(null);
   const contextMenuIconRef = useRef(null);
   const [showContextMenu, setShowContextMenu] = useState(""); // state to show context menu for removing a participant, will open the confirmation modal first
   const [showConfirmationModal, setShowConfirmationModal] = useState(false); // state to show modal for removing a participant
+  const { isMobile } = useContext(isMobileContext);
+
+  const [positionClass, setPositionClass] = useState("");
 
   // Handle closing context menu which clicking outside
   useEffect(() => {
@@ -32,6 +37,15 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (isMobile && popoutRef.current) {
+      const rect = popoutRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      setPositionClass(rect.bottom > viewportHeight ? "bottom-14" : "top-14");
+    }
+  }, [isMobile, participant]);
 
   const handleContextMenu = (e) => {
     e.stopPropagation();
@@ -57,7 +71,10 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
         href="https://cdn.materialdesignicons.com/6.5.95/css/materialdesignicons.min.css"
       ></link>
 
-      <div className="absolute right-[108%] top-0 mr-1 w-[20rem] pt-7 pb-4 bg-gray-100 opacity-90 hover:opacity-100 transition-opacity ease-in-out duration-200 shadow-md border rounded-lg">
+      <div
+        className={`absolute md:right-[108%] md:top-0 left-2 ${positionClass} z-50 md:mr-1 w-[20rem] md:pt-7 md:pb-4 pt-5 pb-2 bg-gray-100 md:opacity-90 hover:opacity-100 transition-opacity ease-in-out duration-200 shadow-md border rounded-lg`}
+        ref={popoutRef}
+      >
         <div className="flex flex-col items-center">
           {participant.username !== user.username && (
             <div className="absolute right-2 top-2">
@@ -91,25 +108,25 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
             {participant.socials?.instagram && (
               <a
                 href={participant.socials.instagram}
-                class="flex rounded-full hover:bg-orange-50 h-10 w-10"
+                className="flex rounded-full hover:bg-orange-50 h-10 w-10"
               >
-                <i class="mdi mdi-instagram text-orange-400 mx-auto mt-2"></i>
+                <i className="mdi mdi-instagram text-orange-400 mx-auto mt-2"></i>
               </a>
             )}
             {participant.socials?.facebook && (
               <a
                 href={participant.socials.facebook}
-                class="flex rounded-full hover:bg-blue-50 h-10 w-10"
+                className="flex rounded-full hover:bg-blue-50 h-10 w-10"
               >
-                <i class="mdi mdi-facebook text-blue-400 mx-auto mt-2"></i>
+                <i className="mdi mdi-facebook text-blue-400 mx-auto mt-2"></i>
               </a>
             )}
             {participant.socials?.linkedin && (
               <a
                 href={participant.socials.linkedin}
-                class="flex rounded-full hover:bg-indigo-50 h-10 w-10"
+                className="flex rounded-full hover:bg-indigo-50 h-10 w-10"
               >
-                <i class="mdi mdi-linkedin text-indigo-400 mx-auto mt-2"></i>
+                <i className="mdi mdi-linkedin text-indigo-400 mx-auto mt-2"></i>
               </a>
             )}
           </div>
@@ -143,7 +160,7 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
       {showContextMenu === participant._id && (
         <div
           ref={contextMenuRef}
-          className="absolute bottom-[4rem] right-[17.5rem]"
+          className="absolute md:bottom-[4rem] md:right-[17.5rem] bottom-3 right-3"
         >
           <RemoveParticipantContextMenu
             participant={participant}

@@ -11,6 +11,7 @@ import { io } from "socket.io-client";
 import { onlineUsersContext } from "./context/OnlineUsersContext.jsx";
 import { allUsersContext } from "./context/AllUsersContext.jsx";
 import { userContext } from "./context/UserContext.jsx";
+import { isMobileContext } from "./context/IsMobileContext.jsx";
 import {
   BrowserRouter as Router,
   Routes,
@@ -28,6 +29,7 @@ function App() {
   const [password, setPassword] = useState(""); // State for the password
   const [onlineUsers, setOnlineUsers] = useState([]); // State for the users online
   const [allUsers, setAllUsers] = useState([]); // State for all users in the database
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // State for screen width
 
   return (
     <userContext.Provider value={{ user, setUser }}>
@@ -38,13 +40,15 @@ function App() {
               value={{ onlineUsers, setOnlineUsers }}
             >
               <allUsersContext.Provider value={{ allUsers, setAllUsers }}>
-                <Routes>
-                  <Route
-                    path="/"
-                    element={<LandingPage setPassword={setPassword} />}
-                  />
-                  <Route path="/main" element={<MainPage />} />
-                </Routes>
+                <isMobileContext.Provider value={{ isMobile, setIsMobile }}>
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={<LandingPage setPassword={setPassword} />}
+                    />
+                    <Route path="/main" element={<MainPage />} />
+                  </Routes>
+                </isMobileContext.Provider>
               </allUsersContext.Provider>
             </onlineUsersContext.Provider>
           </PaletteProvider>

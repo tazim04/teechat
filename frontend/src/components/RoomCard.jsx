@@ -185,7 +185,7 @@ function RoomCard({
         {lastMessages[room._id]?.content ? (
           <div className="relative w-48 p-2">
             {/* <!-- Timestamp aligned to the top right --> */}
-            <span className="text-[0.8rem] text-gray-200 absolute -top-[0.55rem] -right-4">
+            <span className="text-[0.8rem] text-gray-200 absolute -top-[0.55rem] md:-right-4 -right-16">
               {getTimeStamp(lastMessages[room._id].timestamp)}
             </span>
 

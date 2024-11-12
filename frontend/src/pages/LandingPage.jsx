@@ -40,7 +40,7 @@ function LandingPage({ setPassword }) {
   return (
     <div className="flex bg-gradient-to-r from-purple-600 via-rose-600 to-purple-600 bg-[length:200%_auto] animate-gradient h-screen flex-col justify-center">
       <div
-        className="relative bg-gray-200 bg-opacity-60 mx-auto flex justify-center items-center h-[45rem] w-[40rem] shadow-md rounded-xl overflow-auto"
+        className="relative bg-gray-200 bg-opacity-60 mx-auto flex justify-center items-center h-[45rem] md:w-[40rem] w-[21rem] p-5 shadow-md rounded-xl overflow-auto"
         style={{ maxHeight: "90vh" }}
       >
         {/* SignIn Transition */}

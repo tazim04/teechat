@@ -12,6 +12,7 @@ import { allUsersContext } from "../context/AllUsersContext";
 import { usePalette } from "../context/PaletteContext";
 import { useSocket } from "../context/SocketContext";
 import { userContext } from "../context/UserContext";
+import { isMobileContext } from "../context/IsMobileContext";
 
 // Create a context object for isDeleteOpen state for delete confirmation modal
 export const isDeleteOpenContext = createContext(false);
@@ -30,6 +31,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
   const { onlineUsers, setOnlineUsers } = useContext(onlineUsersContext); // State holding online users
   const { allUsers, setAllUsers } = useContext(allUsersContext); // State holding all users in the database
   const { user } = useContext(userContext); // Get the user from the context
+  const { isMobile } = useContext(isMobileContext);
 
   const username = user.username; // Get the username from the context
   const [rooms, setRooms] = useState([]); // State for the rooms
@@ -138,10 +140,10 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
   };
 
   return (
-    <div className="flex flex-col min-h-screen overflow-hidden">
+    <div className="flex flex-col min-h-screen overflow-hidden md:w-[20rem] w-[100vw]">
       <div
         className={`flex transition-color ease-in-out duration-300 ${palette.sideBar}`}
-        style={{ width: "20rem" }}
+        // style={{ width: "20rem" }}
       >
         <div className="side-bar-body w-full h-full">
           {" "}
@@ -169,7 +171,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
           <Tooltip
             id="first-room"
             style={{
-              fontSize: "1rem",
+              fontSize: isMobile ? "0.8rem" : "1rem",
               borderRadius: "1rem",
               zIndex: "9999",
             }}
