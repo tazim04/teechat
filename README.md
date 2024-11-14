@@ -1,5 +1,5 @@
 
-![Logo](/frontend/public/favicon.png)
+![Logo](/frontend/public/favicon_white.png)
 # TeeChat
 
 TeeChat is a real time chatting application. Create an account and start creating rooms with one or multiple users!
