@@ -96,7 +96,7 @@ function Input({ type, register, errors, defaultValue, setValue, watch }) {
         {inputType === "interests" ? (
           <TagPicker
             data={interest_suggestions}
-            style={{ width: "100%" }}
+            style={{ width: "100%", maxHeight: "4.5rem", overflowY: "auto" }}
             name="interests"
             menuStyle={{
               maxHeight: 260,
