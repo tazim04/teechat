@@ -22,4 +22,5 @@ Link to TeeChat: www.teechat.chat
 - Real-time chating between users
 - Create rooms with one or multiple users, delete rooms, and edit group room names
 - Full JWT implementation, with the use of an Access Token and a Refresh Token for secure authentication and keeping users logged in
+- All passwords are securely stored in the database with one-way hashing
 
