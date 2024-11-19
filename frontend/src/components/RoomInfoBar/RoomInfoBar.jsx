@@ -176,7 +176,7 @@ function RoomInfoBar({
           {room.is_group ? (
             <div className="mt-10">
               <div className="flex items-center justify-between mb-2">
-                <p className="font-medium text-[1rem]">
+                <p className="font-medium text-[0.9rem]">
                   Roommates - {participants.length}
                 </p>
                 <div className="flex items-center align-middle">
@@ -212,58 +212,60 @@ function RoomInfoBar({
                   </div>
                 </div>
               </div>
-              {participants.map((participant, index) => (
-                <div key={index} className="relative my-1">
-                  <div
-                    onClick={() => toggleProfileClick(participant)}
-                    className={`flex flex-row p-2 rounded-lg cursor-pointer ${
-                      participant.username === user.username
-                        ? "bg-gray-200 bg-opacity-50"
-                        : ""
-                    } transition-all ease-in-out duration-100 hover:bg-gray-300 $`}
-                    data-tooltip-id="profile"
-                    //   data-tooltip-html={`
-                    // <div className='flex flex-col items-center'>
-                    // <p>Username: ${participant.username}</p>
-                    // </div>
-                    //   `}
-                  >
-                    <div className="flex align-middle">
-                      <div className="w-10 h-10">
-                        <AvatarIcon
-                          name={participant.username}
-                          showStatus={false}
-                          isOnline={checkOnline(participant._id)}
-                        />
-                      </div>
+              <div className="overflow-y-auto h-[calc(100vh-18rem)]">
+                {participants.map((participant, index) => (
+                  <div key={index} className="relative my-1">
+                    <div
+                      onClick={() => toggleProfileClick(participant)}
+                      className={`flex flex-row p-2 rounded-lg cursor-pointer ${
+                        participant.username === user.username
+                          ? "bg-gray-200 bg-opacity-50"
+                          : ""
+                      } transition-all ease-in-out duration-100 hover:bg-gray-300 $`}
+                      data-tooltip-id="profile"
+                      //   data-tooltip-html={`
+                      // <div className='flex flex-col items-center'>
+                      // <p>Username: ${participant.username}</p>
+                      // </div>
+                      //   `}
+                    >
+                      <div className="flex align-middle">
+                        <div className="w-10 h-10">
+                          <AvatarIcon
+                            name={participant.username}
+                            showStatus={false}
+                            isOnline={checkOnline(participant._id)}
+                          />
+                        </div>
 
-                      <div className="relative right-[0.6rem] top-7">
-                        {checkOnline(participant._id) ? (
-                          <span className="flex w-2.5 h-2.5 bg-green-400 rounded-full flex-shrink-0"></span>
-                        ) : (
-                          <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full flex-shrink-0"></span>
-                        )}
+                        <div className="relative right-[0.6rem] top-7">
+                          {checkOnline(participant._id) ? (
+                            <span className="flex w-2.5 h-2.5 bg-green-400 rounded-full flex-shrink-0"></span>
+                          ) : (
+                            <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full flex-shrink-0"></span>
+                          )}
+                        </div>
                       </div>
+                      <p className="text-[1.1rem] ms-3 font-medium my-auto text-gray-700 select-none truncate max-w-full">
+                        {participant.username}
+                        {/* {console.log("Participant: ", participant, "User: ", user)} */}
+                        <span className="text-[0.8rem] md:ml-20 ml-36 text-gray-600">
+                          {participant.username === user.username ? "me" : ""}
+                        </span>
+                      </p>
                     </div>
-                    <p className="text-[1.1rem] ms-3 font-medium my-auto text-gray-700 select-none truncate max-w-full">
-                      {participant.username}
-                      {/* {console.log("Participant: ", participant, "User: ", user)} */}
-                      <span className="text-[0.8rem] md:ml-20 ml-36 text-gray-600">
-                        {participant.username === user.username ? "me" : ""}
-                      </span>
-                    </p>
-                  </div>
 
-                  {activeProfile === participant._id && (
-                    <ProfilePopout
-                      participant={participant}
-                      room={room}
-                      setActiveProfile={setActiveProfile}
-                      isOnline={isOnline}
-                    />
-                  )}
-                </div>
-              ))}
+                    {activeProfile === participant._id && (
+                      <ProfilePopout
+                        participant={participant}
+                        room={room}
+                        setActiveProfile={setActiveProfile}
+                        isOnline={isOnline}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="mt-4">
