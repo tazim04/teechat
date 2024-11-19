@@ -188,7 +188,7 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
             />
           </div>
           {/* Rooms list */}
-          <div className="col text-base overflow-y-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-gray-300 scrollbar-track-transparent h-[calc(100vh-6.2rem)] pb-20">
+          <div className="col text-base overflow-y-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-gray-300 scrollbar-track-transparent h-[calc(100vh-7.85rem)] pb-20">
             <isDeleteOpenContext.Provider
               value={{ isDeleteOpen, setIsDeleteOpen }}
             >
