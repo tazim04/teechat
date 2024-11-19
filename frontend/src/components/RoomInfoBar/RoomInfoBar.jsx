@@ -178,12 +178,12 @@ function RoomInfoBar({
               </div>
             ) : (
               <div className="flex flex-row justify-center">
-                <h2 className="text-lg text-center font-bold truncate w-60">
+                <h2 className="text-lg text-center font-bold truncate w-56">
                   {room.name}
                 </h2>
 
                 <span
-                  className="relative right-10 flex items-center opacity-100 transition-all duratin-100 ease-in-out hover:opacity-50 cursor-pointer"
+                  className="relative flex items-center opacity-100 transition-all duratin-100 ease-in-out hover:opacity-50 cursor-pointer"
                   onClick={handleChangeNameClick}
                 >
                   <img src="/rename_room.png" alt="rename" className="w-5" />
