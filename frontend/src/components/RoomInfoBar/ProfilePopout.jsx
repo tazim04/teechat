@@ -39,11 +39,23 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
   }, []);
 
   useEffect(() => {
-    if (isMobile && popoutRef.current) {
+    if (popoutRef.current) {
       const rect = popoutRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
 
-      setPositionClass(rect.bottom > viewportHeight ? "bottom-14" : "top-14");
+      if (isMobile) {
+        // For mobile (already implemented in your code)
+        setPositionClass(rect.bottom > viewportHeight ? "bottom-14" : "top-14");
+      } else {
+        // For desktop
+        const overflowsBottom = rect.bottom > viewportHeight;
+
+        if (overflowsBottom) {
+          setPositionClass("bottom-1"); // Adjust to position when bottom overflow
+        } else {
+          setPositionClass("top-0"); // Default position
+        }
+      }
     }
   }, [isMobile, participant]);
 
@@ -72,7 +84,7 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
       ></link>
 
       <div
-        className={`absolute md:right-[108%] md:top-0 left-2 ${positionClass} z-50 md:mr-1 w-[20rem] md:pt-7 md:pb-4 pt-5 pb-2 bg-gray-100 md:opacity-90 hover:opacity-100 transition-opacity ease-in-out duration-200 shadow-md border rounded-lg`}
+        className={`absolute md:-left-[140%] left-2 ${positionClass} z-50 md:mr-1 w-[20rem] md:pt-7 md:pb-4 pt-5 pb-2 bg-gray-100 md:opacity-90 hover:opacity-100 transition-opacity ease-in-out duration-200 shadow-md border rounded-lg`}
         ref={popoutRef}
       >
         <div className="flex flex-col items-center">
@@ -137,14 +149,15 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
               My Interests
             </p>
             <div className="w-full flex flex-wrap justify-center">
-              {participant?.interests.map((interest, index) => (
-                <span
-                  key={index}
-                  className="bg-gray-300 rounded-full px-2 py-1 m-1 text-gray-700 text-[0.7rem]"
-                >
-                  {interest}
-                </span>
-              ))}
+              {participant.interest != null &&
+                participant?.interests.map((interest, index) => (
+                  <span
+                    key={index}
+                    className="bg-gray-300 rounded-full px-2 py-1 m-1 text-gray-700 text-[0.7rem]"
+                  >
+                    {interest}
+                  </span>
+                ))}
             </div>
           </div>
           <div className="row mt-3">
