@@ -137,7 +137,7 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
               My Interests
             </p>
             <div className="w-full flex flex-wrap justify-center">
-              {participant.interests.map((interest, index) => (
+              {participant?.interests.map((interest, index) => (
                 <span
                   key={index}
                   className="bg-gray-300 rounded-full px-2 py-1 m-1 text-gray-700 text-[0.7rem]"

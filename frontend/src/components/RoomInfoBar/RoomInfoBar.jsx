@@ -319,14 +319,15 @@ function RoomInfoBar({
                             My Interests
                           </p>
                           <div className="w-full max-w-96 flex flex-wrap justify-center max-h-[8.7rem] overflow-y-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                            {participant?.interests.map((interest, index) => (
-                              <span
-                                key={index}
-                                className="bg-gray-300 rounded-full px-2 py-1 m-1 text-gray-700 text-[0.8rem]"
-                              >
-                                {interest}
-                              </span>
-                            ))}
+                            {participant.interest != null &&
+                              participant?.interests.map((interest, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-gray-300 rounded-full px-2 py-1 m-1 text-gray-700 text-[0.8rem]"
+                                >
+                                  {interest}
+                                </span>
+                              ))}
                           </div>
                         </div>
                         <div className="row my-5">
