@@ -8,14 +8,11 @@ import RemoveParticipantConfirmationModal from "./RemoveParticipantConfirmationM
 
 function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
   const { user } = useContext(userContext);
-  const popoutRef = useRef(null);
   const contextMenuRef = useRef(null);
   const contextMenuIconRef = useRef(null);
   const [showContextMenu, setShowContextMenu] = useState(""); // state to show context menu for removing a participant, will open the confirmation modal first
   const [showConfirmationModal, setShowConfirmationModal] = useState(false); // state to show modal for removing a participant
   const { isMobile } = useContext(isMobileContext);
-
-  const [positionClass, setPositionClass] = useState("");
 
   // Handle closing context menu which clicking outside
   useEffect(() => {
@@ -37,27 +34,6 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  useEffect(() => {
-    if (popoutRef.current) {
-      const rect = popoutRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-
-      if (isMobile) {
-        // For mobile (already implemented in your code)
-        setPositionClass(rect.bottom > viewportHeight ? "bottom-14" : "top-14");
-      } else {
-        // For desktop
-        const overflowsBottom = rect.bottom > viewportHeight;
-
-        if (overflowsBottom) {
-          setPositionClass("bottom-1"); // Adjust to position when bottom overflow
-        } else {
-          setPositionClass("top-0"); // Default position
-        }
-      }
-    }
-  }, [isMobile, participant]);
 
   const handleContextMenu = (e) => {
     e.stopPropagation();
@@ -84,8 +60,7 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
       ></link>
 
       <div
-        className={`absolute md:-left-[140%] left-2 ${positionClass} z-50 md:mr-1 w-[20rem] md:pt-7 md:pb-4 pt-5 pb-2 bg-gray-100 md:opacity-90 hover:opacity-100 transition-opacity ease-in-out duration-200 shadow-md border rounded-lg`}
-        ref={popoutRef}
+        className={`absolute z-50 md:mr-1 w-[20rem] md:pt-7 md:pb-4 pt-5 pb-2 bg-gray-100 md:opacity-90 hover:opacity-100 transition-opacity ease-in-out duration-200 shadow-md border rounded-lg`}
       >
         <div className="flex flex-col items-center">
           {participant.username !== user.username && (

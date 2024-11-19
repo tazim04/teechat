@@ -9,6 +9,7 @@ import ProfilePopout from "./ProfilePopout";
 import { format, isToday } from "date-fns";
 import AddToRoomMenu from "./AddToRoomMenu";
 import toast, { Toaster } from "react-hot-toast";
+import { isMobileContext } from "../../context/IsMobileContext";
 
 function RoomInfoBar({
   room,
@@ -20,12 +21,16 @@ function RoomInfoBar({
   const socket = useSocket();
   const { user } = useContext(userContext); // Get the user info from the context
   const { onlineUsers } = useContext(onlineUsersContext);
+  const { isMobile } = useContext(isMobileContext);
+
+  const popoutRef = useRef(null);
 
   const [addParticipantHover, setAddParticipantHover] = useState(false);
   const [showAddParticipant, setShowAddParticipant] = useState(false);
   const [activeProfile, setActiveProfile] = useState(null);
   const [showChangeName, setShowChangename] = useState(false);
   const [newName, setNewName] = useState(room.name); // set as original name initially
+  const [positionClass, setPositionClass] = useState("");
 
   const changeNameInputRef = useRef(null);
 
@@ -91,6 +96,27 @@ function RoomInfoBar({
       socket.emit("change_room_name", newName, room._id);
     }
   };
+
+  // useEffect(() => {
+  //   if (popoutRef.current) {
+  //     const rect = popoutRef.current.getBoundingClientRect();
+  //     const viewportHeight = window.innerHeight;
+
+  //     if (isMobile) {
+  //       // For mobile (already implemented in your code)
+  //       setPositionClass(rect.bottom > viewportHeight ? "bottom-14" : "top-14");
+  //     } else {
+  //       // For desktop
+  //       const overflowsBottom = rect.bottom > viewportHeight;
+
+  //       if (overflowsBottom) {
+  //         setPositionClass("bottom-1"); // Adjust to position when bottom overflow
+  //       } else {
+  //         setPositionClass("top-[15rem]"); // Default position
+  //       }
+  //     }
+  //   }
+  // }, [isMobile, activeProfile]);
 
   const cancelChangeName = () => {
     setShowChangename(false);
@@ -254,15 +280,15 @@ function RoomInfoBar({
                         </span>
                       </p>
                     </div>
-
+                    {/* 
                     {activeProfile === participant._id && (
                       <ProfilePopout
                         participant={participant}
                         room={room}
                         setActiveProfile={setActiveProfile}
-                        isOnline={isOnline}
+                        isOnline={checkOnline(participant._id)}
                       />
-                    )}
+                    )} */}
                   </div>
                 ))}
               </div>
@@ -361,6 +387,19 @@ function RoomInfoBar({
           }}
           place="left"
         />
+      )}
+      {activeProfile && (
+        <div
+          className={`absolute md:-left-[20.5rem] md:top-[14rem] top-1 left-5 ${positionClass} z-50`}
+          ref={popoutRef}
+        >
+          <ProfilePopout
+            participant={participants.find((p) => p._id === activeProfile)}
+            room={room}
+            setActiveProfile={setActiveProfile}
+            isOnline={checkOnline(activeProfile)}
+          />
+        </div>
       )}
     </div>
   );
