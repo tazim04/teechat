@@ -124,7 +124,7 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
               My Interests
             </p>
             <div className="w-full flex flex-wrap justify-center">
-              {participant.interest != null &&
+              {participant.interests != null &&
                 participant?.interests.map((interest, index) => (
                   <span
                     key={index}
@@ -148,7 +148,9 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
       {showContextMenu === participant._id && (
         <div
           ref={contextMenuRef}
-          className="absolute md:bottom-[4rem] md:right-[17.5rem] bottom-3 right-3"
+          className={`absolute left-40 md:bottom-1 ${
+            isMobile && "top-10"
+          }  z-50`}
         >
           <RemoveParticipantContextMenu
             participant={participant}
