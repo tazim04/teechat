@@ -60,7 +60,7 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
       ></link>
 
       <div
-        className={`absolute z-50 md:mr-1 w-[20rem] md:pt-7 md:pb-4 pt-5 pb-2 bg-gray-100 md:opacity-90 hover:opacity-100 transition-opacity ease-in-out duration-200 shadow-md border rounded-lg`}
+        className={`absolute max-h-96 min-h-80 z-50 md:mr-1 w-[20rem] md:pt-7 pt-5 pb-2 bg-gray-100 md:opacity-90 hover:opacity-100 transition-opacity ease-in-out duration-200 shadow-md border rounded-lg`}
       >
         <div className="flex flex-col items-center">
           {participant.username !== user.username && (
@@ -123,16 +123,18 @@ function ProfilePopout({ participant, room, setActiveProfile, isOnline }) {
             <p className="font-semibold text-[0.9rem] text-gray-800 py-1">
               My Interests
             </p>
-            <div className="w-full flex flex-wrap justify-center">
-              {participant.interests != null &&
-                participant?.interests.map((interest, index) => (
-                  <span
-                    key={index}
-                    className="bg-gray-300 rounded-full px-2 py-1 m-1 text-gray-700 text-[0.7rem]"
-                  >
-                    {interest}
-                  </span>
-                ))}
+            <div className="max-h-32 overflow-y-auto">
+              <div className="w-full flex flex-wrap justify-center">
+                {participant.interests != null &&
+                  participant?.interests.map((interest, index) => (
+                    <span
+                      key={index}
+                      className="bg-gray-300 rounded-full px-2 py-1 m-1 text-gray-700 text-[0.7rem]"
+                    >
+                      {interest}
+                    </span>
+                  ))}
+              </div>
             </div>
           </div>
           <div className="row mt-3">
