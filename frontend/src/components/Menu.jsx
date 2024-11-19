@@ -38,7 +38,7 @@ function Menu({ showMenu, setShowMenu, rooms, openChat }) {
 
   return (
     <div
-      className={`absolute md:-left-[28rem] top-[3.5rem] right-[1.5rem] ${palette.menu} w-80 mx-auto mt-3 rounded-xl md:opacity-90 md:shadow-sm shadow-2xl transition-all ease-in-out duration-300
+      className={`absolute md:-left-[28rem] md:top-1 top-[3.5rem] right-[1.5rem] ${palette.menu} w-80 mx-auto mt-3 rounded-xl md:opacity-90 md:shadow-sm shadow-2xl transition-all ease-in-out duration-300
     md:hover:shadow-2xl hover:opacity-100`}
       style={{ height: `${menuHeight}rem`, zIndex: 9999 }}
     >
