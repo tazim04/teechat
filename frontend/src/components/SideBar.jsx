@@ -17,9 +17,19 @@ import { isMobileContext } from "../context/IsMobileContext";
 // Create a context object for isDeleteOpen state for delete confirmation modal
 export const isDeleteOpenContext = createContext(false);
 
-function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
+function SideBar({
+  currentRoom,
+  setCurrentRoom,
+  messages,
+  setMessages,
+  showMenu,
+  setShowMenu,
+  rooms,
+  setRooms,
+  openChat,
+}) {
   // const [hoveredUser, setHoveredUser] = useState(null); // State for hovering over the add friend button
-  const [showMenu, setShowMenu] = useState(false); // State for the menu
+  // const [showMenu, setShowMenu] = useState(false); // State for the menu
   const [showToolTip, setShowToolTip] = useState(false); // State for the tooltip
   const [isDeleteOpen, setIsDeleteOpen] = useState(false); // State for the delete confirmation modal
   const [selectedRoomContext, setSelectedRoomContext] = useState(""); // State for the selected room for the context menu
@@ -34,7 +44,6 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
   const { isMobile } = useContext(isMobileContext);
 
   const username = user.username; // Get the username from the context
-  const [rooms, setRooms] = useState([]); // State for the rooms
 
   // Socket.io event listeners
   useEffect(() => {
@@ -98,21 +107,6 @@ function SideBar({ currentRoom, setCurrentRoom, messages, setMessages }) {
 
   //   setUsersToShow(filteredUsers);
   // }, [search]);
-
-  const openChat = (selected_room) => {
-    if (currentRoom && currentRoom._id === selected_room._id) {
-      return; // If the selected chat is the same as the current chat, return
-    }
-    // console.log("Opening chat: ", selected_room); // Log the selected chat
-    setCurrentRoom(selected_room); // Set the room to the selected chat
-    socket.emit("get_previous_messages", selected_room); // Emit a "get_previous_messages" event
-
-    // console.log(
-    //   "Set room to: " + selected_room.id,
-    //   selected_room.name,
-    //   "is_group: " + selected_room.is_group
-    // ); // Log the selected chat
-  };
 
   const checkOnline = (room) => {
     // console.log("Checking online: ", room);

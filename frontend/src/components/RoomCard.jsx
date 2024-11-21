@@ -172,7 +172,7 @@ function RoomCard({
         </div>
         <span
           className={`absolute left-[5rem] top-0 truncate text-[1rem] text-gray-100 ${
-            lastMessages[room._id]?.content ? "w-[8rem] " : "w-[12rem]" // increase width when timestamp isnt shown for less truncate
+            lastMessages[room._id]?.content ? "w-[7.3rem] " : "w-[12rem]" // increase width when timestamp isnt shown to have less truncate
           } ${
             (showNewMessage[room._id] ||
               (currentRoom && currentRoom._id === room._id)) &&
