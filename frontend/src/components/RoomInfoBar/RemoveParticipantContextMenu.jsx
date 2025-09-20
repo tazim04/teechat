@@ -13,7 +13,7 @@ function RemoveParticipantContextMenu({
   };
 
   return (
-    <div className="w-40 py-1 text-[1rem] text-center bg-gray-200 hover:bg-red-500 text-gray-900 font-semibold hover:text-gray-50 opacity-80 rounded-md shadow-md">
+    <div className="w-40 py-1 text-[1rem] text-center bg-gray-200 hover:bg-red-500 text-gray-900 font-semibold hover:text-gray-50 md:opacity-80 rounded-md shadow-md">
       <ul>
         <li>
           <div

@@ -9,6 +9,7 @@ import ProfilePopout from "./ProfilePopout";
 import { format, isToday } from "date-fns";
 import AddToRoomMenu from "./AddToRoomMenu";
 import toast, { Toaster } from "react-hot-toast";
+import { isMobileContext } from "../../context/IsMobileContext";
 
 function RoomInfoBar({
   room,
@@ -20,12 +21,16 @@ function RoomInfoBar({
   const socket = useSocket();
   const { user } = useContext(userContext); // Get the user info from the context
   const { onlineUsers } = useContext(onlineUsersContext);
+  const { isMobile } = useContext(isMobileContext);
+
+  const popoutRef = useRef(null);
 
   const [addParticipantHover, setAddParticipantHover] = useState(false);
   const [showAddParticipant, setShowAddParticipant] = useState(false);
   const [activeProfile, setActiveProfile] = useState(null);
   const [showChangeName, setShowChangename] = useState(false);
   const [newName, setNewName] = useState(room.name); // set as original name initially
+  const [positionClass, setPositionClass] = useState("");
 
   const changeNameInputRef = useRef(null);
 
@@ -92,13 +97,34 @@ function RoomInfoBar({
     }
   };
 
+  // useEffect(() => {
+  //   if (popoutRef.current) {
+  //     const rect = popoutRef.current.getBoundingClientRect();
+  //     const viewportHeight = window.innerHeight;
+
+  //     if (isMobile) {
+  //       // For mobile (already implemented in your code)
+  //       setPositionClass(rect.bottom > viewportHeight ? "bottom-14" : "top-14");
+  //     } else {
+  //       // For desktop
+  //       const overflowsBottom = rect.bottom > viewportHeight;
+
+  //       if (overflowsBottom) {
+  //         setPositionClass("bottom-1"); // Adjust to position when bottom overflow
+  //       } else {
+  //         setPositionClass("top-[15rem]"); // Default position
+  //       }
+  //     }
+  //   }
+  // }, [isMobile, activeProfile]);
+
   const cancelChangeName = () => {
     setShowChangename(false);
     setNewName(room.name);
   };
 
   return (
-    <div className="relative w-[18rem] bg-gray-100 border-2 border-l-gray-200 h-full shadow-lg transition-transform duration-300">
+    <div className="relative md:w-[18rem] w-[100vw] bg-gray-100 border-2 border-l-gray-200 h-full shadow-lg transition-transform duration-300">
       <Toaster />
       <button
         className="fixed top-3 right-3 text-[1.4rem] flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 
@@ -135,7 +161,7 @@ function RoomInfoBar({
                     onChange={onNewNameType}
                   />
                 </div>
-                <div className="flex justify-center mt-3 space-x-2">
+                <div className="flex justify-center md:mt-3 space-x-2">
                   <button
                     className="bg-green-500 px-2 py-1 text-white rounded-lg hover:bg-green-400"
                     onClick={handleChangeNameSubmit}
@@ -151,13 +177,13 @@ function RoomInfoBar({
                 </div>
               </div>
             ) : (
-              <div className="flex flex-row">
-                <h2 className="text-lg text-center font-bold truncate w-60">
+              <div className="flex flex-row justify-center">
+                <h2 className="text-lg text-center font-bold truncate w-56">
                   {room.name}
                 </h2>
 
                 <span
-                  className="ms-1 flex items-center opacity-100 transition-all duratin-100 ease-in-out hover:opacity-50 cursor-pointer"
+                  className="relative flex items-center opacity-100 transition-all duratin-100 ease-in-out hover:opacity-50 cursor-pointer"
                   onClick={handleChangeNameClick}
                 >
                   <img src="/rename_room.png" alt="rename" className="w-5" />
@@ -176,7 +202,7 @@ function RoomInfoBar({
           {room.is_group ? (
             <div className="mt-10">
               <div className="flex items-center justify-between mb-2">
-                <p className="font-medium text-[1rem]">
+                <p className="font-medium text-[0.9rem]">
                   Roommates - {participants.length}
                 </p>
                 <div className="flex items-center align-middle">
@@ -212,58 +238,60 @@ function RoomInfoBar({
                   </div>
                 </div>
               </div>
-              {participants?.map((participant, index) => (
-                <div key={participant._id || index}>
-                  <div
-                    onClick={() => toggleProfileClick(participant)}
-                    className={`flex flex-row p-2 rounded-lg cursor-pointer ${
-                      participant.username === user.username
-                        ? "bg-gray-200 bg-opacity-50"
-                        : ""
-                    } transition-all ease-in-out duration-100 hover:bg-gray-300 $`}
-                    data-tooltip-id="profile"
-                    //   data-tooltip-html={`
-                    // <div className='flex flex-col items-center'>
-                    // <p>Username: ${participant.username}</p>
-                    // </div>
-                    //   `}
-                  >
-                    <div className="flex align-middle">
-                      <div className="w-10 h-10">
-                        <AvatarIcon
-                          name={participant.username}
-                          showStatus={false}
-                          isOnline={checkOnline(participant._id)}
-                        />
-                      </div>
+              <div className="overflow-y-auto h-[calc(100vh-18rem)]">
+                {participants.map((participant, index) => (
+                  <div key={index} className="relative my-1">
+                    <div
+                      onClick={() => toggleProfileClick(participant)}
+                      className={`flex flex-row p-2 rounded-lg cursor-pointer ${
+                        participant.username === user.username
+                          ? "bg-gray-200 bg-opacity-50"
+                          : ""
+                      } transition-all ease-in-out duration-100 hover:bg-gray-300 $`}
+                      data-tooltip-id="profile"
+                      //   data-tooltip-html={`
+                      // <div className='flex flex-col items-center'>
+                      // <p>Username: ${participant.username}</p>
+                      // </div>
+                      //   `}
+                    >
+                      <div className="flex align-middle">
+                        <div className="w-10 h-10">
+                          <AvatarIcon
+                            name={participant.username}
+                            showStatus={false}
+                            isOnline={checkOnline(participant._id)}
+                          />
+                        </div>
 
-                      <div className="relative right-[0.6rem] top-7">
-                        {checkOnline(participant._id) ? (
-                          <span className="flex w-2.5 h-2.5 bg-green-400 rounded-full flex-shrink-0"></span>
-                        ) : (
-                          <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full flex-shrink-0"></span>
-                        )}
+                        <div className="relative right-[0.6rem] top-7">
+                          {checkOnline(participant._id) ? (
+                            <span className="flex w-2.5 h-2.5 bg-green-400 rounded-full flex-shrink-0"></span>
+                          ) : (
+                            <span className="flex w-2.5 h-2.5 bg-gray-400 rounded-full flex-shrink-0"></span>
+                          )}
+                        </div>
                       </div>
+                      <p className="text-[1.1rem] ms-3 font-medium my-auto text-gray-700 select-none truncate max-w-full">
+                        {participant.username}
+                        {/* {console.log("Participant: ", participant, "User: ", user)} */}
+                        <span className="text-[0.8rem] md:ml-20 ml-36 text-gray-600">
+                          {participant.username === user.username ? "me" : ""}
+                        </span>
+                      </p>
                     </div>
-                    <p className="text-[1.1rem] ms-3 font-medium my-auto text-gray-700 select-none truncate max-w-full">
-                      {participant.username}
-                      {/* {console.log("Participant: ", participant, "User: ", user)} */}
-                      <span className="text-[0.8rem] ml-20 text-gray-600">
-                        {participant.username === user.username ? "me" : ""}
-                      </span>
-                    </p>
+                    {/* 
+                    {activeProfile === participant._id && (
+                      <ProfilePopout
+                        participant={participant}
+                        room={room}
+                        setActiveProfile={setActiveProfile}
+                        isOnline={checkOnline(participant._id)}
+                      />
+                    )} */}
                   </div>
-
-                  {activeProfile === participant._id && (
-                    <ProfilePopout
-                      participant={participant}
-                      room={room}
-                      setActiveProfile={setActiveProfile}
-                      isOnline={isOnline}
-                    />
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           ) : (
             <div className="mt-4">
@@ -319,14 +347,15 @@ function RoomInfoBar({
                             My Interests
                           </p>
                           <div className="w-full max-w-96 flex flex-wrap justify-center max-h-[8.7rem] overflow-y-auto scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                            {participant.interests.map((interest, index) => (
-                              <span
-                                key={index}
-                                className="bg-gray-300 rounded-full px-2 py-1 m-1 text-gray-700 text-[0.8rem]"
-                              >
-                                {interest}
-                              </span>
-                            ))}
+                            {participant.interests != null &&
+                              participant?.interests.map((interest, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-gray-300 rounded-full px-2 py-1 m-1 text-gray-700 text-[0.8rem]"
+                                >
+                                  {interest}
+                                </span>
+                              ))}
                           </div>
                         </div>
                         <div className="row my-5">
@@ -358,6 +387,19 @@ function RoomInfoBar({
           }}
           place="left"
         />
+      )}
+      {activeProfile && (
+        <div
+          className={`absolute md:-left-[20.5rem] md:top-[14rem] top-1 left-5 ${positionClass} z-50`}
+          ref={popoutRef}
+        >
+          <ProfilePopout
+            participant={participants.find((p) => p._id === activeProfile)}
+            room={room}
+            setActiveProfile={setActiveProfile}
+            isOnline={checkOnline(activeProfile)}
+          />
+        </div>
       )}
     </div>
   );

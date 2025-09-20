@@ -6,6 +6,7 @@ import "./stylesheets/Chat.css";
 import { usePalette } from "../context/PaletteContext";
 import { userContext } from "../context/UserContext";
 import { onlineUsersContext } from "../context/OnlineUsersContext";
+import { isMobileContext } from "../context/IsMobileContext";
 import RoomInfoBar from "../components/RoomInfoBar/RoomInfoBar";
 
 function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
@@ -23,11 +24,28 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
   const { palette } = usePalette(); // Destructure palette from usePalette
   const { onlineUsers } = useContext(onlineUsersContext); // Get the online users from the context
   const { user } = useContext(userContext); // Get the user info from the context
+  const { isMobile } = useContext(isMobileContext);
   const username = user.username; // Get the username from the context
 
   const bottomRef = useRef(); // Reference to the bottom of the chat
+  const chatRef = useRef();
+  const inputRef = useRef(null);
 
   const [scrollPosition, setScrollPosition] = useState(0);
+
+  // for mobile
+  useEffect(() => {
+    const setDynamicHeight = () => {
+      if (isMobile && chatRef.current) {
+        chatRef.current.style.height = `${window.innerHeight}px`;
+      }
+    };
+
+    setDynamicHeight(); // Set on initial load
+    window.addEventListener("resize", setDynamicHeight);
+
+    return () => window.removeEventListener("resize", setDynamicHeight);
+  }, []);
 
   // Track if the user is at the bottom of the chat using observer for the scroll down button
   useEffect(() => {
@@ -42,6 +60,15 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
       observer.disconnect();
     };
   });
+
+  // If mobile, show room info is closed on open
+  useEffect(() => {
+    if (isMobile) {
+      setShowRoomInfo(false);
+    } else {
+      setShowRoomInfo(true); // Always open on desktop
+    }
+  }, [isMobile, currentRoom]);
 
   // Scroll to the bottom of the chat when the room is opened or a new message is sent
   useEffect(() => {
@@ -214,6 +241,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
       }
     );
     setMessage(""); // Clear the message input
+    inputRef.current.focus(); // Keep the keyboard open by refocusing the input field, mainly for mobile
 
     setSendAnimation(true); // Set the send animation to true
     setTimeout(() => {
@@ -292,17 +320,20 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
   }, [messageRefs, messages, setMessages, currentRoom, user._id, socket]);
 
   return (
-    <div className="flex flex-row flex-1">
+    <div className="flex md:flex-row flex-1">
       {/* <ChatBar room={currentRoom} /> Display the chat bar */}
 
       {currentRoom ? ( // Check if the room (recipient) is selected
-        <div className="flex flex-col flex-1 h-screen">
-          <ChatBar
-            room={currentRoom}
-            showRoomInfo={showRoomInfo}
-            setShowRoomInfo={setShowRoomInfo}
-            isOnline={isOnline} // pass if online using the corresponding functions
-          />
+        <div className="flex flex-col flex-1 md:h-screen" ref={chatRef}>
+          <div className="sticky top-0">
+            <ChatBar
+              room={currentRoom}
+              showRoomInfo={showRoomInfo}
+              setShowRoomInfo={setShowRoomInfo}
+              isOnline={isOnline} // pass if online using the corresponding functions
+              setCurrentRoom={setCurrentRoom}
+            />
+          </div>
           <div className="flex-1 overflow-y-auto p-4">
             {/* Check if there are messages for the selected recipient */}
             {messages[currentRoom._id] ? (
@@ -384,6 +415,7 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
               value={message}
               onChange={onType}
               onKeyDown={(e) => e.key === "Enter" && send()}
+              ref={inputRef}
             />
             <button
               className={`${palette.send} rounded-xl px-3 h-9 ms-5 my-auto overflow-hidden relative`}
@@ -409,13 +441,19 @@ function Chat({ currentRoom, setCurrentRoom, messages, setMessages }) {
         </div>
       )}
       {showRoomInfo && currentRoom && (
-        <RoomInfoBar
-          room={currentRoom}
-          showRoomInfo={showRoomInfo}
-          setShowRoomInfo={setShowRoomInfo}
-          participants={participants}
-          isOnline={isOnline}
-        />
+        <div
+          className={`${
+            isMobile ? "absolute top-0 left-0 w-full h-full bg-white z-50" : ""
+          }`}
+        >
+          <RoomInfoBar
+            room={currentRoom}
+            showRoomInfo={showRoomInfo}
+            setShowRoomInfo={setShowRoomInfo}
+            participants={participants}
+            isOnline={isOnline}
+          />
+        </div>
       )}
     </div>
   );

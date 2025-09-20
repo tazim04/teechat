@@ -172,7 +172,7 @@ function RoomCard({
         </div>
         <span
           className={`absolute left-[5rem] top-0 truncate text-[1rem] text-gray-100 ${
-            lastMessages[room._id]?.content ? "w-[8rem] " : "w-[12rem]" // increase width when timestamp isnt shown for less truncate
+            lastMessages[room._id]?.content ? "w-[7.3rem] " : "w-[12rem]" // increase width when timestamp isnt shown to have less truncate
           } ${
             (showNewMessage[room._id] ||
               (currentRoom && currentRoom._id === room._id)) &&
@@ -185,7 +185,7 @@ function RoomCard({
         {lastMessages[room._id]?.content ? (
           <div className="relative w-48 p-2">
             {/* <!-- Timestamp aligned to the top right --> */}
-            <span className="text-[0.8rem] text-gray-200 absolute -top-[0.55rem] -right-4">
+            <span className="text-[0.8rem] text-gray-200 absolute -top-[0.55rem] md:-right-4 -right-16">
               {getTimeStamp(lastMessages[room._id].timestamp)}
             </span>
 
