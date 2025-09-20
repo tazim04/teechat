@@ -40,87 +40,127 @@ export default function messagesSocket(io, socket) {
 
   // Handle sending a direct message or group message
   socket.on("dm", async (content, roomId, to, from, is_group, callback) => {
-    // Find the sender from the database
-    const sender = await User.findById(from);
-    const message = { sender: sender._id, content, timestamp: new Date() };
+    try {
+      // Find the sender in the DB
+      const sender = await User.findById(from);
+      if (!sender) {
+        console.error("dm: sender not found", from);
+        return;
+      }
 
-    // Initialize cache for room if it doesn't exist
-    if (!memory.messagesCache.has(roomId)) memory.messagesCache.set(roomId, []);
+      // Prepare message object
+      const messageData = {
+        sender: sender._id,
+        content,
+        timestamp: new Date(),
+      };
 
-    // Save the message to the database
-    const savedMessage = await addMessage(roomId, message);
+      // Init cache for the room if missing
+      if (!memory.messagesCache.has(roomId)) {
+        memory.messagesCache.set(roomId, []);
+      }
 
-    // Format the message to include sender details for the client
-    const formattedMessage = {
-      _id: savedMessage._id,
-      readBy: savedMessage.readBy,
-      sender: { _id: sender._id, username: sender.username },
-      content,
-      timestamp: new Date(),
-    };
+      // Save message to DB
+      const savedMessage = await addMessage(roomId, messageData);
 
-    // Update the cache
-    memory.messagesCache.get(roomId).push(formattedMessage);
+      // Format for client
+      const messageToSend = {
+        _id: savedMessage._id,
+        readBy: savedMessage.readBy,
+        sender: { _id: sender._id, username: sender.username },
+        content,
+        timestamp: savedMessage.timestamp,
+        room_id: roomId,
+      };
 
-    // Emit the message to the appropriate clients
-    if (is_group) {
-      socket.to(roomId).emit("recieve_message", formattedMessage);
-      const room = await Room.findById(roomId).populate("participants");
+      // Push to cache
+      memory.messagesCache.get(roomId).push(messageToSend);
 
-      // Notify all participants in the group chat
-      for (const p of room.participants) {
-        const sid = memory.socketIds.get(String(p._id));
-        if (sid) {
-          const last = await fetchLastMessage(roomId);
-          io.to(sid).emit("recieve_last_message", last);
+      // Handle group chat
+      if (is_group) {
+        console.log("dm: sending group message to room", roomId);
+
+        // Send to all other sockets in the room
+        socket.to(roomId).emit("recieve_message", messageToSend);
+
+        // Update each participant’s room list + last message
+        const room = await Room.findById(roomId).populate("participants");
+        for (const participant of room.participants) {
+          const sid = memory.socketIds.get(String(participant._id));
+          if (!sid) continue;
+
+          const sortedRooms = await getRoomsWithNames(participant);
+          io.to(sid).emit("receive_rooms", sortedRooms);
+
+          const lastMessage = await fetchLastMessage(roomId);
+          io.to(sid).emit("recieve_last_message", lastMessage);
         }
-      }
-    } else {
-      const recipient = await User.findOne({ username: to });
-      const sid = memory.socketIds.get(String(recipient._id));
-      if (sid) {
-        io.to(sid).emit("recieve_message", formattedMessage);
+      } else {
+        // 8. Handle one-to-one chat
+        const recipient = await User.findOne({ username: to });
+        if (!recipient) {
+          console.error("dm: recipient not found", to);
+          return;
+        }
+
+        const recipientSid = memory.socketIds.get(String(recipient._id));
+
+        // send to recipient if online
+        if (recipientSid) {
+          io.to(recipientSid).emit("recieve_message", messageToSend);
+
+          const lastMessage = await fetchLastMessage(roomId);
+          io.to(recipientSid).emit("recieve_last_message", lastMessage);
+
+          const sortedRoomsRecipient = await getRoomsWithNames(recipient);
+          io.to(recipientSid).emit("receive_rooms", sortedRoomsRecipient);
+        } else {
+          console.log("dm: recipient offline", to);
+        }
+
+        // always send back to sender
+        socket.emit("recieve_message", messageToSend);
+
         const lastMessage = await fetchLastMessage(roomId);
-        io.to(sid).emit("recieve_last_message", lastMessage);
+        socket.emit("recieve_last_message", lastMessage);
+
+        const sortedRoomsSender = await getRoomsWithNames(sender);
+        socket.emit("receive_rooms", sortedRoomsSender);
       }
-      const lastMessage = await fetchLastMessage(roomId);
-      socket.emit("recieve_last_message", lastMessage);
 
-      // Update rooms for both sender and recipient
-      const sortedRoomsRecipient = await getRoomsWithNames(recipient);
-      if (sid) io.to(sid).emit("receive_rooms", sortedRoomsRecipient);
-
-      const sortedRoomsSender = await getRoomsWithNames(sender);
-      socket.emit("receive_rooms", sortedRoomsSender);
+      // Return via callback
+      if (callback) callback(messageToSend);
+    } catch (err) {
+      console.error("dm error:", err);
+      if (callback) callback({ error: "Failed to send message" });
     }
-    callback(formattedMessage);
   });
 
   // Mark a message as read by a user
   socket.on("message_read", async (msgId, roomId, userId) => {
-    const room = await Room.findById(roomId).select("messages");
-    if (!room) return;
-
     const user = await User.findById(userId);
     if (!user) return;
 
-    // Find the specific message in the room
-    const message = room.messages.find((m) => m._id.equals(msgId));
-    if (!message) return;
+    // Atomically update the message's readBy field
+    await Room.updateOne(
+      { _id: roomId, "messages._id": msgId },
+      { $addToSet: { "messages.$.readBy": user._id } }
+    );
 
-    // Update the readBy array if the user hasn't already marked it as read
-    if (!message.readBy.some((id) => id.equals(userId))) {
-      message.readBy.push(userId);
-    }
+    // Retrieve the updated message to send back
+    const room = await Room.findById(roomId).select("messages").lean();
+    const message = room.messages.find((m) => String(m._id) === String(msgId));
+    if (!message) return;
 
     // update cache
     const cachedMessages = memory.messagesCache.get(roomId) || [];
-    const cached = cachedMessages.find((m) => m._id.equals(msgId));
-    if (cached && !cached.readBy.some((id) => id.equals(userId))) {
-      cached.readBy.push(userId);
+    const cachedMessage = cachedMessages.find((m) => m._id.equals(msgId));
+    if (
+      cachedMessage &&
+      !cachedMessage.readBy.some((id) => String(id) === String(userId))
+    ) {
+      cachedMessage.readBy.push(userId);
     }
-
-    await room.save();
 
     // Notify the sender and the reader about the read status
     const senderSid = memory.socketIds.get(String(message.sender));

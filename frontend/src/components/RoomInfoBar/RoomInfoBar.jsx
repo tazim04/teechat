@@ -172,7 +172,7 @@ function RoomInfoBar({
         </div>
 
         {/* Participants List */}
-        <div className="ml-1 flex flex-col w-full">
+        <div className="ml-1 flex flex-col w-full relative">
           {room.is_group ? (
             <div className="mt-10">
               <div className="flex items-center justify-between mb-2">
@@ -212,8 +212,8 @@ function RoomInfoBar({
                   </div>
                 </div>
               </div>
-              {participants.map((participant, index) => (
-                <div key={index} className="relative my-1">
+              {participants?.map((participant, index) => (
+                <div key={participant._id || index}>
                   <div
                     onClick={() => toggleProfileClick(participant)}
                     className={`flex flex-row p-2 rounded-lg cursor-pointer ${

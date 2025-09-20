@@ -108,7 +108,10 @@ export async function getRoomsWithNames(user) {
     }
     return room;
   });
-  return rooms;
+
+  // Sort rooms by last updated time (most recent first)
+  const sortedRooms = rooms.sort((a, b) => b.updatedAt - a.updatedAt);
+  return sortedRooms;
 }
 
 // Fetch the last message of a room along with sender details
