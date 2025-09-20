@@ -198,7 +198,7 @@ function RoomInfoBar({
         </div>
 
         {/* Participants List */}
-        <div className="ml-1 flex flex-col w-full">
+        <div className="ml-1 flex flex-col w-full relative">
           {room.is_group ? (
             <div className="mt-10">
               <div className="flex items-center justify-between mb-2">
